@@ -1,3 +1,12 @@
-.vagrant
 setup_vars.conf
-db_config.py
+config.ini
+static/uploads
+
+.vagrant
+
+node_modules
+bower_components
+
+invenv/*
+*.py[co]
+__pycache__
