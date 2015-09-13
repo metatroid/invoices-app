@@ -12,7 +12,7 @@ class Project(models.Model):
   project_description = models.TextField(blank=True)
   project_url = models.URLField(max_length=200, blank=True)
   project_logo = models.ImageField(upload_to=logo_path, blank=True)
-  deadline = models.DateTimeField(blank=True)
+  deadline = models.DateTimeField(blank=True, null=True)
   client_name = models.CharField(max_length=50)
   client_email = models.EmailField(blank=True)
   total_time = models.PositiveIntegerField(default=0)
