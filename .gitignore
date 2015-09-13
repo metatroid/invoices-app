@@ -1,0 +1,3 @@
+.vagrant
+setup_vars.conf
+db_config.py
