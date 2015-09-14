@@ -7,7 +7,9 @@ def logo_path(instance, filename):
     return 'project_logos/%d/%s' % (instance.user.id, filename)
 
 class Project(models.Model):
-  user = models.ForeignKey(settings.AUTH_USER_MODEL)
+  def __str__(self):
+    return self.project_name+" ("+str(self.id)+")"
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='projects', on_delete='models.CASCADE')
   project_name = models.CharField(max_length=50)
   project_description = models.TextField(blank=True)
   project_url = models.URLField(max_length=200, blank=True)
@@ -24,3 +26,6 @@ class Project(models.Model):
   paid = models.BooleanField(default=False)
   created_at = models.DateTimeField(default=timezone.now)
   updated_at = models.DateTimeField(auto_now=True)
+
+  class Meta:
+    ordering = ('created_at',)

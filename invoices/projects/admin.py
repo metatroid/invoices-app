@@ -1,4 +1,7 @@
 from django.contrib import admin
-from .models import Project
+from invoices.projects.models import Project
+from invoices.intervals.models import Interval
+from invoices.statements.models import Statement
 
-admin.site.register(Project)
+administerableModels = [Project, Interval, Statement]
+admin.site.register(administerableModels)
