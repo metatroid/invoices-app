@@ -1,3 +1,5 @@
+config.ini
+config.overrides.ini
 static/uploads
 
 .vagrant

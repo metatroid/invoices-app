@@ -16,7 +16,10 @@ from configparser import RawConfigParser
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 config = RawConfigParser()
-config.readfp(open(os.path.join(BASE_DIR, 'config.ini')))
+if(os.path.isfile(os.path.join(BASE_DIR, 'config.overrides.ini'))):
+    config.readfp(open(os.path.join(BASE_DIR, 'config.overrides.ini')))
+else:
+    config.readfp(open(os.path.join(BASE_DIR, 'config.ini')))
 
 
 # Quick-start development settings - unsuitable for production
