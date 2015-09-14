@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 #source variables
-SUPERUSER_NAME=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_NAME/) print $2}' config.ini`
-SUPERUSER_EMAIL=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_EMAIL/) print $2}' config.ini`
-SUPERUSER_PASSWORD=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_PASSWORD/) print $2}' config.ini`
+SUPERUSER_NAME=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_NAME/) print $2}' /vagrant/config.ini`
+SUPERUSER_EMAIL=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_EMAIL/) print $2}' /vagrant/config.ini`
+SUPERUSER_PASSWORD=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /SUPERUSER_PASSWORD/) print $2}' /vagrant/config.ini`
 
 #setup virtualenv
 cd /vagrant

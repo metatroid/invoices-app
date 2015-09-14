@@ -11,6 +11,7 @@ Old version available here: http://interval.metatroid.com/
   </li>
   <li>Initialize vagrant
     <pre>vagrant up</pre>
+    Depends on hostsupdater <pre>vagrant plugin install vagrant-hostsupdater</pre>
   </li>
   <li>Open your browser to http://django.dev</li>
   <li>Django admin (http://django.dev/admin) credentials are:<br>Username: admin<br>Password: invoiceAdmin_</li>
