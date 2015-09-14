@@ -1,0 +1,31 @@
+{
+  "name": "invoices",
+  "version": "0.0.1",
+  "description": "invoice generator",
+  "author": "Jon Gronberg",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:metatroid/invoices-app.git"
+  },
+  "dependencies": {
+    "gulp": "latest"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/metatroid/invoices-app/issues"
+  },
+  "homepage": "http://invoiced.metatroid.com",
+  "devDependencies": {
+    "gulp-autoprefixer": "latest",
+    "gulp-haml": "latest",
+    "gulp-concat": "latest",
+    "gulp-sass": "latest",
+    "gulp-sourcemaps": "latest",
+    "gulp-rename": "~1.2.2",
+    "gulp-uglify": "latest",
+    "gulp-copy": "latest",
+    "gulp-load-plugins": "latest",
+    "gulp-flatten": "~0.2.0",
+    "gulp-jshint": "~1.11.2"
+  }
+}
