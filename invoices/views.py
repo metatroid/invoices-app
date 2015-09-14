@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework import status
 from invoices.projects.serializers import UserSerializer, ProjectSerializer, IntervalSerializer, StatementSerializer
 from django.contrib.auth.models import User
@@ -9,7 +10,16 @@ from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
 
+class UserStatus(APIView):
+  permission_classes = (AllowAny,)
+  def get(self, request):
+    user = request.user
+    if(user.is_active):
+      return Response(UserSerializer(user).data)
+    return Response(None)
+
 class UserDetail(APIView):
+  permission_classes = (IsAuthenticated,)
   def get_object(self, pk, req):
     try:
       if(req.user.is_superuser):
@@ -35,6 +45,7 @@ class UserDetail(APIView):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ProjectList(APIView):
+  permission_classes = (IsAuthenticated,)
   def get(self, request, format=None):
     projects = User.objects.get(pk=request.user.id).projects.all().order_by('-created_at')
     serializer = ProjectSerializer(projects, many=True)
@@ -47,6 +58,7 @@ class ProjectList(APIView):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProjectDetail(APIView):
+  permission_classes = (IsAuthenticated,)
   def get_object(self, pk, req):
     try:
       return User.objects.get(pk=req.user.id).projects.get(pk=pk)
@@ -69,6 +81,7 @@ class ProjectDetail(APIView):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class IntervalList(APIView):
+  permission_classes = (IsAuthenticated,)
   def get(self, request, project_id, format=None):
     project = User.objects.get(pk=request.user.id).projects.get(pk=project_id)
     intervals = project.intervals.all().order_by('-created_at')
@@ -82,6 +95,7 @@ class IntervalList(APIView):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class IntervalDetail(APIView):
+  permission_classes = (IsAuthenticated,)
   def get_object(self, project_id, pk, req):
     try:
       return User.objects.get(pk=req.user.id).projects.get(pk=project_id).intervals.get(pk=pk)
@@ -104,6 +118,7 @@ class IntervalDetail(APIView):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class StatementList(APIView):
+  permission_classes = (IsAuthenticated,)
   def get(self, request, project_id, format=None):
     project = User.objects.get(pk=request.user.id).projects.get(pk=project_id)
     statements = project.statements.all().order_by('-created_at')
@@ -117,6 +132,7 @@ class StatementList(APIView):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StatementDetail(APIView):
+  permission_classes = (IsAuthenticated,)
   def get_object(self, project_id, pk, req):
     try:
       return User.objects.get(pk=req.user.id).projects.get(pk=project_id).statements.get(pk=pk)

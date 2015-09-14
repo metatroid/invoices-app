@@ -11,12 +11,24 @@ angular.module('invoices.states', [
   $urlRouterProvider.otherwise('/');
 
   $stateProvider
-    .state('home', {
+    .state('main', {
       url: '/',
       views: {
         'main': {
-          templateUrl: templateDir + '/home.html',
+          templateUrl: templateDir + '/main.html',
           controller: 'mainCtrl'
+        },
+        'landing@main': {
+          templateUrl: templateDir + '/landing.html',
+          controller: 'mainCtrl'
+        },
+        'app@main': {
+          templateUrl: templateDir + '/app-main.html',
+          controller: 'appCtrl'
+        },
+        'nav@main': {
+          templateUrl: templateDir + '/nav.html',
+          controller: 'appCtrl'
         }
       }
     });

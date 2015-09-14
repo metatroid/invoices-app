@@ -1,9 +1,11 @@
 angular.module('invoices', [
                'invoices.controllers',
-               'invoices.states'
+               'invoices.states',
+               'invoices.services'
 ]);
 
-angular.module('invoices.controllers', []);
+angular.module('invoices.states', []);
+angular.module('invoices.services', []);
 
 angular.module('invoices')
   .config(['$compileProvider', function($compileProvider){

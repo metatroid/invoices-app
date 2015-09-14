@@ -1,0 +1,9 @@
+.container
+  .row
+    .col-md-2
+      %nav{ui-view: "nav"}
+    .col-md-10
+      .row{ng-repeat: "project in projects"}
+        .col-xs-12
+          .project-wrapper{id: "project-{{project.id}}"}
+            {{project.project_name}}

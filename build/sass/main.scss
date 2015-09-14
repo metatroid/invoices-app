@@ -1,3 +1,9 @@
-body{
-  background-color: #eaeaea;
+@import 'libs/bootstrap/bootstrap';
+@import 'libs/font-awesome/font-awesome';
+#wrapper{
+  opacity: 0;
+  transition: opacity .5s ease;
+  &.initialized{
+    opacity: 1;
+  }
 }

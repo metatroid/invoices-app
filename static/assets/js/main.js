@@ -33058,10 +33058,12 @@ angular.module('ui.router.state')
 })(window, window.angular);
 angular.module('invoices', [
                'invoices.controllers',
-               'invoices.states'
+               'invoices.states',
+               'invoices.services'
 ]);
 
-angular.module('invoices.controllers', []);
+angular.module('invoices.states', []);
+angular.module('invoices.services', []);
 
 angular.module('invoices')
   .config(['$compileProvider', function($compileProvider){
@@ -33069,8 +33071,41 @@ angular.module('invoices')
   }
 ]);
 angular.module('invoices.controllers', [])
-  .controller('mainCtrl', ['$scope', function($scope){
-    $scope.testMessage = "success";
+  .controller('mainCtrl', ['$scope', '$log', 'apiSrv', function($scope, $log, apiSrv){
+    apiSrv.request('GET', 'user', {}, 
+      function(user){
+        $scope.user = user;
+        $scope.ready = true;
+      }, 
+      function(er){
+        $log.error(er);
+      }
+    );
+  }])
+  .controller('appCtrl', ['$scope', '$log', 'apiSrv', function($scope, $log, apiSrv){
+    apiSrv.request('GET', 'projects', {}, 
+      function(projects){
+        $scope.projects = projects;
+      }, 
+      function(err){
+        $log.error(err);
+      }
+    );
+  }])
+;
+angular.module('invoices.services')
+  .factory('apiSrv', ['$http', function($http){
+    var apiSrv = {};
+
+    apiSrv.request = function(method, url, args, successFn, errorFn){
+      return $http({
+        method: method,
+        url: '/api/' + url + ".json",
+        data: JSON.stringify(args)
+      }).success(successFn);
+    };
+
+    return apiSrv;
   }])
 ;
 angular.module('invoices.states', [
@@ -33086,12 +33121,24 @@ angular.module('invoices.states', [
   $urlRouterProvider.otherwise('/');
 
   $stateProvider
-    .state('home', {
+    .state('main', {
       url: '/',
       views: {
         'main': {
-          templateUrl: templateDir + '/home.html',
+          templateUrl: templateDir + '/main.html',
           controller: 'mainCtrl'
+        },
+        'landing@main': {
+          templateUrl: templateDir + '/landing.html',
+          controller: 'mainCtrl'
+        },
+        'app@main': {
+          templateUrl: templateDir + '/app-main.html',
+          controller: 'appCtrl'
+        },
+        'nav@main': {
+          templateUrl: templateDir + '/nav.html',
+          controller: 'appCtrl'
         }
       }
     });
