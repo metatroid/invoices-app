@@ -1,5 +1,3 @@
-setup_vars.conf
-config.ini
 static/uploads
 
 .vagrant

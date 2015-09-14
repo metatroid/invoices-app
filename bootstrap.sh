@@ -5,7 +5,9 @@ apt-get update
 apt-get install -y nginx python3-pip python3-dev libpq-dev postgresql postgresql-contrib
 
 #source variables
-. ./setup_vars.conf
+DATABASE_NAME=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /DATABASE_NAME/) print $2}' config.ini`
+DATABASE_USER=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /DATABASE_USER/) print $2}' config.ini`
+DATABASE_PASSWORD=`awk -F '= ' '{if (! ($0 ~ /^;/) && $0 ~ /DATABASE_PASSWORD/) print $2}' config.ini`
 
 #setup postgresql
 sudo -u postgres psql --command "CREATE DATABASE $DATABASE_NAME;"
