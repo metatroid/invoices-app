@@ -7,14 +7,14 @@ Old version available here: http://interval.metatroid.com/
 <h1>Install Instructions</h1>
 <ol>
   <li>Clone the repository
-  ```
-  mkdir invoices; cd $_; git clone git@github.com:metatroid/invoices-app.git .
-  ```
+    <pre>
+      mkdir invoices; cd $_; git clone git@github.com:metatroid/invoices-app.git .
+    </pre>
   </li>
   <li>Initialize vagrant
-  ```
-  vagrant up
-  ```
+    <pre>
+      vagrant up
+    </pre>
   </li>
   <li>Open your browser to http://django.dev</li>
   <li>Django admin (http://django.dev/admin) credentials are:<br>Username: admin<br>Password: invoiceAdmin_</li>
