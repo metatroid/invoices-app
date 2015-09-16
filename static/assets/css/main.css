@@ -7204,8 +7204,90 @@ button.close {
 .fa-fonticons:before {
   content: ""; }
 
+.unstyled {
+  list-style: none;
+  padding: 0; }
+
+.inline {
+  overflow: hidden; }
+  .inline li {
+    float: left; }
+
+body {
+  background-color: #f0f0f0;
+  background-image: url(/static/assets/img/old-mathematics.png); }
+
 #wrapper {
   opacity: 0;
   transition: opacity 0.5s ease; }
   #wrapper.initialized {
     opacity: 1; }
+
+nav {
+  padding-top: 16px; }
+  nav a {
+    color: #d1f7ff;
+    font-size: 16px;
+    padding: 8px 16px;
+    display: inline-block;
+    transition: color 0.5s ease; }
+    nav a:hover {
+      color: white;
+      text-decoration: none; }
+
+#landing #graphic {
+  height: 75vh;
+  background-color: #000; }
+
+#landing .mockup {
+  background-image: url(/static/assets/img/device_laptop.png);
+  background-size: 100%;
+  height: 650px;
+  position: relative;
+  top: -5vh;
+  opacity: 0;
+  -webkit-transform: translateY(250px);
+          transform: translateY(250px);
+  transition: all 0.75s ease; }
+
+#landing .heading h1 {
+  color: #9eeeff;
+  letter-spacing: .2em;
+  font-variant: small-caps; }
+
+.initialized #landing .mockup {
+  opacity: 1;
+  -webkit-transform: translateY(0px);
+          transform: translateY(0px); }
+
+#info {
+  margin-bottom: 500px; }
+  #info .panel {
+    min-height: 250px;
+    text-align: center;
+    padding: 16px; }
+    #info .panel[inview=fadeIn] {
+      opacity: 0;
+      transition: opacity 0.75s ease; }
+      #info .panel[inview=fadeIn].inview {
+        opacity: 1; }
+    #info .panel[inview=slideInLeft] {
+      opacity: 0;
+      -webkit-transform: translateX(-250px);
+              transform: translateX(-250px);
+      transition: opacity 0.75s ease, -webkit-transform 0.5s ease;
+      transition: opacity 0.75s ease, transform 0.5s ease; }
+      #info .panel[inview=slideInLeft].inview {
+        opacity: 1;
+        -webkit-transform: translateX(0px);
+                transform: translateX(0px); }
+    #info .panel[inview=slideInRight] {
+      opacity: 0;
+      -webkit-transform: translateX(250px);
+              transform: translateX(250px);
+      transition: opacity 0.75s ease, -webkit-transform 0.5s ease;
+      transition: opacity 0.75s ease, transform 0.5s ease; }
+      #info .panel[inview=slideInRight].inview {
+        opacity: 1;
+        -webkit-transform: translateX(0px);
+                transform: translateX(0px); }

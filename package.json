@@ -17,13 +17,14 @@
   "homepage": "http://invoiced.metatroid.com",
   "devDependencies": {
     "gulp-autoprefixer": "latest",
-    "gulp-haml": "latest",
     "gulp-concat": "latest",
-    "gulp-sass": "latest",
-    "gulp-rename": "latest",
-    "gulp-uglify": "latest",
     "gulp-copy": "latest",
+    "gulp-haml": "latest",
+    "gulp-imagemin": "latest",
+    "gulp-jshint": "latest",
     "gulp-load-plugins": "latest",
-    "gulp-jshint": "latest"
+    "gulp-rename": "latest",
+    "gulp-sass": "latest",
+    "gulp-uglify": "latest"
   }
 }

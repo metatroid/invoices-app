@@ -52,8 +52,20 @@ gulp.task('haml', function(){
     .pipe($.copy('angular', {prefix: 2}));
 });
 
-gulp.task('default', ['js', 'jsall', 'sass', 'haml'], function(){
+//img optimization
+gulp.task('img', function(){
+  gulp.src('build/img/**/*')
+    .pipe($.imagemin({
+      progressive: true,
+      interlaced: true,
+      svgoPlugins: [{removeUnknownsAndDefaults: false}]
+    }))
+    .pipe(gulp.dest('static/assets/img'))
+});
+
+gulp.task('default', ['js', 'jsall', 'sass', 'haml', 'img'], function(){
   gulp.watch('build/js/app/**/*.js', ['js', 'jsall']);
   gulp.watch('build/sass/**/*.scss', ['sass']);
   gulp.watch('build/haml/**/*.haml', ['haml']);
+  gulp.watch('build/img/**/*', ['img']);
 });

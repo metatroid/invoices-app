@@ -1,13 +1,31 @@
-.container
-  .row
-    .col-xs-12
-      .hero
-        %ul
-          %li
-            landing page
-          %li
-            login
-          %li
-            register
-          %li
-            about
+#graphic
+  .container
+    .row
+      .col-xs-12
+        %nav.nav.pull-right
+          %ul.unstyled.inline
+            %li
+              %a{href: "#"}
+                info
+            %li
+              %a{href: "#"}
+                register
+            %li
+              %a{href: "#"}
+                log in
+        .heading
+          %h1
+            invoices
+        .mockup
+#info
+  .container
+    .row
+      .col-sm-4
+        .panel{inview: "slideInLeft"}
+          info
+      .col-sm-4
+        .panel{inview: "fadeIn"}
+          info
+      .col-sm-4
+        .panel{inview: "slideInRight"}
+          info
