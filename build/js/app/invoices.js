@@ -10,7 +10,9 @@ angular.module('invoices.services', []);
 angular.module('invoices.directives', []);
 
 angular.module('invoices')
-  .config(['$compileProvider', function($compileProvider){
+  .config(['$httpProvider', '$compileProvider', function($httpProvider, $compileProvider){
+    $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+    $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|mailto|tel):/);
   }
 ]);

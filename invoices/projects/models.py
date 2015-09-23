@@ -15,7 +15,7 @@ class Project(models.Model):
   project_url = models.URLField(max_length=200, blank=True)
   project_logo = models.ImageField(upload_to=logo_path, blank=True)
   deadline = models.DateTimeField(blank=True, null=True)
-  client_name = models.CharField(max_length=50)
+  client_name = models.CharField(max_length=50, blank=True)
   client_email = models.EmailField(blank=True)
   total_time = models.PositiveIntegerField(default=0)
   hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('0.00'))

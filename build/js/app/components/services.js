@@ -7,7 +7,7 @@ angular.module('invoices.services')
         method: method,
         url: '/api/' + url + ".json",
         data: JSON.stringify(args)
-      }).success(successFn);
+      }).success(successFn).error(errorFn);
     };
 
     return apiSrv;
