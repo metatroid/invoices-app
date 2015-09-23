@@ -12,9 +12,15 @@ $header: #1D2437;
     float: left;
   }
 }
+*:focus{
+  outline: none !important;
+}
 body{
   background-color: #f0f0f0;
   background-image: url(/static/assets/img/old-mathematics.png);
+  &.app{
+    background-image: url(/static/assets/img/grid.gif);
+  }
 }
 #wrapper{
   opacity: 0;
@@ -28,7 +34,7 @@ nav{
   position: relative;
   z-index: 7;
   a{
-    color: lighten(#01acd0, 40%);
+    color: darken(#01acd0, 10%);
     font-size: 16px;
     letter-spacing: .1em;
     font-weight: 300;
@@ -37,9 +43,24 @@ nav{
     display: inline-block;
     transition: color 1.5s ease;
     text-shadow: 0 2px 0 rgba(0, 0, 0, 0.975);
+    text-decoration: none !important;
     &:hover{
       color: lighten(#01acd0, 75%);
       text-decoration: none;
+    }
+    &:focus,
+    &:active{
+      color: darken(#01acd0, 10%);
+      &:hover{
+        color: lighten(#01acd0, 75%);
+      }
+    }
+  }
+  li{
+    &:last-of-type{
+      a{
+        padding-right: 0;
+      }
     }
   }
 }
@@ -66,13 +87,14 @@ nav{
     position: relative;
     z-index: 6;
     h1{
-      color: lighten(#01acd0, 40%);
+      color: darken(#01acd0, 10%);
       letter-spacing: .25em;
       font-variant: small-caps;
-      font-weight: 100;
-      text-shadow: 2px 2px 2px darken(#9eeeff, 50%);
+      font-weight: 700;
+      // text-shadow: 2px 2px 2px darken(#9eeeff, 50%);
       // text-shadow: 2px 2px 2px #00829e, 0px 15px 2px #00829e;
-      @include longshadow();
+      // @include longshadow();
+      text-shadow: 0 -1px 0 rgba(#01acd0, 0.25), 0 1px 1px rgba(darken(#01acd0, 20%), 0.75);
       position: relative;
     }
   }
@@ -82,24 +104,21 @@ nav{
   background-size: 100%;
   height: 650px;
   position: relative;
-  top: -50px;
   z-index: 5;
   opacity: 0;
   transform: translateY(250px);
-  filter: blur(5px);
-  transition: opacity .75s ease, transform 1s ease, filter 2s ease;
+  transition: opacity .75s ease, transform 1s ease;
 }
 .initialized{
   #landing{
     .mockup{
       opacity: 1;
       transform: translateY(0px);
-      filter: blur(0px);
     }
   }
 }
 #info{
-  margin-bottom: 50px;
+  margin-bottom: 250px;
   padding-top: 25px;
   clear: both;
   overflow: hidden;
@@ -152,5 +171,159 @@ nav{
         }
       }
     }
+  }
+}
+
+.overlay{
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0,0,0,0.65);
+  z-index: 9;
+  opacity: 0;
+  pointer-events: none;
+  transition: all .5s ease;
+  .overlay-toggle{
+    position: absolute;
+    right: 5px;
+    top: 2px;
+    color: #333;
+    cursor: pointer;
+  }
+  .overlay-child{
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 333px;
+    height: 180px;
+    background-color: #eaeaea;
+    padding: 0px;
+    overflow: hidden;
+    transition: all .5s ease;
+    .inner-child{
+      border-style: dashed;
+      border-color: #000;
+      border-width: 200px;
+      transition: all 1s ease;
+      width: 100%;
+      height: 100%;
+    }
+    .overlay-header{
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      h2{
+        font-size: 18px;
+        letter-spacing: .2em;
+        color: #0a0a0a;
+        text-align: center;
+        border-bottom: 1px solid;
+        margin: 20px 45px;
+        padding-bottom: 2px;
+      }
+    }
+  }
+  &.active{
+    opacity: 1;
+    pointer-events: all;
+    .overlay-child{
+      opacity: 1;
+      .inner-child{
+        border-width: 0px;
+      }
+    }
+  }
+}
+
+#authentication{
+  .social-options{
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 16px;
+    a{
+      display: block;
+      float: left;
+      width: 33.3%;
+      text-align: center;
+      font-size: 44px;
+      color: #0a0a0a;
+    }
+  }
+}
+
+.app-navigation{
+  a{
+    color: #0a0a0a;
+    text-shadow: none;
+    font-size: 18px;
+    padding: 6px 12px;
+    &:hover{
+      color: #333;
+    }
+  }
+  .drop{
+    .drop-trigger{
+      position: relative;
+      background-color: rgba(255,255,255,0);
+      padding: 0 5px;
+      cursor: pointer;
+      transition: background-color .35s linear;
+      &:hover{
+        background-color: rgba(255,255,255,1);
+        .drop-menu{
+          opacity: 1;
+          min-height: 25px;
+          height: auto;
+        }
+      }
+      .drop-menu{
+        background-color: #fff;
+        position: absolute;
+        text-align: left;
+        min-width: 150px;
+        top: 100%;
+        left: 0;
+        opacity: 0;
+        height: 0;
+        min-height: 0;
+        overflow: hidden;
+        transition: all .5s linear;
+        a{
+          font-size: 9px;
+          padding-left: 7px;
+          font-weight: 700;
+          font-variant: small-caps;
+          span{
+            margin-right: 5px;
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+#app{
+  a.btn{
+    span{
+      margin-right: 4px;
+    }
+  }
+  nav{
+    margin-bottom: 44px;
+  }
+  .app-container{
+    background-image: linear-gradient(to bottom, rgba(255,255,255,1) 0, rgba(255,255,255,0.5) 100%);
+    overflow: hidden;
+    padding: 16px 0 32px;
   }
 }

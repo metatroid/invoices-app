@@ -1,0 +1,14 @@
+#authentication.overlay{ng-class: "{active: showAuthForm == true}"}
+  .overlay-child
+    .inner-child
+      .overlay-header
+        %span.fa.fa-caret-down.overlay-toggle{ng-click: "toggleAuthForm()"}
+        %h2.title
+          create an account
+      .social-options
+        %a.registration-link.facebook{href: "/login/facebook"}
+          %span.fa.fa-facebook
+        %a.registration-link.twitter{href: "/login/twitter"}
+          %span.fa.fa-twitter
+        %a.registration-link.google{href: "/login/google-oauth2"}
+          %span.fa.fa-google-plus-square

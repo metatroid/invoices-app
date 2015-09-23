@@ -7214,9 +7214,14 @@ button.close {
   .inline li {
     float: left; }
 
+*:focus {
+  outline: none !important; }
+
 body {
   background-color: #f0f0f0;
   background-image: url(/static/assets/img/old-mathematics.png); }
+  body.app {
+    background-image: url(/static/assets/img/grid.gif); }
 
 #wrapper {
   opacity: 0;
@@ -7229,7 +7234,7 @@ nav {
   position: relative;
   z-index: 7; }
   nav a {
-    color: #9eeeff;
+    color: #01829d;
     font-size: 16px;
     letter-spacing: .1em;
     font-weight: 300;
@@ -7237,10 +7242,19 @@ nav {
     padding: 20px 24px 8px;
     display: inline-block;
     transition: color 1.5s ease;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.975); }
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.975);
+    text-decoration: none !important; }
     nav a:hover {
       color: white;
       text-decoration: none; }
+    nav a:focus,
+    nav a:active {
+      color: #01829d; }
+      nav a:focus:hover,
+      nav a:active:hover {
+        color: white; }
+  nav li:last-of-type a {
+    padding-right: 0; }
 
 #landing #graphic {
   height: 75vh;
@@ -7253,12 +7267,11 @@ nav {
   position: relative;
   z-index: 6; }
   #landing .heading h1 {
-    color: #9eeeff;
+    color: #01829d;
     letter-spacing: .25em;
     font-variant: small-caps;
-    font-weight: 100;
-    text-shadow: 2px 2px 2px #00829e;
-    text-shadow: 0px 0px 0px #000, 0.1px 1px 0px #000, 0.2px 2px 0px #000, 0.3px 3px 0px #000, 0.4px 4px 0px #000, 0.5px 5px 0px #000, 0.6px 6px 0px #000, 0.7px 7px 0px #000, 0.8px 8px 0px #000, 0.9px 9px 0px #000, 1px 10px 0px #000;
+    font-weight: 700;
+    text-shadow: 0 -1px 0 rgba(1, 172, 208, 0.25), 0 1px 1px rgba(1, 88, 106, 0.75);
     position: relative; }
 
 .mockup {
@@ -7266,24 +7279,20 @@ nav {
   background-size: 100%;
   height: 650px;
   position: relative;
-  top: -50px;
   z-index: 5;
   opacity: 0;
   -webkit-transform: translateY(250px);
           transform: translateY(250px);
-  -webkit-filter: blur(5px);
-          filter: blur(5px);
-  transition: opacity 0.75s ease, -webkit-transform 1s ease, -webkit-filter 2s ease, opacity 0.75s ease, -webkit-transform 1s ease, filter 2s ease; }
+  transition: opacity 0.75s ease, -webkit-transform 1s ease;
+  transition: opacity 0.75s ease, transform 1s ease; }
 
 .initialized #landing .mockup {
   opacity: 1;
   -webkit-transform: translateY(0px);
-          transform: translateY(0px);
-  -webkit-filter: blur(0px);
-          filter: blur(0px); }
+          transform: translateY(0px); }
 
 #info {
-  margin-bottom: 50px;
+  margin-bottom: 250px;
   padding-top: 25px;
   clear: both;
   overflow: hidden; }
@@ -7334,3 +7343,130 @@ nav {
           opacity: 1;
           -webkit-transform: scale(0.1);
                   transform: scale(0.1); }
+
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  z-index: 9;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.5s ease; }
+  .overlay .overlay-toggle {
+    position: absolute;
+    right: 5px;
+    top: 2px;
+    color: #333;
+    cursor: pointer; }
+  .overlay .overlay-child {
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    width: 333px;
+    height: 180px;
+    background-color: #eaeaea;
+    padding: 0px;
+    overflow: hidden;
+    transition: all 0.5s ease; }
+    .overlay .overlay-child .inner-child {
+      border-style: dashed;
+      border-color: #000;
+      border-width: 200px;
+      transition: all 1s ease;
+      width: 100%;
+      height: 100%; }
+    .overlay .overlay-child .overlay-header {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0; }
+      .overlay .overlay-child .overlay-header h2 {
+        font-size: 18px;
+        letter-spacing: .2em;
+        color: #0a0a0a;
+        text-align: center;
+        border-bottom: 1px solid;
+        margin: 20px 45px;
+        padding-bottom: 2px; }
+  .overlay.active {
+    opacity: 1;
+    pointer-events: all; }
+    .overlay.active .overlay-child {
+      opacity: 1; }
+      .overlay.active .overlay-child .inner-child {
+        border-width: 0px; }
+
+#authentication .social-options {
+  overflow: hidden;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  margin-top: 16px; }
+  #authentication .social-options a {
+    display: block;
+    float: left;
+    width: 33.3%;
+    text-align: center;
+    font-size: 44px;
+    color: #0a0a0a; }
+
+.app-navigation a {
+  color: #0a0a0a;
+  text-shadow: none;
+  font-size: 18px;
+  padding: 6px 12px; }
+  .app-navigation a:hover {
+    color: #333; }
+
+.app-navigation .drop .drop-trigger {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0);
+  padding: 0 5px;
+  cursor: pointer;
+  transition: background-color 0.35s linear; }
+  .app-navigation .drop .drop-trigger:hover {
+    background-color: white; }
+    .app-navigation .drop .drop-trigger:hover .drop-menu {
+      opacity: 1;
+      min-height: 25px;
+      height: auto; }
+  .app-navigation .drop .drop-trigger .drop-menu {
+    background-color: #fff;
+    position: absolute;
+    text-align: left;
+    min-width: 150px;
+    top: 100%;
+    left: 0;
+    opacity: 0;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    transition: all 0.5s linear; }
+    .app-navigation .drop .drop-trigger .drop-menu a {
+      font-size: 9px;
+      padding-left: 7px;
+      font-weight: 700;
+      font-variant: small-caps; }
+      .app-navigation .drop .drop-trigger .drop-menu a span {
+        margin-right: 5px;
+        font-size: 12px; }
+
+#app a.btn span {
+  margin-right: 4px; }
+
+#app nav {
+  margin-bottom: 44px; }
+
+#app .app-container {
+  background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
+  overflow: hidden;
+  padding: 16px 0 32px; }

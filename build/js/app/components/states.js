@@ -29,6 +29,10 @@ angular.module('invoices.states', [
         'nav@main': {
           templateUrl: templateDir + '/nav.html',
           controller: 'appCtrl'
+        },
+        'auth@main': {
+          templateUrl: templateDir + '/auth.html',
+          controller: 'appCtrl'
         }
       }
     });

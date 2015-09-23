@@ -10,7 +10,7 @@ cd /vagrant
 sudo pip3 install virtualenv
 virtualenv invenv
 source invenv/bin/activate
-pip3 install django gunicorn psycopg2 djangorestframework markdown django-filter Pillow
+pip3 install django gunicorn psycopg2 djangorestframework markdown django-filter Pillow python-social-auth python-openid
 django-admin.py startproject invoices .
 ./manage.py makemigrations
 ./manage.py migrate

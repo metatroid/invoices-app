@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout as auth_logout
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -156,3 +157,7 @@ class StatementDetail(APIView):
 
 def index_view(request):
   return render(request, 'index.html')
+
+def logout(request):
+  auth_logout(request)
+  return redirect('/')
