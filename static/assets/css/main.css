@@ -7466,6 +7466,27 @@ nav {
 #app nav {
   margin-bottom: 44px; }
 
+#app aside {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #0a0a0a;
+  padding: 25px 0px; }
+  #app aside ul {
+    list-style: none;
+    padding: 0; }
+    #app aside ul li a {
+      display: block;
+      text-align: center;
+      padding: 25px 50px;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 36px;
+      transition: color 0.5s ease; }
+      #app aside ul li a:hover {
+        color: rgba(255, 255, 255, 0.85);
+        text-decoration: none; }
+
 #app .app-container {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
   overflow: hidden;
