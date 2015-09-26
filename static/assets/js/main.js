@@ -33203,11 +33203,16 @@ var smoothScroll = function (element, options) {
   }, 0);
 };
 
+var revealView = function(target){
+  document.querySelector('.view-panel.inview').classList.remove('inview');
+  document.getElementById(target).classList.add('inview');
+};
+
 angular.module('invoices.directives', [])
   .directive('inscroll', ['$window', function($window){
     return {
       restrict: 'A',
-      link: function(scope, element, attrs){
+      link: function($scope, $element, $attrs){
         angular.element($window).bind('scroll', function(){
           var elements = document.querySelectorAll("[inview]");
           for(var i=0;i<elements.length;i++){
@@ -33230,37 +33235,51 @@ angular.module('invoices.directives', [])
   .directive('inview', function(){
     return {
       restrict: 'A',
-      link: function(scope, element, attrs){
-        angular.element(element).on('inview', function(){
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('inview', function(){
           this.classList.add('inview');
         });
-        angular.element(element).on('outview', function(){
+        angular.element($element).on('outview', function(){
           this.classList.remove('inview');
         });
       }
     };
   })
   .directive('inscrollto', function(){
-      return {
-        restrict: 'A',
-        link: function($scope, $elem, $attrs) {
-          var targetElement;
-          
-          $elem.on('click', function(e) {
-            e.preventDefault();
-            this.blur();
-            var targetId = $attrs.inscrollto;
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        var targetElement;
+        
+        $element.on('click', function(e) {
+          e.preventDefault();
+          this.blur();
+          var targetId = $attrs.inscrollto;
 
-            targetElement = document.getElementById(targetId);
-            if ( !targetElement ) return; 
+          targetElement = document.getElementById(targetId);
+          if ( !targetElement ) return; 
 
-            smoothScroll(targetElement, {});
+          smoothScroll(targetElement, {});
 
-            return false;
-          });
-        }
-      };
-    })
+          return false;
+        });
+      }
+    };
+  })
+  .directive('inreveal', function(){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        var target = $attrs.inreveal;
+        angular.element($element).on('click', function(e){
+          e.preventDefault();
+          document.querySelector('a.active').classList.remove('active');
+          this.classList.add('active');
+          revealView(target);
+        });
+      }
+    };
+  })
 ;
 angular.module('invoices.services')
   .factory('apiSrv', ['$http', function($http){

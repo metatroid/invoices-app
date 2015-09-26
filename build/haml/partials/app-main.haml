@@ -1,7 +1,10 @@
-%aside
+%nav.aside
   %ul.sidebar
     %li
-      %a{href: "#"}
+      %a.active{href: "#", inreveal: "projects"}
+        %span.fa.fa-tasks
+    %li
+      %a{href: "#", inreveal: "form"}
         %span.fa.fa-plus-square
     %li
       %a{href: "#"}
@@ -12,48 +15,41 @@
     %li
       %a{href: "#"}
         %span.fa.fa-code-fork
-    %li
-      %a{href: "#"}
-        %span.fa.fa-tasks
-    
-
-.container
-  .row
-    .col-xs-12
-      %nav.app-navigation{ui-view: "nav"}
-  .row
-    .col-xs-10.col-xs-offset-2
-      .app-container
-        .row
-          .col-xs-12
-            .project-additions
-              .form-wrapper.project-form-wrapper
-                %form.form.project-form{ng-submit: "createProject()"}
-                  .form-group
-                    %input.form-control{type: "text", ng-model: "newProject.project_name", placeholder: "project name"}
-                  .form-group
-                    %input.form-control{type: "url", ng-model: "project_url", placeholder: "project_url"}
-                  .form-group
-                    %textarea.form-control{type: "text", ng-model: "project_description", placeholder: "project_description"}
-                  .form-group
-                    %input.form-control{type: "text", ng-model: "client_name", placeholder: "client_name"}
-                  .form-group
-                    %input.form-control{type: "email", ng-model: "client_email", placeholder: "client_email"}
-                  .form-group
-                    %input.form-control{type: "datetime", ng-model: "deadline", placeholder: "deadline"}
-                  .form-group
-                    %input.form-control{type: "number", ng-model: "hourly_rate", placeholder: "hourly_rate"}
-                  .form-group
-                    %input.form-control{type: "number", ng-model: "fixed_rate", placeholder: "fixed_rate"}
-                  .form-group
-                    %input.form-control{type: "file", ng-model: "project_logo", placeholder: "project_logo"}
-                  .form-actions
-                    %ul.errors.text-danger{ng-if: "newProject.error != ''", ng-bind-html: "htmlSafe(newProject.error)"}
-                    %button.btn.btn-default.btn-xs{type: "submit"}
-                      %span.fa.fa-plus-square
-                      Insert Project
-
-        .row{ng-repeat: "project in projects"}
-          .col-xs-12
-            .project-wrapper{id: "project-{{project.id}}"}
+%main.main-app
+  %nav.app-navigation{ui-view: "nav"}
+  #projects.view-panel.inview
+    .container-fluid
+      .row
+        .col-xs-12
+          %ul.project-list
+            %li{ng-repeat: "project in projects"}
               {{project.project_name}}
+  #form.view-panel
+    .container-fluid
+      .row
+        .col-xs-12
+          .form-wrapper.project-form-wrapper
+            %form.form.project-form{ng-submit: "createProject()"}
+              .form-group
+                %input.form-control{type: "text", ng-model: "newProject.project_name", placeholder: "project name"}
+              .form-group
+                %input.form-control{type: "url", ng-model: "project_url", placeholder: "project_url"}
+              .form-group
+                %textarea.form-control{type: "text", ng-model: "project_description", placeholder: "project_description"}
+              .form-group
+                %input.form-control{type: "text", ng-model: "client_name", placeholder: "client_name"}
+              .form-group
+                %input.form-control{type: "email", ng-model: "client_email", placeholder: "client_email"}
+              .form-group
+                %input.form-control{type: "datetime", ng-model: "deadline", placeholder: "deadline"}
+              .form-group
+                %input.form-control{type: "number", ng-model: "hourly_rate", placeholder: "hourly_rate"}
+              .form-group
+                %input.form-control{type: "number", ng-model: "fixed_rate", placeholder: "fixed_rate"}
+              .form-group
+                %input.form-control{type: "file", ng-model: "project_logo", placeholder: "project_logo"}
+              .form-actions
+                %ul.errors.text-danger{ng-if: "newProject.error != ''", ng-bind-html: "htmlSafe(newProject.error)"}
+                %button.btn.btn-default.btn-xs{type: "submit"}
+                  %span.fa.fa-plus-square
+                  Insert Project

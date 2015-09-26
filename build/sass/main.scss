@@ -291,7 +291,7 @@ nav{
         text-align: left;
         min-width: 150px;
         top: 100%;
-        left: 0;
+        right: 0;
         opacity: 0;
         height: 0;
         min-height: 0;
@@ -321,13 +321,15 @@ nav{
   nav{
     margin-bottom: 44px;
   }
-  aside{
+  nav.aside{
+    margin-bottom: 0;
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     background-color: #0a0a0a;
     padding: 25px 0px;
+    width: 140px;
     ul{
       list-style: none;
       padding: 0;
@@ -343,7 +345,23 @@ nav{
             color: rgba(255,255,255,0.85);
             text-decoration: none;
           }
+          &.active{
+            color: rgba(255,255,255,0.85);
+          }
         }
+      }
+    }
+  }
+  main.main-app{
+    .view-panel{
+      position: fixed;
+      left: 140px;
+      right: 0;
+      top: 80px;
+      transform: translateX(-100%);
+      transition: transform .5s ease;
+      &.inview{
+        transform: translateX(0%);
       }
     }
   }

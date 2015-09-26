@@ -7445,7 +7445,7 @@ nav {
     text-align: left;
     min-width: 150px;
     top: 100%;
-    left: 0;
+    right: 0;
     opacity: 0;
     height: 0;
     min-height: 0;
@@ -7466,26 +7466,43 @@ nav {
 #app nav {
   margin-bottom: 44px; }
 
-#app aside {
+#app nav.aside {
+  margin-bottom: 0;
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   background-color: #0a0a0a;
-  padding: 25px 0px; }
-  #app aside ul {
+  padding: 25px 0px;
+  width: 140px; }
+  #app nav.aside ul {
     list-style: none;
     padding: 0; }
-    #app aside ul li a {
+    #app nav.aside ul li a {
       display: block;
       text-align: center;
       padding: 25px 50px;
       color: rgba(255, 255, 255, 0.35);
       font-size: 36px;
       transition: color 0.5s ease; }
-      #app aside ul li a:hover {
+      #app nav.aside ul li a:hover {
         color: rgba(255, 255, 255, 0.85);
         text-decoration: none; }
+      #app nav.aside ul li a.active {
+        color: rgba(255, 255, 255, 0.85); }
+
+#app main.main-app .view-panel {
+  position: fixed;
+  left: 140px;
+  right: 0;
+  top: 80px;
+  -webkit-transform: translateX(-100%);
+          transform: translateX(-100%);
+  transition: -webkit-transform 0.5s ease;
+  transition: transform 0.5s ease; }
+  #app main.main-app .view-panel.inview {
+    -webkit-transform: translateX(0%);
+            transform: translateX(0%); }
 
 #app .app-container {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
