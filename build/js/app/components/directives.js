@@ -52,8 +52,8 @@ var smoothScroll = function (element, options) {
 };
 
 var revealView = function(target){
-  document.querySelector('.view-panel.inview').classList.remove('inview');
-  document.getElementById(target).classList.add('inview');
+  document.querySelector('.view-panel.active').classList.remove('active');
+  document.getElementById(target).classList.add('active');
 };
 
 angular.module('invoices.directives', [])

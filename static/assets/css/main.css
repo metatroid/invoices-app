@@ -7500,11 +7500,25 @@ nav {
           transform: translateX(-100%);
   transition: -webkit-transform 0.5s ease;
   transition: transform 0.5s ease; }
-  #app main.main-app .view-panel.inview {
+  #app main.main-app .view-panel.active {
     -webkit-transform: translateX(0%);
             transform: translateX(0%); }
 
-#app .app-container {
+#app #projects {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
-  overflow: hidden;
-  padding: 16px 0 32px; }
+  overflow: hidden; }
+  #app #projects .project-list {
+    list-style: none;
+    padding: 0;
+    margin: 0; }
+    #app #projects .project-list .project {
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin: 10px 0;
+      background-color: #fff; }
+      #app #projects .project-list .project .project-settings {
+        margin-top: -10px;
+        margin-right: -5px; }
+        #app #projects .project-list .project .project-settings a {
+          color: #333;
+          font-size: 10px; }

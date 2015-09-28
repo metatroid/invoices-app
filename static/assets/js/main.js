@@ -33125,6 +33125,14 @@ angular.module('invoices.controllers', [])
             $scope.newProject.error = data.error;
           } else {
             $scope.newProject.project_name = "";
+            $scope.newProject.project_url = "";
+            $scope.newProject.project_description = "";
+            $scope.newProject.client_name = "";
+            $scope.newProject.client_email = "";
+            $scope.newProject.deadline = "";
+            $scope.newProject.hourly_rate = "";
+            $scope.newProject.fixed_rate = "";
+            $scope.newProject.project_logo = "";
             getProjects();
           }
         },
@@ -33135,15 +33143,42 @@ angular.module('invoices.controllers', [])
       );
     };
     $scope.newProject = {
-      "project_name": ""
+      "project_name": "",
+      "project_url": "",
+      "project_description": "",
+      "client_name": "",
+      "client_email": "",
+      "deadline": "",
+      "hourly_rate": "",
+      "fixed_rate": "",
+      "project_logo": ""
     };
     $scope.createProject = function(){
       $scope.newProject.error = "";
       var projectData = {
         "user": $scope.user.id,
-        "project_name": $scope.newProject.project_name
+        "project_name": $scope.newProject.project_name,
+        "project_url": $scope.newProject.project_url,
+        "project_description": $scope.newProject.project_description,
+        "client_name": $scope.newProject.client_name,
+        "client_email": $scope.newProject.client_email,
+        "deadline": $scope.newProject.deadline,
+        "hourly_rate": $scope.newProject.hourly_rate,
+        "fixed_rate": $scope.newProject.fixed_rate,
+        "project_logo": $scope.newProject.project_logo
       };
       addProject(projectData);
+    };
+    $scope.deleteProject = function(id){
+      apiSrv.request('DELETE', 'project/'+id, {},
+       function(data){
+        $log.info(data);
+        getProjects();
+       },
+       function(err){
+        $log.error(err);
+       }
+      );
     };
     if($scope.user){
       getProjects();
@@ -33204,8 +33239,8 @@ var smoothScroll = function (element, options) {
 };
 
 var revealView = function(target){
-  document.querySelector('.view-panel.inview').classList.remove('inview');
-  document.getElementById(target).classList.add('inview');
+  document.querySelector('.view-panel.active').classList.remove('active');
+  document.getElementById(target).classList.add('active');
 };
 
 angular.module('invoices.directives', [])

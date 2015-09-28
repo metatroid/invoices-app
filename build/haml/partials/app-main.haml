@@ -17,13 +17,27 @@
         %span.fa.fa-code-fork
 %main.main-app
   %nav.app-navigation{ui-view: "nav"}
-  #projects.view-panel.inview
+  #projects.view-panel.active
     .container-fluid
       .row
         .col-xs-12
           %ul.project-list
-            %li{ng-repeat: "project in projects"}
-              {{project.project_name}}
+            %li.project{ng-repeat: "project in projects"}
+              .project-wrapper
+                .project-icon
+                  {{project.project_logo}}
+                .project-info
+                  .pull-right.project-settings
+                    %ul.unstyled.inline
+                      %li
+                        %a.delete{href: "#", ng-click: "deleteProject(project.id)"}
+                          %span.fa.fa-remove
+                  .project-name
+                    {{project.project_name}}
+                  .project-client
+                    {{project.client_name}}
+                  .project-rate
+                    Rate: {{project.hourly_rate}}
   #form.view-panel
     .container-fluid
       .row

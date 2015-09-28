@@ -360,14 +360,32 @@ nav{
       top: 80px;
       transform: translateX(-100%);
       transition: transform .5s ease;
-      &.inview{
+      &.active{
         transform: translateX(0%);
       }
     }
   }
-  .app-container{
+  #projects{
     background-image: linear-gradient(to bottom, rgba(255,255,255,1) 0, rgba(255,255,255,0.5) 100%);
     overflow: hidden;
-    padding: 16px 0 32px;
+    .project-list{
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      .project{
+        padding: 10px;
+        border: 1px solid #ddd;
+        margin: 10px 0;
+        background-color: #fff;
+        .project-settings{
+          margin-top: -10px;
+          margin-right: -5px;
+          a{
+            color: #333;
+            font-size: 10px;
+          }
+        }
+      }
+    }
   }
 }
