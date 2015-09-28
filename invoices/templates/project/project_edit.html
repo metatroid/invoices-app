@@ -1,0 +1,5 @@
+<form method="POST" class="project-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-default btn-xs">Save</button>
+</form>

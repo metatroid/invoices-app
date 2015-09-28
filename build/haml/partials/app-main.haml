@@ -4,9 +4,6 @@
       %a.active{href: "#", inreveal: "projects"}
         %span.fa.fa-tasks
     %li
-      %a{href: "#", inreveal: "form"}
-        %span.fa.fa-plus-square
-    %li
       %a{href: "#"}
         %span.fa.fa-cog
     %li
@@ -15,55 +12,34 @@
     %li
       %a{href: "#"}
         %span.fa.fa-code-fork
+  .app-actions
+    %a{href: "#", ng-click: "showNewProjectForm($event)"}
+      %span.fa.fa-plus-square
+      New Project
 %main.main-app
-  %nav.app-navigation{ui-view: "nav"}
+  %md-toolbar
+    %nav.app-navigation{ui-view: "nav"}
   #projects.view-panel.active
-    .container-fluid
-      .row
-        .col-xs-12
-          %ul.project-list
-            %li.project{ng-repeat: "project in projects"}
-              .project-wrapper
-                .project-icon
-                  {{project.project_logo}}
-                .project-info
-                  .pull-right.project-settings
-                    %ul.unstyled.inline
-                      %li
-                        %a.delete{href: "#", ng-click: "deleteProject(project.id)"}
-                          %span.fa.fa-remove
-                  .project-name
-                    {{project.project_name}}
-                  .project-client
-                    {{project.client_name}}
-                  .project-rate
-                    Rate: {{project.hourly_rate}}
-  #form.view-panel
-    .container-fluid
-      .row
-        .col-xs-12
-          .form-wrapper.project-form-wrapper
-            %form.form.project-form{ng-submit: "createProject()"}
-              .form-group
-                %input.form-control{type: "text", ng-model: "newProject.project_name", placeholder: "project name"}
-              .form-group
-                %input.form-control{type: "url", ng-model: "project_url", placeholder: "project_url"}
-              .form-group
-                %textarea.form-control{type: "text", ng-model: "project_description", placeholder: "project_description"}
-              .form-group
-                %input.form-control{type: "text", ng-model: "client_name", placeholder: "client_name"}
-              .form-group
-                %input.form-control{type: "email", ng-model: "client_email", placeholder: "client_email"}
-              .form-group
-                %input.form-control{type: "datetime", ng-model: "deadline", placeholder: "deadline"}
-              .form-group
-                %input.form-control{type: "number", ng-model: "hourly_rate", placeholder: "hourly_rate"}
-              .form-group
-                %input.form-control{type: "number", ng-model: "fixed_rate", placeholder: "fixed_rate"}
-              .form-group
-                %input.form-control{type: "file", ng-model: "project_logo", placeholder: "project_logo"}
-              .form-actions
-                %ul.errors.text-danger{ng-if: "newProject.error != ''", ng-bind-html: "htmlSafe(newProject.error)"}
-                %button.btn.btn-default.btn-xs{type: "submit"}
-                  %span.fa.fa-plus-square
-                  Insert Project
+    %md-content
+      %md-list.project-list
+        %md-list-item.project{ng-repeat: "project in projects"}
+          %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}"}
+          .md-list-item-text{layout: "column"}
+            .pull-right.project-settings
+              %ul.unstyled.inline
+                %li
+                  %a.delete{href: "#", ng-click: "deleteProject(project.id)"}
+                    %span.fa.fa-remove
+            %h2
+              {{project.project_name}}
+            %h3
+              {{project.client_name}}
+            %ul.unstyled
+              %li
+                Rate: {{project.hourly_rate}}
+              %li
+                Time:
+              %li
+                Balance:
+
+

@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'social.apps.django_app.default',
+    'djangular',
     'invoices.projects',
     'invoices.intervals',
     'invoices.statements'
@@ -66,7 +67,7 @@ ROOT_URLCONF = 'invoices.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'angular')],
+        'DIRS': [os.path.join(BASE_DIR, 'angular'), os.path.join(BASE_DIR, 'invoices/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

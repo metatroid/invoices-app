@@ -1,6 +1,7 @@
 @import url(https://fonts.googleapis.com/css?family=Lato:400,100,100italic,300,300italic,400italic,700,700italic,900,900italic|Oswald:400,700);
 @import 'libs/bootstrap/bootstrap';
 @import 'libs/font-awesome/font-awesome';
+@import 'libs/angular-material';
 $header: #1D2437;
 .unstyled{
   list-style: none;
@@ -321,6 +322,51 @@ nav{
   nav{
     margin-bottom: 44px;
   }
+  #newProjectDialog{
+    md-dialog-content{
+      padding-top: 0;
+    }
+    md-input-container{
+      min-width: 33%;
+      &.half{
+        min-width: 50%;
+      }
+    }
+    md-datepicker{
+      padding-top: 15px;
+    }
+    .file-upload-wrapper{
+      position: relative;
+      background-color: #808080;
+      padding: 6px 12px;
+      width: 125px;
+      text-align: center;
+      cursor: pointer;
+      span{
+        color: #fff;
+        cursor: pointer;
+      }
+      label{
+        top: auto;
+        cursor: pointer;
+      }
+    }
+    input#project_logo{
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+    }
+    button[type=submit]{
+      font-size: 10px;
+      padding: 0 12px;
+    }
+  }
+  .project-form-wrapper{
+    width: 800px;
+  }
   nav.aside{
     margin-bottom: 0;
     position: fixed;
@@ -352,7 +398,19 @@ nav{
       }
     }
   }
+  .app-actions{
+    a{
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      span{
+        margin-right: 5px;
+      }
+    }
+  }
   main.main-app{
+    position: relative;
+    left: 140px;
+    width: calc(100% - 140px);
     .view-panel{
       position: fixed;
       left: 140px;

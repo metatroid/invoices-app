@@ -1,4 +1,5 @@
 angular.module('invoices', [
+               'ngMaterial',
                'invoices.controllers',
                'invoices.states',
                'invoices.services',
@@ -10,9 +11,16 @@ angular.module('invoices.services', []);
 angular.module('invoices.directives', []);
 
 angular.module('invoices')
-  .config(['$httpProvider', '$compileProvider', function($httpProvider, $compileProvider){
+  .config(['$httpProvider', '$compileProvider', '$mdThemingProvider', function($httpProvider, $compileProvider, $mdThemingProvider){
     $httpProvider.defaults.xsrfCookieName = 'csrftoken';
     $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+    $httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|mailto|tel):/);
+    $mdThemingProvider.theme('default')
+      .primaryPalette('grey')
+      .accentPalette('blue-grey');
+    $mdThemingProvider.theme('docs-dark', 'default')
+      .primaryPalette('yellow')
+      .dark();
   }
 ]);

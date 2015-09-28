@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "angular": "~1.4.5",
+    "angular-material": "~0.11.1",
     "angular-ui-router": "~0.2.15",
     "bootstrap-sass": "~3.3.5",
     "components-font-awesome": "~4.4.0"

@@ -128,4 +128,22 @@ angular.module('invoices.directives', [])
       }
     };
   })
+  .directive('infilechange', function(){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('change', function(e){
+          var filename = '';
+          if(this.files && this.files[0]){
+            filename = e.target.value.split('\\').pop().length > 14 ? e.target.value.split('\\').pop().slice(0,11)+"&hellip;" : e.target.value.split('\\').pop();
+          }
+          if(filename){
+            this.nextSibling.querySelector('span.label').innerHTML = filename;
+          } else {
+            this.nextSibling.querySelector('span.label').innerHTML = 'Project Logo';
+          }
+        });
+      }
+    }
+  })
 ;

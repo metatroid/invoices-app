@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
+from invoices.projects.forms import ProjectForm
 
 class UserStatus(APIView):
   permission_classes = (AllowAny,)
@@ -54,7 +55,7 @@ class ProjectList(APIView):
   def post(self, request, format=None):
     serializer = ProjectSerializer(data=request.data)
     if serializer.is_valid():
-      serializer.save()
+      serializer.save(user=request.user)
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -154,6 +155,10 @@ class StatementDetail(APIView):
     statement = self.get_object(project_id, pk, request)
     statement.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+def project_new(request):
+  form = ProjectForm()
+  return render(request, 'project/project_edit.html', {'form': form})
 
 def index_view(request):
   return render(request, 'index.html')
