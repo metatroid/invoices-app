@@ -60042,7 +60042,7 @@ angular.module('invoices.controllers', [])
       }
     );
   }])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', function($scope, $log, $sce, apiSrv, $mdDialog, djResource){
+  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', '$timeout', function($scope, $log, $sce, apiSrv, $mdDialog, djResource, $timeout){
     // $scope.user = {};
     if(!$scope.user){
       apiSrv.request('GET', 'user', {}, 
@@ -60091,15 +60091,15 @@ angular.module('invoices.controllers', [])
     //   }
     // );
     var Project = djResource('api/projects/:id', {'id': "@id"});
-    $scope.projects = Project.query();
+    // $scope.projects = Project.query();
+    updateProjectList();
     $scope.newProject = new Project();
     $scope.createProject = function(){
       apiSrv.request('POST', 'projects/', $scope.newProject,
         function(data){
           $scope.cancel();
           clearProjectFormFields();
-          $scope.projects.push(data);
-          // updateProjectList();
+          updateProjectList();
         },
         function(err){
           $log.error(err);
@@ -60111,16 +60111,28 @@ angular.module('invoices.controllers', [])
       //   updateProjectList();
       // });
     };
-    $scope.deleteProject = function(id){
-      apiSrv.request('DELETE', 'projects/'+id, {},
-       function(data){
-        $log.info(data);
-        $scope.projects = Project.query();
-       },
-       function(err){
-        $log.error(err);
-       }
-      );
+    $scope.deleteProject = function(ev, id){
+      var confirm = $mdDialog.confirm()
+          .title('You are about to delete this project.')
+          .content('This action cannot be undone. Are you sure you wish to proceed?')
+          .ariaLabel('Confirm delete')
+          .targetEvent(ev)
+          .ok('Delete this project')
+          .cancel('Cancel');
+      var id = id;
+      $mdDialog.show(confirm).then(function() {
+        apiSrv.request('DELETE', 'projects/'+id, {},
+          function(data){
+            $log.info(data);
+            $scope.projects = Project.query();
+          },
+          function(err){
+            $log.error(err);
+          }
+        );
+      }, function() {
+        $log.info('cancelled delete');
+      });
     };
 
     $scope.timeEvent = "startTimer";
