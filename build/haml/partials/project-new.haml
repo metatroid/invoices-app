@@ -4,7 +4,7 @@
       %h2
         create project
       %span{flex: "flex"}
-      %md-button.md-icon-button{ng-click: "cancelProject()"}
+      %md-button.md-icon-button{ng-click: "cancel()", aria-label: "Cancel"}
         %span.fa.fa-caret-down
   %md-dialog-content
     .form-wrapper.project-form-wrapper
@@ -45,12 +45,13 @@
         %md-content{layout-padding: "layout-padding"}
           %md-input-container
             .file-upload-wrapper
-              %input{type: "file", ng-model: "newProject.project_logo", id: "project_logo", infilechange: "infilechange"}
+              %input{type: "file", aria-label: "Project logo upload", ng-model: "newProject.project_logo", id: "project_logo", infilechange: "infilechange"}
               %label.md-no-float{for: "project_logo"}
                 %span.fa.fa-upload
                 %span.label
                   Project Logo
-        %md-content
+        %input{type: "hidden", ng-model: "newProject.user", ng-value: "user.id", value: "{{user.id}}", name: "user", required: "true"}
+        .md-actions{layout: "row"}
           %ul.errors.text-danger{ng-if: "newProject.error != ''", ng-bind-html: "htmlSafe(newProject.error)"}
-          %md-button{type: "submit"}
+          %md-button.md-primary{type: "submit"}
             insert project

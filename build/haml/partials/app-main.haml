@@ -22,24 +22,56 @@
   #projects.view-panel.active
     %md-content
       %md-list.project-list
-        %md-list-item.project{ng-repeat: "project in projects"}
-          %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}"}
-          .md-list-item-text{layout: "column"}
-            .pull-right.project-settings
-              %ul.unstyled.inline
-                %li
-                  %a.delete{href: "#", ng-click: "deleteProject(project.id)"}
-                    %span.fa.fa-remove
+        %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}"}
+          %md-fab-toolbar{md-open: "closed", md-direction: "left", count: "4"}
+            %md-fab-trigger
+              %md-button.md-fab{aria-label: "menu"}
+                %md-icon
+                  %span.fa.fa-cogs
+            %md-toolbar
+              %md-fab-actions.md-toolbar-tools
+                %md-button.md-icon-button{aria-label: "remove", ng-click: "deleteProject(project.id)"}
+                  %span.fa.fa-remove
+                %md-button.md-icon-button{aria-label: "invoice"}
+                  %span.fa.fa-sticky-note
+                %md-button.md-icon-button{aria-label: "settings"}
+                  %span.fa.fa-cog
+          %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}
+          %span.project-icon.fa.fa-folder{ng-if: "!project.project_logo"}
+          .md-list-item-text.project-info-wrapper{layout: "column"}
             %h2
               {{project.project_name}}
-            %h3
+            %h4
               {{project.client_name}}
             %ul.unstyled
               %li
-                Rate: {{project.hourly_rate}}
+                %strong
+                  Rate: 
+                {{project.hourly_rate | currency}}
               %li
-                Time:
+                %strong
+                  Time: 
+                {{project.total_time | secondsToTimeString}}
               %li
-                Balance:
-
-
+                %strong
+                  Balance: 
+                {{project.balance | currency}}
+          .md-list-item-text.timer-wrapper{layout: "column"}
+            .timer
+              %md-button.counter{incounting: true, data-project: "{{project.id}}"}
+                00:00:00
+              %a.timer-control.timer-pause{href: "#", ng-show: "timers.indexOf(project.id) != -1", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+                %span.fa.fa-pause
+                pause
+              %a.timer-control.timer-resume{href: "#", ng-show: "timers.indexOf(project.id) == -1", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+                %span.fa.fa-play-circle
+                start
+              .interval-form-wrapper
+                %form{ng-submit: "saveInterval(project.id)"}
+                  %md-content
+                    %md-input-container
+                      %label
+                        Description
+                      %input{ng-model: "intervalObj.description", required: "required"}
+                    %md-button.md-raised.md-primary{type: "submit"}
+                      save time interval

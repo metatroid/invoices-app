@@ -33056,6 +33056,447 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
+'use strict';
+
+//Portions of this file:
+//Copyright (c) 2010-2012 Google, Inc. http://angularjs.org
+//Those portions modified, used, or copied under permissions granted by the MIT license. See:
+// https://raw.github.com/angular/angular.js/9480136d9f062ec4b8df0a35914b48c0d61e0002/LICENSE
+
+/**
+ * @ngdoc overview
+ * @name djangoRESTResources
+ * @description
+ */
+
+/**
+ * @ngdoc object
+ * @name djangoRESTResources.djResource
+ * @requires $http
+ *
+ * @description
+ * A factory for generating classes that interact with a Django REST Framework backend.
+ *
+ * Identical in operation to AngularJS' ngResource module's $resource object except for the following:
+ *  - If an isArray=True request receives a JSON _object_ containing a `count` field (instead of a JS array), assume
+ *  that the REST endpoint has `paginate_by` set. The results are then streamed a page at a time into the promise object
+ *  and any success callbacks are deferred until the last page returns successfully.
+ *  - URLs are assumed to have the trailing slashes, as is the Django way of doing things.
+ *
+ * # Installation
+ * Include `angular-django-rest-resource.js`
+ *
+ * Load the module:
+ *
+ *        angular.module('app', ['djangoRESTResources']);
+ *
+ * now you inject djResource into any of your Angular things.
+ *
+ * @param {string} url A parametrized URL template with parameters prefixed by `:` as in
+ *   `/user/:username`. If you are using a URL with a port number (e.g.
+ *   `http://example.com:8080/api`), it will be respected.
+ *
+ * @param {Object=} paramDefaults Default values for `url` parameters. These can be overridden in
+ *   `actions` methods. If any of the parameter value is a function, it will be executed every time
+ *   when a param value needs to be obtained for a request (unless the param was overridden).
+ *
+ *   Each key value in the parameter object is first bound to url template if present and then any
+ *   excess keys are appended to the url search query after the `?`.
+ *
+ *   Given a template `/path/:verb` and parameter `{verb:'greet', salutation:'Hello'}` results in
+ *   URL `/path/greet?salutation=Hello`.
+ *
+ *   If the parameter value is prefixed with `@` then the value of that parameter is extracted from
+ *   the data object (useful for non-GET operations).
+ *
+ * @param {Object.<Object>=} actions Hash with declaration of custom action that should extend the
+ *   default set of resource actions. The declaration should be created in the format of $http.config
+ *
+ *       {action1: {method:?, params:?, isArray:?, headers:?, ...},
+ *        action2: {method:?, params:?, isArray:?, headers:?, ...},
+ *        ...}
+ *
+ *   Where:
+ *
+ *   - **`action`** – {string} – The name of action. This name becomes the name of the method on your
+ *     resource object.
+ *   - **`method`** – {string} – HTTP request method. Valid methods are: `GET`, `POST`, `PUT`, `DELETE`,
+ *     and `JSONP`.
+ *   - **`params`** – {Object=} – Optional set of pre-bound parameters for this action. If any of the
+ *     parameter value is a function, it will be executed every time when a param value needs to be
+ *     obtained for a request (unless the param was overridden).
+ *   - **`url`** – {string} – action specific `url` override. The url templating is supported just like
+ *     for the resource-level urls.
+ *   - **`isArray`** – {boolean=} – If true then the returned object for this action is an array, see
+ *     `returns` section.
+ *   - **`transformRequest`** – `{function(data, headersGetter)|Array.<function(data, headersGetter)>}` –
+ *     transform function or an array of such functions. The transform function takes the http
+ *     request body and headers and returns its transformed (typically serialized) version.
+ *   - **`transformResponse`** – `{function(data, headersGetter)|Array.<function(data, headersGetter)>}` –
+ *     transform function or an array of such functions. The transform function takes the http
+ *     response body and headers and returns its transformed (typically deserialized) version.
+ *   - **`cache`** – `{boolean|Cache}` – If true, a default $http cache will be used to cache the
+ *     GET request, otherwise if a cache instance built with
+ *     {@link http://docs.angularjs.org/api/ng.$cacheFactory $cacheFactory}, this cache will be used for
+ *     caching.
+ *   - **`timeout`** – `{number}` – timeout in milliseconds.
+ *   - **`withCredentials`** - `{boolean}` - whether to to set the `withCredentials` flag on the
+ *     XHR object. See {@link https://developer.mozilla.org/en/http_access_control#section_5
+ *     requests with credentials} for more information.
+ *   - **`responseType`** - `{string}` - see
+ *   {@link https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#responseType requestType}.
+ *
+ * @returns {Object} A resource "class" object with methods for the default set of resource actions
+ *   optionally extended with custom `actions`. The default set contains these actions:
+ *
+ *       { 'get':    {method:'GET'},
+ *         'save':   {method:'POST', method_if_field_has_value:['id', 'PUT']},
+ *         'update': {method:'PUT'},
+ *         'query':  {method:'GET', isArray:true},
+ *         'remove': {method:'DELETE'},
+ *         'delete': {method:'DELETE'} };
+ *
+ *   Calling these methods invoke an {@link http://docs.angularjs.org/api/ng.$http $http} with the specified http
+ *   method, destination and parameters. When the data is returned from the server then the object is an
+ *   instance of the resource class. The actions `save`, `remove` and `delete` are available on it
+ *   as  methods with the `$` prefix. This allows you to easily perform CRUD operations (create,
+ *   read, update, delete) on server-side data like this:
+ *   <pre>
+        var User = djResource('/user/:userId', {userId:'@id'});
+        var user = User.get({userId:123}, function() {
+          user.abc = true;
+          user.$save();
+        });
+     </pre>
+ *
+ *   Invoking a djResource object method immediately returns an empty reference (object or array depending
+ *   on `isArray`). Once the data is returned from the server the existing reference is populated with the actual data.
+ *
+ *   The action methods on the class object or instance object can be invoked with the following
+ *   parameters:
+ *
+ *   - HTTP GET "class" actions: `DjangoRESTResource.action([parameters], [success], [error])`
+ *   - non-GET "class" actions: `DjangoRESTResource.action([parameters], postData, [success], [error])`
+ *   - non-GET instance actions:  `instance.$action([parameters], [success], [error])`
+ *
+ *
+ *   The DjangoRESTResource instances and collection have these additional properties:
+ *
+ *   - `$then`: the `then` method of a {@link http://docs.angularjs.org/api/ng.$q promise} derived from the underlying
+ *     {@link http://docs.angularjs.org/api/ng.$http $http} call.
+ *
+ *     The success callback for the `$then` method will be resolved if the underlying `$http` requests
+ *     succeeds.
+ *
+ *     The success callback is called with a single object which is the
+ *     {@link http://docs.angularjs.org/api/ng.$http http response}
+ *     object extended with a new property `resource`. This `resource` property is a reference to the
+ *     result of the resource action — resource object or array of resources.
+ *
+ *     The error callback is called with the {@link http://docs.angularjs.org/api/ng.$http http response} object when
+ *     an http error occurs.
+ *
+ *   - `$resolved`: true if the promise has been resolved (either with success or rejection);
+ *     Knowing if the DjangoRESTResource has been resolved is useful in data-binding.
+ */
+angular.module('djangoRESTResources', ['ng']).
+  factory('djResource', ['$http', '$parse', function($http, $parse) {
+    var DEFAULT_ACTIONS = {
+      'get':    {method:'GET'},
+      'save':   {method:'POST', method_if_field_has_value: ['id','PUT']},
+      'update': {method:'PUT'},
+      'query':  {method:'GET', isArray:true},
+      'remove': {method:'DELETE'},
+      'delete': {method:'DELETE'}
+    };
+    var noop = angular.noop,
+        forEach = angular.forEach,
+        extend = angular.extend,
+        copy = angular.copy,
+        isFunction = angular.isFunction,
+        getter = function(obj, path) {
+          return $parse(path)(obj);
+        };
+
+    /**
+     * We need our custom method because encodeURIComponent is too aggressive and doesn't follow
+     * http://www.ietf.org/rfc/rfc3986.txt with regards to the character set (pchar) allowed in path
+     * segments:
+     *    segment       = *pchar
+     *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+     *    pct-encoded   = "%" HEXDIG HEXDIG
+     *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+     *                     / "*" / "+" / "," / ";" / "="
+     */
+    function encodeUriSegment(val) {
+      return encodeUriQuery(val, true).
+        replace(/%26/gi, '&').
+        replace(/%3D/gi, '=').
+        replace(/%2B/gi, '+');
+    }
+
+
+    /**
+     * This method is intended for encoding *key* or *value* parts of query component. We need a custom
+     * method because encodeURIComponent is too aggressive and encodes stuff that doesn't have to be
+     * encoded per http://tools.ietf.org/html/rfc3986:
+     *    query       = *( pchar / "/" / "?" )
+     *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+     *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *    pct-encoded   = "%" HEXDIG HEXDIG
+     *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+     *                     / "*" / "+" / "," / ";" / "="
+     */
+    function encodeUriQuery(val, pctEncodeSpaces) {
+      return encodeURIComponent(val).
+        replace(/%40/gi, '@').
+        replace(/%3A/gi, ':').
+        replace(/%24/g, '$').
+        replace(/%2C/gi, ',').
+        replace(/%20/g, (pctEncodeSpaces ? '%20' : '+'));
+    }
+
+    function Route(template, defaults) {
+      this.template = template = template + '#';
+      this.defaults = defaults || {};
+      this.urlParams = {};
+    }
+
+    Route.prototype = {
+      setUrlParams: function(config, params, actionUrl) {
+        var self = this,
+            url = actionUrl || self.template,
+            val,
+            encodedVal;
+
+        var urlParams = self.urlParams = {};
+        forEach(url.split(/\W/), function(param){
+          if (!(new RegExp("^\\d+$").test(param)) && param && (new RegExp("(^|[^\\\\]):" + param + "(\\W|$)").test(url))) {
+              urlParams[param] = true;
+          }
+        });
+        url = url.replace(/\\:/g, ':');
+
+        params = params || {};
+        forEach(self.urlParams, function(_, urlParam){
+          val = params.hasOwnProperty(urlParam) ? params[urlParam] : self.defaults[urlParam];
+          if (angular.isDefined(val) && val !== null) {
+            encodedVal = encodeUriSegment(val);
+            url = url.replace(new RegExp(":" + urlParam + "(\\W|$)", "g"), encodedVal + "$1");
+          } else {
+            url = url.replace(new RegExp("(\/?):" + urlParam + "(\\W|$)", "g"), function(match,
+                leadingSlashes, tail) {
+              if (tail.charAt(0) == '/') {
+                return tail;
+              } else {
+                return leadingSlashes + tail;
+              }
+            });
+          }
+        });
+
+        // set the url
+        config.url = url.replace(/#$/, '');
+
+        // set params - delegate param encoding to $http
+        forEach(params, function(value, key){
+          if (!self.urlParams[key]) {
+            config.params = config.params || {};
+            config.params[key] = value;
+          }
+        });
+      }
+    };
+
+
+    function DjangoRESTResourceFactory(url, paramDefaults, actions) {
+      var route = new Route(url);
+
+      actions = extend({}, DEFAULT_ACTIONS, actions);
+
+      function extractParams(data, actionParams){
+        var ids = {};
+        actionParams = extend({}, paramDefaults, actionParams);
+        forEach(actionParams, function(value, key){
+          if (isFunction(value)) { value = value(); }
+          ids[key] = value.charAt && value.charAt(0) == '@' ? getter(data, value.substr(1)) : value;
+        });
+        return ids;
+      }
+
+      function DjangoRESTResource(value){
+        copy(value || {}, this);
+      }
+
+      forEach(actions, function(action, name) {
+        action.method = angular.uppercase(action.method);
+        var hasBody = action.method == 'POST' || action.method == 'PUT' || action.method == 'PATCH';
+        DjangoRESTResource[name] = function(a1, a2, a3, a4) {
+          var params = {};
+          var data;
+          var success = noop;
+          var error = null;
+          var promise;
+
+          switch(arguments.length) {
+          case 4:
+            error = a4;
+            success = a3;
+            //fallthrough
+          case 3:
+          case 2:
+            if (isFunction(a2)) {
+              if (isFunction(a1)) {
+                success = a1;
+                error = a2;
+                break;
+              }
+
+              success = a2;
+              error = a3;
+              //fallthrough
+            } else {
+              params = a1;
+              data = a2;
+              success = a3;
+              break;
+            }
+          case 1:
+            if (isFunction(a1)) success = a1;
+            else if (hasBody) data = a1;
+            else params = a1;
+            break;
+          case 0: break;
+          default:
+            throw "Expected between 0-4 arguments [params, data, success, error], got " +
+              arguments.length + " arguments.";
+          }
+
+          var value = this instanceof DjangoRESTResource ? this : (action.isArray ? [] : new DjangoRESTResource(data));
+          var httpConfig = {},
+              promise;
+
+          forEach(action, function(value, key) {
+            if (key == 'method' && action.hasOwnProperty('method_if_field_has_value')) {
+              // Check if the action's HTTP method is dependent on a field holding a value ('id' for example)
+              var field = action.method_if_field_has_value[0];
+              var fieldDependentMethod = action.method_if_field_has_value[1];
+              httpConfig.method =
+                (data.hasOwnProperty(field) && data[field] !== null) ? fieldDependentMethod : action.method;
+            } else if (key != 'params' && key != 'isArray' ) {
+              httpConfig[key] = copy(value);
+            }
+          });
+          httpConfig.data = data;
+          route.setUrlParams(httpConfig, extend({}, extractParams(data, action.params || {}), params), action.url);
+
+          function markResolved() { value.$resolved = true; }
+
+          promise = $http(httpConfig);
+          value.$resolved = false;
+
+          promise.then(markResolved, markResolved);
+          value.$then = promise.then(function(response) {
+            // Success wrapper
+
+            var data = response.data;
+            var then = value.$then, resolved = value.$resolved;
+
+            var deferSuccess = false;
+
+            if (data) {
+              if (action.isArray) {
+                value.length = 0;
+
+                // If it's an object with count and results, it's a pagination container, not an array:
+                if (data.hasOwnProperty("count") && data.hasOwnProperty("results")) {
+                  // Don't call success callback until the last page has been accepted:
+                  deferSuccess = true;
+
+                  var paginator = function recursivePaginator(data) {
+                    // If there is a next page, go ahead and request it before parsing our results. Less wasted time.
+                    if (data.next !== null) {
+                      var next_config = copy(httpConfig);
+                      next_config.params = {};
+                      next_config.url = data.next;
+                      $http(next_config).success(function(next_data) { recursivePaginator(next_data); }).error(error);
+                    }
+                    // Ok, now load this page's results:
+                    forEach(data.results, function(item) {
+                      value.push(new DjangoRESTResource(item));
+                    });
+                    if (data.next == null) {
+                      // We've reached the last page, call the original success callback with the concatenated pages of data.
+                      (success||noop)(value, response.headers);
+                    }
+                  };
+                  paginator(data);
+                } else {
+                  //Not paginated, push into array as normal.
+                  forEach(data, function(item) {
+                    value.push(new DjangoRESTResource(item));
+                  });
+                }
+              } else {
+                // Not an isArray action
+                copy(data, value);
+
+                // Copy operation destroys value's original properties, so restore some of the old ones:
+                value.$then = then;
+                value.$resolved = resolved;
+                value.$promise = promise;
+              }
+            }
+
+            if (!deferSuccess) {
+              (success||noop)(value, response.headers);
+            }
+
+            response.resource = value;
+            return response;
+          }, error).then;
+
+          return value;
+        };
+
+
+        DjangoRESTResource.prototype['$' + name] = function(a1, a2, a3) {
+          var params = extractParams(this),
+              success = noop,
+              error;
+
+          switch(arguments.length) {
+          case 3: params = a1; success = a2; error = a3; break;
+          case 2:
+          case 1:
+            if (isFunction(a1)) {
+              success = a1;
+              error = a2;
+            } else {
+              params = a1;
+              success = a2 || noop;
+            }
+          case 0: break;
+          default:
+            throw "Expected between 1-3 arguments [params, success, error], got " +
+              arguments.length + " arguments.";
+          }
+          var data = hasBody ? this : undefined;
+          return DjangoRESTResource[name].call(this, params, data, success, error);
+        };
+      });
+
+      DjangoRESTResource.bind = function(additionalParamDefaults){
+        return DjangoRESTResourceFactory(url, extend({}, paramDefaults, additionalParamDefaults), actions);
+      };
+
+      return DjangoRESTResource;
+    }
+
+    return DjangoRESTResourceFactory;
+  }]);
+
 /**
  * @license AngularJS v1.4.6
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -59558,12 +59999,15 @@ angular.module('invoices', [
                'invoices.controllers',
                'invoices.states',
                'invoices.services',
-               'invoices.directives'
+               'invoices.directives',
+               'invoices.filters',
+               'djangoRESTResources'
 ]);
 
 angular.module('invoices.states', []);
 angular.module('invoices.services', []);
 angular.module('invoices.directives', []);
+angular.module('invoices.filters', []);
 
 angular.module('invoices')
   .config(['$httpProvider', '$compileProvider', '$mdThemingProvider', function($httpProvider, $compileProvider, $mdThemingProvider){
@@ -59598,20 +60042,162 @@ angular.module('invoices.controllers', [])
       }
     );
   }])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', function($scope, $log, $sce, apiSrv, $mdDialog){
-    $scope.user = {};
-    apiSrv.request('GET', 'user', {}, 
-      function(user){
-        $scope.user = user;
-        $scope.ready = true;
-        if(user){
-          $scope.bodyclass = "app";
+  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', function($scope, $log, $sce, apiSrv, $mdDialog, djResource){
+    // $scope.user = {};
+    if(!$scope.user){
+      apiSrv.request('GET', 'user', {}, 
+        function(user){
+          $scope.user = user;
+          $scope.ready = true;
+          if(user){
+            $scope.bodyclass = "app";
+          }
+        }, 
+        function(er){
+          $log.error(er);
         }
-      }, 
-      function(er){
-        $log.error(er);
+      );
+    }
+    var updateProjectList = function(){
+      apiSrv.request('GET', 'projects', {}, 
+        function(projects){
+          $scope.projects = projects;
+          // console.log(projects);
+        }, 
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+    var clearProjectFormFields = function(){
+      $scope.newProject.project_name = "";
+      $scope.newProject.project_url = "";
+      $scope.newProject.project_description = "";
+      $scope.newProject.client_name = "";
+      $scope.newProject.client_email = "";
+      $scope.newProject.deadline = "";
+      $scope.newProject.hourly_rate = "";
+      $scope.newProject.fixed_rate = "";
+      $scope.newProject.project_logo = "";
+    };
+    
+    // $scope.projects = [];
+    // apiSrv.request('GET', 'projects/', {},
+    //   function(data){
+    //     $scope.projects = data;
+    //   },
+    //   function(err){
+    //     $log.error(err);
+    //   }
+    // );
+    var Project = djResource('api/projects/:id', {'id': "@id"});
+    $scope.projects = Project.query();
+    $scope.newProject = new Project();
+    $scope.createProject = function(){
+      apiSrv.request('POST', 'projects/', $scope.newProject,
+        function(data){
+          $scope.cancel();
+          clearProjectFormFields();
+          $scope.projects.push(data);
+          // updateProjectList();
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+      // $scope.newProject.$save(function(data){
+      //   $scope.cancel();
+      //   clearProjectFormFields();
+      //   updateProjectList();
+      // });
+    };
+    $scope.deleteProject = function(id){
+      apiSrv.request('DELETE', 'projects/'+id, {},
+       function(data){
+        $log.info(data);
+        $scope.projects = Project.query();
+       },
+       function(err){
+        $log.error(err);
+       }
+      );
+    };
+
+    $scope.timeEvent = "startTimer";
+    var timerRunning = false;
+    $scope.timers = [];
+    var intervals = {};
+    var startTimer = function(id){
+      $scope.timeEvent = "startTimer";
+      intervals[id] = {};
+      intervals[id].timerRunning = true;
+      var timerEl = document.getElementById("project_"+id).querySelector(".timer");
+      timerEl.classList.remove('saving');
+      apiSrv.request('POST', 'projects/'+id+'/intervals/', {},
+       function(data){
+        $log.info(data);
+        intervals[id].interval = data.id;
+       },
+       function(err){
+        $log.error(err);
+       }
+      );
+    };
+    var stopTimer = function(id){
+      $scope.timeEvent = "stopTimer";
+      intervals[id].timerRunning = false;
+      var intervalId = intervals[id].interval,
+          timerEl = document.getElementById("project_"+id).querySelector(".timer");
+      timerEl.setAttribute('data-interval', intervalId);
+      timerEl.classList.add('saving');
+      apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', {end: (new Date())},
+        function(data){
+          // $log.info(data);
+          document.getElementById("project_"+id).querySelector(".counter").setAttribute('data-interval', intervalId);
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+
+    $scope.startstopTimer = function(id){
+      var ix = $scope.timers.indexOf(id);
+      if(!timerRunning && (typeof intervals[id] === "undefined" || !intervals[id].timerRunning)){
+        startTimer(id);
+        $scope.timers.push(id);
+      } else {
+        stopTimer(id);
+        $scope.timers.splice(ix, 1);
       }
-    );
+    };
+
+    $scope.intervalObj = {"description": ""};
+    $scope.saveInterval = function(id){
+      var intervalData = {
+        "description": $scope.intervalObj.description
+      };
+      var intervalId = intervals[id].interval,
+          timerEl = document.getElementById("project_"+id).querySelector(".timer"),
+          timerBtn = timerEl.querySelector('.counter');
+      apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
+        function(data){
+          timerEl.classList.remove('saving');
+          timerEl.removeAttribute('data-interval');
+          timerBtn.innerHTML = "00:00:00";
+          timerEl.setAttribute('data-state', 'restart');
+          intervals[id].timerRunning = false;
+          $scope.timeEvent = "startTimer";
+          $scope.timers.splice($scope.timers.indexOf(id), 1);
+          $scope.intervalObj.description = "";
+          $scope.projects = Project.query();
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+
     $scope.cancel = function() {
       $mdDialog.cancel();
     };
@@ -59638,85 +60224,6 @@ angular.module('invoices.controllers', [])
       }
       return responseString;
     };
-    var getProjects = function(){
-      apiSrv.request('GET', 'projects', {}, 
-        function(projects){
-          $scope.projects = projects;
-        }, 
-        function(err){
-          $log.error(err);
-        }
-      );
-    };
-    $scope.newProject = {
-      "project_name": "",
-      "project_url": "",
-      "project_description": "",
-      "client_name": "",
-      "client_email": "",
-      "deadline": "",
-      "hourly_rate": "",
-      "fixed_rate": "",
-      "project_logo": ""
-    };
-  var addProject = function(projectData){
-      
-    };
-  $scope.createProject = function(){
-      $scope.newProject.error = "";
-      var projectData = {
-        "user": $scope.user.id,
-        "project_name": $scope.newProject.project_name.length ? $scope.newProject.project_name : null,
-        "project_url": $scope.newProject.project_url.length ? $scope.newProject.project_url : null,
-        "project_description": $scope.newProject.project_description.length ? $scope.newProject.project_description : null,
-        "client_name": $scope.newProject.client_name.length ? $scope.newProject.client_name : null,
-        "client_email": $scope.newProject.client_email.length ? $scope.newProject.client_email : null,
-        "deadline": $scope.newProject.deadline.length ? $scope.newProject.deadline : null,
-        "hourly_rate": $scope.newProject.hourly_rate.length ? $scope.newProject.hourly_rate : null,
-        "fixed_rate": $scope.newProject.fixed_rate.length ? $scope.newProject.fixed_rate : 0,
-        "project_logo": $scope.newProject.project_logo.length ? $scope.newProject.project_logo : null
-      };
-      apiSrv.request('POST', 'projects', projectData,
-        function(data){
-          // $log.info(data);
-          if(data.error){
-            $scope.newProject.error = data.error;
-          } else {
-            $scope.newProject.project_name = "";
-            $scope.newProject.project_url = "";
-            $scope.newProject.project_description = "";
-            $scope.newProject.client_name = "";
-            $scope.newProject.client_email = "";
-            $scope.newProject.deadline = "";
-            $scope.newProject.hourly_rate = "";
-            $scope.newProject.fixed_rate = "";
-            $scope.newProject.project_logo = "";
-            $scope.cancel();
-            getProjects();
-            // document.querySelector('.view-panel.active').classList.remove('active');
-            // document.getElementById("projects").classList.add('active');
-          }
-        },
-        function(err){
-          $log.error(err);
-          $scope.newProject.error = formatErr(err);
-        }
-      );
-    };
-    $scope.deleteProject = function(id){
-      apiSrv.request('DELETE', 'project/'+id, {},
-       function(data){
-        $log.info(data);
-        getProjects();
-       },
-       function(err){
-        $log.error(err);
-       }
-      );
-    };
-    if($scope.user){
-      getProjects();
-    }
   }])
 ;
 var smoothScroll = function (element, options) {
@@ -59775,6 +60282,21 @@ var smoothScroll = function (element, options) {
 var revealView = function(target){
   document.querySelector('.view-panel.active').classList.remove('active');
   document.getElementById(target).classList.add('active');
+};
+
+var msToTimeString = function(ms){
+  var seconds = Math.floor(ms / 1000),
+      h = 3600,
+      m = 60,
+      hours = Math.floor(seconds/h),
+      minutes = Math.floor( (seconds % h)/m ),
+      scnds = Math.floor( (seconds % m) ),
+      timeString = '';
+  if(scnds < 10) scnds = "0"+scnds;
+  if(hours < 10) hours = "0"+hours;
+  if(minutes < 10) minutes = "0"+minutes;
+  timeString = hours +":"+ minutes +":"+scnds;
+  return timeString;
 };
 
 angular.module('invoices.directives', [])
@@ -59865,7 +60387,89 @@ angular.module('invoices.directives', [])
           }
         });
       }
-    }
+    };
+  })
+  .directive('intimer', function(){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('click', function(){
+          var el = this.parentElement.querySelector(".counter");
+          var timerEvent = $attrs.intimer;
+          var timeEvent = new Event(timerEvent);
+          el.dispatchEvent(timeEvent);
+          // console.log('dispatched '+timerEvent+' to element: '+el);
+          // console.log(this.parentElement);
+        });
+      }
+    };
+  })
+  .directive('incounting', ['$interval', 'apiSrv', function($interval, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var self = this,
+              timer,
+              timeSync,
+              startTime,
+              totalElapsed = 0,
+              elapsed = 0,
+              timerEl = angular.element($element),
+              projectId = timerEl[0].getAttribute('data-project'),
+              intervalId = timerEl[0].getAttribute('data-interval');
+          timerEl.on('startTimer', function(){
+            if(timerEl[0].getAttribute('data-state') === 'restart'){
+              totalElapsed = elapsed = 0;
+              timerEl[0].removeAttribute('data-state');
+            }
+            startTime = new Date();
+            timer = $interval(function(){
+              var now = new Date();
+              elapsed = now.getTime() - startTime.getTime();
+              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
+            }, 1001);
+          });
+          angular.element($element).on('stopTimer', function(){
+            $interval.cancel(timer);
+            timer = undefined;
+            totalElapsed += elapsed;
+            elapsed = 0;
+          });
+        }
+      };
+    }])
+;
+angular.module('invoices.filters', [])
+  .filter('msToTimeString', function(){
+    return function(millseconds) {
+      var seconds = Math.floor(millseconds / 1000),
+          h = 3600,
+          m = 60,
+          hours = Math.floor(seconds/h),
+          minutes = Math.floor( (seconds % h)/m ),
+          scnds = Math.floor( (seconds % m) ),
+          timeString = '';
+      if(scnds < 10) scnds = "0"+scnds;
+      if(hours < 10) hours = "0"+hours;
+      if(minutes < 10) minutes = "0"+minutes;
+      timeString = hours +":"+ minutes +":"+scnds;
+      return timeString;
+    };
+  })
+  .filter('secondsToTimeString', function(){
+    return function(seconds) {
+      var h = 3600,
+          m = 60,
+          hours = Math.floor(seconds/h),
+          minutes = Math.floor( (seconds % h)/m ),
+          scnds = Math.floor( (seconds % m) ),
+          timeString = '';
+      if(scnds < 10) scnds = "0"+scnds;
+      if(hours < 10) hours = "0"+hours;
+      if(minutes < 10) minutes = "0"+minutes;
+      timeString = hours +":"+ minutes +":"+scnds;
+      return timeString;
+    };
   })
 ;
 angular.module('invoices.services')
@@ -59875,7 +60479,7 @@ angular.module('invoices.services')
     apiSrv.request = function(method, url, args, successFn, errorFn){
       return $http({
         method: method,
-        url: '/api/' + url + ".json",
+        url: '/api/' + url,
         data: JSON.stringify(args)
       }).success(successFn).error(errorFn);
     };

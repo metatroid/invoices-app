@@ -5,7 +5,7 @@ angular.module('invoices.services')
     apiSrv.request = function(method, url, args, successFn, errorFn){
       return $http({
         method: method,
-        url: '/api/' + url + ".json",
+        url: '/api/' + url,
         data: JSON.stringify(args)
       }).success(successFn).error(errorFn);
     };

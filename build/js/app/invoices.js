@@ -3,12 +3,15 @@ angular.module('invoices', [
                'invoices.controllers',
                'invoices.states',
                'invoices.services',
-               'invoices.directives'
+               'invoices.directives',
+               'invoices.filters',
+               'djangoRESTResources'
 ]);
 
 angular.module('invoices.states', []);
 angular.module('invoices.services', []);
 angular.module('invoices.directives', []);
+angular.module('invoices.filters', []);
 
 angular.module('invoices')
   .config(['$httpProvider', '$compileProvider', '$mdThemingProvider', function($httpProvider, $compileProvider, $mdThemingProvider){

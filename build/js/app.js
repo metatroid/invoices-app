@@ -3,12 +3,15 @@ angular.module('invoices', [
                'invoices.controllers',
                'invoices.states',
                'invoices.services',
-               'invoices.directives'
+               'invoices.directives',
+               'invoices.filters',
+               'djangoRESTResources'
 ]);
 
 angular.module('invoices.states', []);
 angular.module('invoices.services', []);
 angular.module('invoices.directives', []);
+angular.module('invoices.filters', []);
 
 angular.module('invoices')
   .config(['$httpProvider', '$compileProvider', '$mdThemingProvider', function($httpProvider, $compileProvider, $mdThemingProvider){
@@ -43,20 +46,162 @@ angular.module('invoices.controllers', [])
       }
     );
   }])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', function($scope, $log, $sce, apiSrv, $mdDialog){
-    $scope.user = {};
-    apiSrv.request('GET', 'user', {}, 
-      function(user){
-        $scope.user = user;
-        $scope.ready = true;
-        if(user){
-          $scope.bodyclass = "app";
+  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', function($scope, $log, $sce, apiSrv, $mdDialog, djResource){
+    // $scope.user = {};
+    if(!$scope.user){
+      apiSrv.request('GET', 'user', {}, 
+        function(user){
+          $scope.user = user;
+          $scope.ready = true;
+          if(user){
+            $scope.bodyclass = "app";
+          }
+        }, 
+        function(er){
+          $log.error(er);
         }
-      }, 
-      function(er){
-        $log.error(er);
+      );
+    }
+    var updateProjectList = function(){
+      apiSrv.request('GET', 'projects', {}, 
+        function(projects){
+          $scope.projects = projects;
+          // console.log(projects);
+        }, 
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+    var clearProjectFormFields = function(){
+      $scope.newProject.project_name = "";
+      $scope.newProject.project_url = "";
+      $scope.newProject.project_description = "";
+      $scope.newProject.client_name = "";
+      $scope.newProject.client_email = "";
+      $scope.newProject.deadline = "";
+      $scope.newProject.hourly_rate = "";
+      $scope.newProject.fixed_rate = "";
+      $scope.newProject.project_logo = "";
+    };
+    
+    // $scope.projects = [];
+    // apiSrv.request('GET', 'projects/', {},
+    //   function(data){
+    //     $scope.projects = data;
+    //   },
+    //   function(err){
+    //     $log.error(err);
+    //   }
+    // );
+    var Project = djResource('api/projects/:id', {'id': "@id"});
+    $scope.projects = Project.query();
+    $scope.newProject = new Project();
+    $scope.createProject = function(){
+      apiSrv.request('POST', 'projects/', $scope.newProject,
+        function(data){
+          $scope.cancel();
+          clearProjectFormFields();
+          $scope.projects.push(data);
+          // updateProjectList();
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+      // $scope.newProject.$save(function(data){
+      //   $scope.cancel();
+      //   clearProjectFormFields();
+      //   updateProjectList();
+      // });
+    };
+    $scope.deleteProject = function(id){
+      apiSrv.request('DELETE', 'projects/'+id, {},
+       function(data){
+        $log.info(data);
+        $scope.projects = Project.query();
+       },
+       function(err){
+        $log.error(err);
+       }
+      );
+    };
+
+    $scope.timeEvent = "startTimer";
+    var timerRunning = false;
+    $scope.timers = [];
+    var intervals = {};
+    var startTimer = function(id){
+      $scope.timeEvent = "startTimer";
+      intervals[id] = {};
+      intervals[id].timerRunning = true;
+      var timerEl = document.getElementById("project_"+id).querySelector(".timer");
+      timerEl.classList.remove('saving');
+      apiSrv.request('POST', 'projects/'+id+'/intervals/', {},
+       function(data){
+        $log.info(data);
+        intervals[id].interval = data.id;
+       },
+       function(err){
+        $log.error(err);
+       }
+      );
+    };
+    var stopTimer = function(id){
+      $scope.timeEvent = "stopTimer";
+      intervals[id].timerRunning = false;
+      var intervalId = intervals[id].interval,
+          timerEl = document.getElementById("project_"+id).querySelector(".timer");
+      timerEl.setAttribute('data-interval', intervalId);
+      timerEl.classList.add('saving');
+      apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', {end: (new Date())},
+        function(data){
+          // $log.info(data);
+          document.getElementById("project_"+id).querySelector(".counter").setAttribute('data-interval', intervalId);
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+
+    $scope.startstopTimer = function(id){
+      var ix = $scope.timers.indexOf(id);
+      if(!timerRunning && (typeof intervals[id] === "undefined" || !intervals[id].timerRunning)){
+        startTimer(id);
+        $scope.timers.push(id);
+      } else {
+        stopTimer(id);
+        $scope.timers.splice(ix, 1);
       }
-    );
+    };
+
+    $scope.intervalObj = {"description": ""};
+    $scope.saveInterval = function(id){
+      var intervalData = {
+        "description": $scope.intervalObj.description
+      };
+      var intervalId = intervals[id].interval,
+          timerEl = document.getElementById("project_"+id).querySelector(".timer"),
+          timerBtn = timerEl.querySelector('.counter');
+      apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
+        function(data){
+          timerEl.classList.remove('saving');
+          timerEl.removeAttribute('data-interval');
+          timerBtn.innerHTML = "00:00:00";
+          timerEl.setAttribute('data-state', 'restart');
+          intervals[id].timerRunning = false;
+          $scope.timeEvent = "startTimer";
+          $scope.timers.splice($scope.timers.indexOf(id), 1);
+          $scope.intervalObj.description = "";
+          $scope.projects = Project.query();
+        },
+        function(err){
+          $log.error(err);
+        }
+      );
+    };
+
     $scope.cancel = function() {
       $mdDialog.cancel();
     };
@@ -83,85 +228,6 @@ angular.module('invoices.controllers', [])
       }
       return responseString;
     };
-    var getProjects = function(){
-      apiSrv.request('GET', 'projects', {}, 
-        function(projects){
-          $scope.projects = projects;
-        }, 
-        function(err){
-          $log.error(err);
-        }
-      );
-    };
-    $scope.newProject = {
-      "project_name": "",
-      "project_url": "",
-      "project_description": "",
-      "client_name": "",
-      "client_email": "",
-      "deadline": "",
-      "hourly_rate": "",
-      "fixed_rate": "",
-      "project_logo": ""
-    };
-  var addProject = function(projectData){
-      
-    };
-  $scope.createProject = function(){
-      $scope.newProject.error = "";
-      var projectData = {
-        "user": $scope.user.id,
-        "project_name": $scope.newProject.project_name.length ? $scope.newProject.project_name : null,
-        "project_url": $scope.newProject.project_url.length ? $scope.newProject.project_url : null,
-        "project_description": $scope.newProject.project_description.length ? $scope.newProject.project_description : null,
-        "client_name": $scope.newProject.client_name.length ? $scope.newProject.client_name : null,
-        "client_email": $scope.newProject.client_email.length ? $scope.newProject.client_email : null,
-        "deadline": $scope.newProject.deadline.length ? $scope.newProject.deadline : null,
-        "hourly_rate": $scope.newProject.hourly_rate.length ? $scope.newProject.hourly_rate : null,
-        "fixed_rate": $scope.newProject.fixed_rate.length ? $scope.newProject.fixed_rate : 0,
-        "project_logo": $scope.newProject.project_logo.length ? $scope.newProject.project_logo : null
-      };
-      apiSrv.request('POST', 'projects', projectData,
-        function(data){
-          // $log.info(data);
-          if(data.error){
-            $scope.newProject.error = data.error;
-          } else {
-            $scope.newProject.project_name = "";
-            $scope.newProject.project_url = "";
-            $scope.newProject.project_description = "";
-            $scope.newProject.client_name = "";
-            $scope.newProject.client_email = "";
-            $scope.newProject.deadline = "";
-            $scope.newProject.hourly_rate = "";
-            $scope.newProject.fixed_rate = "";
-            $scope.newProject.project_logo = "";
-            $scope.cancel();
-            getProjects();
-            // document.querySelector('.view-panel.active').classList.remove('active');
-            // document.getElementById("projects").classList.add('active');
-          }
-        },
-        function(err){
-          $log.error(err);
-          $scope.newProject.error = formatErr(err);
-        }
-      );
-    };
-    $scope.deleteProject = function(id){
-      apiSrv.request('DELETE', 'project/'+id, {},
-       function(data){
-        $log.info(data);
-        getProjects();
-       },
-       function(err){
-        $log.error(err);
-       }
-      );
-    };
-    if($scope.user){
-      getProjects();
-    }
   }])
 ;
 var smoothScroll = function (element, options) {
@@ -220,6 +286,21 @@ var smoothScroll = function (element, options) {
 var revealView = function(target){
   document.querySelector('.view-panel.active').classList.remove('active');
   document.getElementById(target).classList.add('active');
+};
+
+var msToTimeString = function(ms){
+  var seconds = Math.floor(ms / 1000),
+      h = 3600,
+      m = 60,
+      hours = Math.floor(seconds/h),
+      minutes = Math.floor( (seconds % h)/m ),
+      scnds = Math.floor( (seconds % m) ),
+      timeString = '';
+  if(scnds < 10) scnds = "0"+scnds;
+  if(hours < 10) hours = "0"+hours;
+  if(minutes < 10) minutes = "0"+minutes;
+  timeString = hours +":"+ minutes +":"+scnds;
+  return timeString;
 };
 
 angular.module('invoices.directives', [])
@@ -310,7 +391,89 @@ angular.module('invoices.directives', [])
           }
         });
       }
-    }
+    };
+  })
+  .directive('intimer', function(){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('click', function(){
+          var el = this.parentElement.querySelector(".counter");
+          var timerEvent = $attrs.intimer;
+          var timeEvent = new Event(timerEvent);
+          el.dispatchEvent(timeEvent);
+          // console.log('dispatched '+timerEvent+' to element: '+el);
+          // console.log(this.parentElement);
+        });
+      }
+    };
+  })
+  .directive('incounting', ['$interval', 'apiSrv', function($interval, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var self = this,
+              timer,
+              timeSync,
+              startTime,
+              totalElapsed = 0,
+              elapsed = 0,
+              timerEl = angular.element($element),
+              projectId = timerEl[0].getAttribute('data-project'),
+              intervalId = timerEl[0].getAttribute('data-interval');
+          timerEl.on('startTimer', function(){
+            if(timerEl[0].getAttribute('data-state') === 'restart'){
+              totalElapsed = elapsed = 0;
+              timerEl[0].removeAttribute('data-state');
+            }
+            startTime = new Date();
+            timer = $interval(function(){
+              var now = new Date();
+              elapsed = now.getTime() - startTime.getTime();
+              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
+            }, 1001);
+          });
+          angular.element($element).on('stopTimer', function(){
+            $interval.cancel(timer);
+            timer = undefined;
+            totalElapsed += elapsed;
+            elapsed = 0;
+          });
+        }
+      };
+    }])
+;
+angular.module('invoices.filters', [])
+  .filter('msToTimeString', function(){
+    return function(millseconds) {
+      var seconds = Math.floor(millseconds / 1000),
+          h = 3600,
+          m = 60,
+          hours = Math.floor(seconds/h),
+          minutes = Math.floor( (seconds % h)/m ),
+          scnds = Math.floor( (seconds % m) ),
+          timeString = '';
+      if(scnds < 10) scnds = "0"+scnds;
+      if(hours < 10) hours = "0"+hours;
+      if(minutes < 10) minutes = "0"+minutes;
+      timeString = hours +":"+ minutes +":"+scnds;
+      return timeString;
+    };
+  })
+  .filter('secondsToTimeString', function(){
+    return function(seconds) {
+      var h = 3600,
+          m = 60,
+          hours = Math.floor(seconds/h),
+          minutes = Math.floor( (seconds % h)/m ),
+          scnds = Math.floor( (seconds % m) ),
+          timeString = '';
+      if(scnds < 10) scnds = "0"+scnds;
+      if(hours < 10) hours = "0"+hours;
+      if(minutes < 10) minutes = "0"+minutes;
+      timeString = hours +":"+ minutes +":"+scnds;
+      return timeString;
+    };
   })
 ;
 angular.module('invoices.services')
@@ -320,7 +483,7 @@ angular.module('invoices.services')
     apiSrv.request = function(method, url, args, successFn, errorFn){
       return $http({
         method: method,
-        url: '/api/' + url + ".json",
+        url: '/api/' + url,
         data: JSON.stringify(args)
       }).success(successFn).error(errorFn);
     };

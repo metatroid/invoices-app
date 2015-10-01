@@ -9,7 +9,7 @@ def logo_path(instance, filename):
 class Project(models.Model):
   def __str__(self):
     return self.project_name+" ("+str(self.id)+")"
-  user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='projects', on_delete='models.CASCADE')
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='projects', on_delete='models.CASCADE', null=True, blank=True)
   project_name = models.CharField(max_length=50)
   project_description = models.TextField(blank=True, null=True)
   project_url = models.URLField(max_length=200, blank=True, null=True)

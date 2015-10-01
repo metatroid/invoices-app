@@ -56,6 +56,21 @@ var revealView = function(target){
   document.getElementById(target).classList.add('active');
 };
 
+var msToTimeString = function(ms){
+  var seconds = Math.floor(ms / 1000),
+      h = 3600,
+      m = 60,
+      hours = Math.floor(seconds/h),
+      minutes = Math.floor( (seconds % h)/m ),
+      scnds = Math.floor( (seconds % m) ),
+      timeString = '';
+  if(scnds < 10) scnds = "0"+scnds;
+  if(hours < 10) hours = "0"+hours;
+  if(minutes < 10) minutes = "0"+minutes;
+  timeString = hours +":"+ minutes +":"+scnds;
+  return timeString;
+};
+
 angular.module('invoices.directives', [])
   .directive('inscroll', ['$window', function($window){
     return {
@@ -144,6 +159,55 @@ angular.module('invoices.directives', [])
           }
         });
       }
-    }
+    };
   })
+  .directive('intimer', function(){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('click', function(){
+          var el = this.parentElement.querySelector(".counter");
+          var timerEvent = $attrs.intimer;
+          var timeEvent = new Event(timerEvent);
+          el.dispatchEvent(timeEvent);
+          // console.log('dispatched '+timerEvent+' to element: '+el);
+          // console.log(this.parentElement);
+        });
+      }
+    };
+  })
+  .directive('incounting', ['$interval', 'apiSrv', function($interval, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var self = this,
+              timer,
+              timeSync,
+              startTime,
+              totalElapsed = 0,
+              elapsed = 0,
+              timerEl = angular.element($element),
+              projectId = timerEl[0].getAttribute('data-project'),
+              intervalId = timerEl[0].getAttribute('data-interval');
+          timerEl.on('startTimer', function(){
+            if(timerEl[0].getAttribute('data-state') === 'restart'){
+              totalElapsed = elapsed = 0;
+              timerEl[0].removeAttribute('data-state');
+            }
+            startTime = new Date();
+            timer = $interval(function(){
+              var now = new Date();
+              elapsed = now.getTime() - startTime.getTime();
+              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
+            }, 1001);
+          });
+          angular.element($element).on('stopTimer', function(){
+            $interval.cancel(timer);
+            timer = undefined;
+            totalElapsed += elapsed;
+            elapsed = 0;
+          });
+        }
+      };
+    }])
 ;

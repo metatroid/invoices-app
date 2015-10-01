@@ -12,13 +12,13 @@ urlpatterns = patterns('',
     url(r'^project/new/$', views.project_new, name='project_new'),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/user', views.UserStatus.as_view()),
-    url(r'^api/user/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
+    url(r'^api/users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
     url(r'^api/projects/$', views.ProjectList.as_view()),
-    url(r'^api/project/(?P<pk>[0-9]+)/$', views.ProjectDetail.as_view()),
-    url(r'^api/project/(?P<project_id>[0-9]+)/intervals/$', views.IntervalList.as_view()),
-    url(r'^api/project/(?P<project_id>[0-9]+)/interval/(?P<pk>[0-9]+)/$', views.IntervalDetail.as_view()),
-    url(r'^api/project/(?P<project_id>[0-9]+)/statements/$', views.StatementList.as_view()),
-    url(r'^api/project/(?P<project_id>[0-9]+)/statement/(?P<pk>[0-9]+)/$', views.StatementDetail.as_view())
+    url(r'^api/projects/(?P<pk>[0-9]+)/$', views.ProjectDetail.as_view()),
+    url(r'^api/projects/(?P<project_id>[0-9]+)/intervals/$', views.IntervalList.as_view()),
+    url(r'^api/projects/(?P<project_id>[0-9]+)/intervals/(?P<pk>[0-9]+)/$', views.IntervalDetail.as_view()),
+    url(r'^api/projects/(?P<project_id>[0-9]+)/statements/$', views.StatementList.as_view()),
+    url(r'^api/projects/(?P<project_id>[0-9]+)/statements/(?P<pk>[0-9]+)/$', views.StatementDetail.as_view())
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)

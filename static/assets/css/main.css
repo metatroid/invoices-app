@@ -14490,42 +14490,39 @@ nav {
 #app nav {
   margin-bottom: 44px; }
 
-#app #newProjectDialog md-dialog-content {
-  padding-top: 0; }
-
-#app #newProjectDialog md-input-container {
-  min-width: 33%; }
-  #app #newProjectDialog md-input-container.half {
-    min-width: 50%; }
-
-#app #newProjectDialog md-datepicker {
-  padding-top: 15px; }
-
-#app #newProjectDialog .file-upload-wrapper {
-  position: relative;
-  background-color: #808080;
-  padding: 6px 12px;
-  width: 125px;
-  text-align: center;
-  cursor: pointer; }
-  #app #newProjectDialog .file-upload-wrapper span {
-    color: #fff;
+#app #newProjectDialog {
+  max-height: 88%; }
+  #app #newProjectDialog md-dialog-content {
+    padding-top: 0; }
+  #app #newProjectDialog md-input-container {
+    min-width: 33%; }
+    #app #newProjectDialog md-input-container.half {
+      min-width: 50%; }
+  #app #newProjectDialog md-datepicker {
+    padding-top: 15px; }
+  #app #newProjectDialog .file-upload-wrapper {
+    position: relative;
+    background-color: #808080;
+    padding: 6px 12px;
+    width: 125px;
+    text-align: center;
     cursor: pointer; }
-  #app #newProjectDialog .file-upload-wrapper label {
-    top: auto;
-    cursor: pointer; }
-
-#app #newProjectDialog input#project_logo {
-  width: 0.1px;
-  height: 0.1px;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-  z-index: -1; }
-
-#app #newProjectDialog button[type=submit] {
-  font-size: 10px;
-  padding: 0 12px; }
+    #app #newProjectDialog .file-upload-wrapper span {
+      color: #fff;
+      cursor: pointer; }
+    #app #newProjectDialog .file-upload-wrapper label {
+      top: auto;
+      cursor: pointer; }
+  #app #newProjectDialog input#project_logo {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1; }
+  #app #newProjectDialog button[type=submit] {
+    font-size: 10px;
+    padding: 0 12px; }
 
 #app .project-form-wrapper {
   width: 800px; }
@@ -14580,19 +14577,106 @@ nav {
 
 #app #projects {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
-  overflow: hidden; }
+  overflow: auto;
+  bottom: 0; }
   #app #projects .project-list {
     list-style: none;
-    padding: 0;
+    padding: 10px;
     margin: 0; }
     #app #projects .project-list .project {
       padding: 10px;
       border: 1px solid #ddd;
       margin: 10px 0;
-      background-color: #fff; }
+      background-color: #fff;
+      -webkit-align-items: flex-start;
+          -ms-flex-align: start;
+              align-items: flex-start;
+      position: relative; }
+      #app #projects .project-list .project md-fab-toolbar {
+        position: absolute;
+        right: 0px;
+        left: 0px;
+        top: 0px; }
+      #app #projects .project-list .project md-toolbar {
+        background-color: #333; }
+      #app #projects .project-list .project .md-button.md-fab {
+        width: 88px;
+        height: 36px;
+        line-height: 24px;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.87);
+        background-color: #333; }
+        #app #projects .project-list .project .md-button.md-fab span {
+          position: relative;
+          z-index: 20; }
+        #app #projects .project-list .project .md-button.md-fab .md-fab-toolbar-background {
+          background-color: #333;
+          border-radius: 0 !important; }
+        #app #projects .project-list .project .md-button.md-fab .md-ripple-container {
+          border-radius: 0; }
+      #app #projects .project-list .project .md-fab-action-item button {
+        color: rgba(255, 255, 255, 0.87);
+        transition: all 0.5s ease; }
+        #app #projects .project-list .project .md-fab-action-item button:hover {
+          color: white; }
+      #app #projects .project-list .project img.md-avatar {
+        margin-top: 0; }
+      #app #projects .project-list .project .project-info-wrapper {
+        width: 30%; }
+      #app #projects .project-list .project .timer-btn {
+        position: relative;
+        top: -20px;
+        min-width: 26px;
+        height: 26px;
+        font-size: 10px;
+        padding: 0;
+        line-height: 1;
+        min-height: 0;
+        left: -8px; }
+      #app #projects .project-list .project .timer-wrapper {
+        -webkit-align-self: center;
+            -ms-flex-item-align: center;
+                align-self: center; }
+        #app #projects .project-list .project .timer-wrapper .interval-form-wrapper {
+          display: none; }
+          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper button {
+            font-size: 10px;
+            margin-top: 0; }
+          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper label {
+            font-size: 10px; }
+          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper md-input-container {
+            padding-bottom: 10px; }
+        #app #projects .project-list .project .timer-wrapper .timer {
+          width: 150px; }
+          #app #projects .project-list .project .timer-wrapper .timer.saving .interval-form-wrapper {
+            display: block; }
+          #app #projects .project-list .project .timer-wrapper .timer .timer-control {
+            font-size: 12px;
+            color: #333;
+            display: block;
+            text-align: center; }
+            #app #projects .project-list .project .timer-wrapper .timer .timer-control span {
+              margin-right: 5px; }
+        #app #projects .project-list .project .timer-wrapper button {
+          font-size: 32px;
+          margin-top: 40px;
+          margin-left: auto;
+          margin-right: auto;
+          display: block; }
+      #app #projects .project-list .project .project-icon {
+        display: block;
+        margin-right: 14px;
+        margin-bottom: 8px;
+        font-size: 42px; }
       #app #projects .project-list .project .project-settings {
-        margin-top: -10px;
-        margin-right: -5px; }
+        position: absolute;
+        right: 5px;
+        top: 0px; }
         #app #projects .project-list .project .project-settings a {
           color: #333;
           font-size: 10px; }
+      #app #projects .project-list .project h2, #app #projects .project-list .project h3, #app #projects .project-list .project h4 {
+        margin-top: 0;
+        margin-bottom: 5px; }

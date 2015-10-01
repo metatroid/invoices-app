@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'social.apps.django_app.default',
     'djangular',
+    'invoices',
     'invoices.projects',
     'invoices.intervals',
     'invoices.statements'
@@ -116,6 +117,39 @@ DATABASES = {
         'PASSWORD': config.get('database', 'DATABASE_PASSWORD'),
         'HOST': 'localhost',
         'PORT': ''
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'invoices.log',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers':['file'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+        'invoices': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+        },
     }
 }
 
