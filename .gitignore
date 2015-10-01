@@ -9,3 +9,4 @@ bower_components
 invenv/*
 *.py[co]
 __pycache__
+*.log
