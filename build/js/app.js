@@ -33,6 +33,7 @@ angular.module('invoices.controllers', [])
     $scope.toggleAuthForm = function(){
       $scope.showAuthForm = !$scope.showAuthForm;
     };
+    $scope.user = {};
     apiSrv.request('GET', 'user', {}, 
       function(user){
         $scope.user = user;
@@ -46,33 +47,8 @@ angular.module('invoices.controllers', [])
       }
     );
   }])
+  .controller('anonCtrl', ['$scope', function($scope){}])
   .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', '$timeout', function($scope, $log, $sce, apiSrv, $mdDialog, djResource, $timeout){
-    // $scope.user = {};
-    if(!$scope.user){
-      apiSrv.request('GET', 'user', {}, 
-        function(user){
-          $scope.user = user;
-          $scope.ready = true;
-          if(user){
-            $scope.bodyclass = "app";
-          }
-        }, 
-        function(er){
-          $log.error(er);
-        }
-      );
-    }
-    var updateProjectList = function(){
-      apiSrv.request('GET', 'projects', {}, 
-        function(projects){
-          $scope.projects = projects;
-          // console.log(projects);
-        }, 
-        function(err){
-          $log.error(err);
-        }
-      );
-    };
     var clearProjectFormFields = function(){
       $scope.newProject.project_name = "";
       $scope.newProject.project_url = "";
@@ -84,38 +60,25 @@ angular.module('invoices.controllers', [])
       $scope.newProject.fixed_rate = "";
       $scope.newProject.project_logo = "";
     };
-    
-    // $scope.projects = [];
-    // apiSrv.request('GET', 'projects/', {},
-    //   function(data){
-    //     $scope.projects = data;
-    //   },
-    //   function(err){
-    //     $log.error(err);
-    //   }
-    // );
     var Project = djResource('api/projects/:id', {'id': "@id"});
-    // $scope.projects = Project.query();
-    updateProjectList();
+    $scope.projects = Project.query();
     $scope.newProject = new Project();
+    function insertProject(data){
+      $log.info($scope.projects);
+      $log.info($scope.projects.length);
+      $log.info(data);
+      $scope.projects.splice($scope.projects.length,1,data);
+      $log.info($scope.projects);
+      $log.info($scope.projects.length);
+    }
     $scope.createProject = function(){
-      apiSrv.request('POST', 'projects/', $scope.newProject,
-        function(data){
-          $scope.cancel();
-          clearProjectFormFields();
-          updateProjectList();
-        },
-        function(err){
-          $log.error(err);
-        }
-      );
-      // $scope.newProject.$save(function(data){
-      //   $scope.cancel();
-      //   clearProjectFormFields();
-      //   updateProjectList();
-      // });
+      $scope.newProject.$save(function(data){
+        insertProject(data);
+        $scope.cancelProject();
+        clearProjectFormFields();
+      });
     };
-    $scope.deleteProject = function(ev, id){
+    $scope.deleteProject = function(ev, id, index){
       var confirm = $mdDialog.confirm()
           .title('You are about to delete this project.')
           .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -123,12 +86,10 @@ angular.module('invoices.controllers', [])
           .targetEvent(ev)
           .ok('Delete this project')
           .cancel('Cancel');
-      var id = id;
       $mdDialog.show(confirm).then(function() {
         apiSrv.request('DELETE', 'projects/'+id, {},
           function(data){
-            $log.info(data);
-            $scope.projects = Project.query();
+            $scope.projects.splice(index, 1);
           },
           function(err){
             $log.error(err);
@@ -151,7 +112,6 @@ angular.module('invoices.controllers', [])
       timerEl.classList.remove('saving');
       apiSrv.request('POST', 'projects/'+id+'/intervals/', {},
        function(data){
-        $log.info(data);
         intervals[id].interval = data.id;
        },
        function(err){
@@ -168,7 +128,6 @@ angular.module('invoices.controllers', [])
       timerEl.classList.add('saving');
       apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', {end: (new Date())},
         function(data){
-          // $log.info(data);
           document.getElementById("project_"+id).querySelector(".counter").setAttribute('data-interval', intervalId);
         },
         function(err){
@@ -176,7 +135,6 @@ angular.module('invoices.controllers', [])
         }
       );
     };
-
     $scope.startstopTimer = function(id){
       var ix = $scope.timers.indexOf(id);
       if(!timerRunning && (typeof intervals[id] === "undefined" || !intervals[id].timerRunning)){
@@ -189,7 +147,7 @@ angular.module('invoices.controllers', [])
     };
 
     $scope.intervalObj = {"description": ""};
-    $scope.saveInterval = function(id){
+    $scope.saveInterval = function(id, index){
       var intervalData = {
         "description": $scope.intervalObj.description
       };
@@ -198,15 +156,11 @@ angular.module('invoices.controllers', [])
           timerBtn = timerEl.querySelector('.counter');
       apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
         function(data){
-          timerEl.classList.remove('saving');
-          timerEl.removeAttribute('data-interval');
+          $scope.projects.splice(index, 1, data);
           timerBtn.innerHTML = "00:00:00";
-          timerEl.setAttribute('data-state', 'restart');
           intervals[id].timerRunning = false;
           $scope.timeEvent = "startTimer";
-          $scope.timers.splice($scope.timers.indexOf(id), 1);
           $scope.intervalObj.description = "";
-          $scope.projects = Project.query();
         },
         function(err){
           $log.error(err);
@@ -214,7 +168,7 @@ angular.module('invoices.controllers', [])
       );
     };
 
-    $scope.cancel = function() {
+    $scope.cancelProject = function() {
       $mdDialog.cancel();
     };
     $scope.showNewProjectForm = function(ev){
@@ -223,7 +177,11 @@ angular.module('invoices.controllers', [])
         templateUrl: 'angular/partials/project-new.html',
         parent: angular.element(document.getElementById('app')),
         targetEvent: ev,
-        clickOutsideToClose: true
+        clickOutsideToClose: true,
+        onComplete: function(){
+          document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
+          document.querySelectorAll("md-dialog-content input")[0].focus();
+        }
       });
     };
 
@@ -434,10 +392,6 @@ angular.module('invoices.directives', [])
               projectId = timerEl[0].getAttribute('data-project'),
               intervalId = timerEl[0].getAttribute('data-interval');
           timerEl.on('startTimer', function(){
-            if(timerEl[0].getAttribute('data-state') === 'restart'){
-              totalElapsed = elapsed = 0;
-              timerEl[0].removeAttribute('data-state');
-            }
             startTime = new Date();
             timer = $interval(function(){
               var now = new Date();
@@ -520,24 +474,21 @@ angular.module('invoices.states', [
       url: '/',
       views: {
         'main': {
-          templateUrl: templateDir + '/main.html',
-          controller: 'mainCtrl'
+          templateUrl: templateDir + '/main.html'
         },
         'landing@main': {
           templateUrl: templateDir + '/landing.html',
-          controller: 'mainCtrl'
+          controller: 'anonCtrl'
         },
         'app@main': {
           templateUrl: templateDir + '/app-main.html',
           controller: 'appCtrl'
         },
         'nav@main': {
-          templateUrl: templateDir + '/nav.html',
-          controller: 'appCtrl'
+          templateUrl: templateDir + '/nav.html'
         },
         'auth@main': {
-          templateUrl: templateDir + '/auth.html',
-          controller: 'appCtrl'
+          templateUrl: templateDir + '/auth.html'
         }
       }
     });

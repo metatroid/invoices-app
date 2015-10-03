@@ -15,24 +15,21 @@ angular.module('invoices.states', [
       url: '/',
       views: {
         'main': {
-          templateUrl: templateDir + '/main.html',
-          controller: 'mainCtrl'
+          templateUrl: templateDir + '/main.html'
         },
         'landing@main': {
           templateUrl: templateDir + '/landing.html',
-          controller: 'mainCtrl'
+          controller: 'anonCtrl'
         },
         'app@main': {
           templateUrl: templateDir + '/app-main.html',
           controller: 'appCtrl'
         },
         'nav@main': {
-          templateUrl: templateDir + '/nav.html',
-          controller: 'appCtrl'
+          templateUrl: templateDir + '/nav.html'
         },
         'auth@main': {
-          templateUrl: templateDir + '/auth.html',
-          controller: 'appCtrl'
+          templateUrl: templateDir + '/auth.html'
         }
       }
     });

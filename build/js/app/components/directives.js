@@ -190,10 +190,6 @@ angular.module('invoices.directives', [])
               projectId = timerEl[0].getAttribute('data-project'),
               intervalId = timerEl[0].getAttribute('data-interval');
           timerEl.on('startTimer', function(){
-            if(timerEl[0].getAttribute('data-state') === 'restart'){
-              totalElapsed = elapsed = 0;
-              timerEl[0].removeAttribute('data-state');
-            }
             startTime = new Date();
             timer = $interval(function(){
               var now = new Date();

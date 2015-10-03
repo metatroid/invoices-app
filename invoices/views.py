@@ -63,7 +63,7 @@ class ProjectDetail(APIView):
   permission_classes = (IsAuthenticated,)
   def get_object(self, pk, req):
     try:
-      return Project.objects.get(pk=pk)
+      return Project.objects.get(pk=pk, user=req.user.id)
     except Project.DoesNotExist:
       raise Http404
   def get(self, request, pk, format=None):
@@ -101,7 +101,7 @@ class IntervalDetail(APIView):
   permission_classes = (IsAuthenticated,)
   def get_object(self, project_id, pk, req):
     try:
-      return User.objects.get(pk=req.user.id).projects.get(pk=project_id).intervals.get(pk=pk)
+      return Interval.objects.get(pk=pk)
     except Interval.DoesNotExist:
       raise Http404
   def get(self, request, project_id, pk, format=None):
@@ -113,7 +113,8 @@ class IntervalDetail(APIView):
     serializer = IntervalSerializer(interval, data=request.data)
     if serializer.is_valid():
       serializer.save()
-      return Response(serializer.data)
+      project = ProjectSerializer(Project.objects.get(pk=project_id))
+      return Response(project.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   def delete(self, request, project_id, pk, format=None):
     interval = self.get_object(project_id, pk, request)

@@ -17,7 +17,7 @@
       %span.fa.fa-plus-square
       New Project
 %main.main-app
-  %md-toolbar
+  %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
   #projects.view-panel.active
     %md-content
@@ -30,7 +30,7 @@
                   %span.fa.fa-cogs
             %md-toolbar
               %md-fab-actions.md-toolbar-tools
-                %md-button.md-icon-button{aria-label: "remove", ng-click: "deleteProject($event, project.id)"}
+                %md-button.md-icon-button{aria-label: "remove", ng-click: "deleteProject($event, project.id, $index)"}
                   %span.fa.fa-remove
                 %md-button.md-icon-button{aria-label: "invoice"}
                   %span.fa.fa-sticky-note
@@ -67,7 +67,7 @@
                 %span.fa.fa-play-circle
                 start
               .interval-form-wrapper
-                %form{ng-submit: "saveInterval(project.id)"}
+                %form{ng-submit: "saveInterval(project.id, $index)"}
                   %md-content
                     %md-input-container
                       %label

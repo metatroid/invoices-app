@@ -14490,37 +14490,37 @@ nav {
 #app nav {
   margin-bottom: 44px; }
 
-#app #newProjectDialog {
+#app #projectDialog {
   max-height: 88%; }
-  #app #newProjectDialog md-dialog-content {
+  #app #projectDialog md-dialog-content {
     padding-top: 0; }
-  #app #newProjectDialog md-input-container {
+  #app #projectDialog md-input-container {
     min-width: 33%; }
-    #app #newProjectDialog md-input-container.half {
+    #app #projectDialog md-input-container.half {
       min-width: 50%; }
-  #app #newProjectDialog md-datepicker {
+  #app #projectDialog md-datepicker {
     padding-top: 15px; }
-  #app #newProjectDialog .file-upload-wrapper {
+  #app #projectDialog .file-upload-wrapper {
     position: relative;
     background-color: #808080;
     padding: 6px 12px;
     width: 125px;
     text-align: center;
     cursor: pointer; }
-    #app #newProjectDialog .file-upload-wrapper span {
+    #app #projectDialog .file-upload-wrapper span {
       color: #fff;
       cursor: pointer; }
-    #app #newProjectDialog .file-upload-wrapper label {
+    #app #projectDialog .file-upload-wrapper label {
       top: auto;
       cursor: pointer; }
-  #app #newProjectDialog input#project_logo {
+  #app #projectDialog input#project_logo {
     width: 0.1px;
     height: 0.1px;
     opacity: 0;
     overflow: hidden;
     position: absolute;
     z-index: -1; }
-  #app #newProjectDialog button[type=submit] {
+  #app #projectDialog button[type=submit] {
     font-size: 10px;
     padding: 0 12px; }
 
@@ -14562,11 +14562,16 @@ nav {
   position: relative;
   left: 140px;
   width: calc(100% - 140px); }
+  #app main.main-app md-toolbar.top {
+    height: 63px;
+    background-color: transparent;
+    color: #1a1a1a;
+    border-bottom: 1px solid #444; }
   #app main.main-app .view-panel {
     position: fixed;
     left: 140px;
     right: 0;
-    top: 80px;
+    top: 63px;
     -webkit-transform: translateX(-100%);
             transform: translateX(-100%);
     transition: -webkit-transform 0.5s ease;
