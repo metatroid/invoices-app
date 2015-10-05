@@ -38,9 +38,12 @@ angular.module('invoices.controllers', [])
         }
       });
     };
-    $scope.cancelProject = function() {
+    $scope.closeDialog = function() {
       $mdDialog.cancel();
     };
+    function closeToast(){
+      $mdToast.hide();
+    }
 
     function detachProjectAndClearFields(id){
       var targetProject = Project.get({id: id}, function(){
@@ -61,11 +64,7 @@ angular.module('invoices.controllers', [])
           return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
       }
     }
-    function closeToast(){
-      $mdToast.hide();
-    }
     $scope.createProject = function(data){
-      $log.info(data);
       if(!xhrfile() && data.project_logo){
         var toast = $mdToast.simple()
                       .content('Your browser does not support xhr file uploads. Selected image will be removed.')
@@ -79,37 +78,10 @@ angular.module('invoices.controllers', [])
           }
         });
       }
-      //
-      // var form = document.getElementById('projectForm'),
-      //     formData = new FormData(form);
-      // formData.append('project_logo[]', data.project_logo[0]);
-      // $log.info("formdata: ");
-      // $log.info(formData);
-      // $http.post('/api/projects/', formData, {
-      //   transformRequest: angular.identity,
-      //   headers: {'Content-Type': undefined}
-      // }).success(function(project){
-      //   $scope.cancelProject();
-      //   detachProjectAndClearFields(project.id);
-      // }).error(function(error){
-      //   $log.error(error);
-      //   $scope.newProject.error = formatErr(error);
-      // });
-      // var formData = new FormData();
-      // formData.append('project_name', data.project_name);
-      // formData.append('project_logo', data.project_logo);
-      apiSrv.request('POST', 'projects/', data, function(project){
-        $scope.cancelProject();
+      $scope.newProject.$save(function(project){
+        $scope.closeDialog();
         detachProjectAndClearFields(project.id);
-      }, function(error){
-        $log.error(error);
-        $scope.newProject.error = formatErr(error);
       });
-
-      // $scope.newProject.$save(function(project){
-      //   $scope.cancelProject();
-      //   detachProjectAndClearFields(project.id);
-      // });
     };
     $scope.deleteProject = function(ev, id, index){
       var confirm = $mdDialog.confirm()

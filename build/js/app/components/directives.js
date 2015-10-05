@@ -169,8 +169,6 @@ angular.module('invoices.directives', [])
             };
             reader.readAsDataURL(this.files[0]);
             filename = e.target.value.split('\\').pop().length > 14 ? e.target.value.split('\\').pop().slice(0,11)+"&hellip;" : e.target.value.split('\\').pop();
-            // $parse($attrs.infile).assign($scope, $element[0].files[0]);
-            // $scope.$apply();
           }
           if(filename){
             this.nextSibling.querySelector('span.label').innerHTML = filename;
