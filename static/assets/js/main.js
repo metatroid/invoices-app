@@ -60045,33 +60045,39 @@ angular.module('invoices.controllers', [])
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
   .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', '$timeout', function($scope, $log, $sce, apiSrv, $mdDialog, djResource, $timeout){
-    var clearProjectFormFields = function(){
-      $scope.newProject.project_name = "";
-      $scope.newProject.project_url = "";
-      $scope.newProject.project_description = "";
-      $scope.newProject.client_name = "";
-      $scope.newProject.client_email = "";
-      $scope.newProject.deadline = "";
-      $scope.newProject.hourly_rate = "";
-      $scope.newProject.fixed_rate = "";
-      $scope.newProject.project_logo = "";
-    };
     var Project = djResource('api/projects/:id', {'id': "@id"});
     $scope.projects = Project.query();
     $scope.newProject = new Project();
-    function insertProject(data){
-      $log.info($scope.projects);
-      $log.info($scope.projects.length);
-      $log.info(data);
-      $scope.projects.splice($scope.projects.length,1,data);
-      $log.info($scope.projects);
-      $log.info($scope.projects.length);
+
+    $scope.showNewProjectForm = function(ev){
+      $mdDialog.show({
+        controller: function(){this.parent = $scope;},
+        controllerAs: 'ctrl',
+        templateUrl: 'angular/partials/project-new.html',
+        parent: angular.element(document.getElementById('projects')),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onComplete: function(){
+          document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
+          document.querySelectorAll("md-dialog-content input")[0].focus();
+        }
+      });
+    };
+    $scope.cancelProject = function() {
+      $mdDialog.cancel();
+    };
+
+    function detachProjectAndClearFields(id){
+      var targetProject = Project.get({id: id}, function(){
+        $scope.projects.push(targetProject);
+        $scope.newProject = new Project();
+      });
     }
-    $scope.createProject = function(){
-      $scope.newProject.$save(function(data){
-        insertProject(data);
+    
+    $scope.createProject = function(data){
+      $scope.newProject.$save(function(project){
         $scope.cancelProject();
-        clearProjectFormFields();
+        detachProjectAndClearFields(project.id);
       });
     };
     $scope.deleteProject = function(ev, id, index){
@@ -60162,23 +60168,6 @@ angular.module('invoices.controllers', [])
           $log.error(err);
         }
       );
-    };
-
-    $scope.cancelProject = function() {
-      $mdDialog.cancel();
-    };
-    $scope.showNewProjectForm = function(ev){
-      $mdDialog.show({
-        controller: 'appCtrl',
-        templateUrl: 'angular/partials/project-new.html',
-        parent: angular.element(document.getElementById('app')),
-        targetEvent: ev,
-        clickOutsideToClose: true,
-        onComplete: function(){
-          document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
-          document.querySelectorAll("md-dialog-content input")[0].focus();
-        }
-      });
     };
 
     $scope.htmlSafe = $sce.trustAsHtml;
