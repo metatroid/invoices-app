@@ -19,20 +19,44 @@
     .row
       .col-sm-4
         .panel{inview: "slideInLeft"}
-          %h4
-            Track
-          %p
-            %span.fa.fa-heartbeat
+          .inside
+            %h4
+              Track
+            %p
+              %span.fa.fa-heartbeat
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
       .col-sm-4
         .panel{inview: "fadeIn"}
-          %h4
-            Invoice
-          %p
-            %span.fa.fa-file-text-o
+          .inside
+            %h4
+              Invoice
+            %p
+              %span.fa.fa-file-text-o
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
       .col-sm-4
         .panel{inview: "slideInRight"}
-          %h4
-            Analyze
-          %p
-            %span.fa.fa-bar-chart
+          .inside
+            %h4
+              Analyze
+            %p
+              %span.fa.fa-bar-chart
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+#strip
+  %canvas#blur{inbokeh: "inbokeh"}
+  .container
+    .row
+      .col-xs-12
+        %h2
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit
+%footer#foot
+  .container
+    .row
+      .col-xs-12
+        .pull-left
+          %strong
+            METATROID.COM
+        .pull-right
+          %a{href: "mailto:metatroid@gmail.com"}
+            metatroid@gmail.com
+
 #auth{ui-view: "auth"}
