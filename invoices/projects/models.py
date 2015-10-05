@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import models
 
 def logo_path(instance, filename):
-    return 'project_logos/%d/%s' % (instance.user.id, filename)
+    return 'project_logos/%d/%s/%s' % (instance.user.id, instance.project_name, filename)
 
 class Project(models.Model):
   def __str__(self):

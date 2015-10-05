@@ -8,50 +8,50 @@
         %span.fa.fa-caret-down
   %md-dialog-content
     .form-wrapper.project-form-wrapper
-    
-      %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
-        %md-input-container
-          %label
-            Project Name
-          %input{ng-model: "ctrl.parent.newProject.project_name", required: "required"}
-        %md-input-container
-          %label
-            Project URL
-          %input{ng-model: "ctrl.parent.newProject.project_url"}
-        %md-datepicker{ng-model: "ctrl.parent.newProject.deadline", md-placeholder: "Project Deadline"}
-      %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
-        %md-input-container.half
-          %label
-            Client Name
-          %input{ng-model: "ctrl.parent.newProject.client_name"}
-        %md-input-container.half
-          %label
-            Client Email
-          %input{ng-model: "ctrl.parent.newProject.client_email"}
-      %md-content{layout-padding: "layout-padding"}
-        %md-input-container
-          %label
-            Project Description
-          %textarea{ng-model: "ctrl.parent.newProject.project_description", columns: "1", md-maxlength: "350"}
-      %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
-        %md-input-container.half
-          %label
-            Hourly Rate
-          %input{ng-model: "ctrl.parent.newProject.hourly_rate"}
-        %md-input-container.half
-          %label
-            Fixed Rate
-          %input{ng-model: "ctrl.parent.newProject.fixed_Rate"}
-      %md-content{layout-padding: "layout-padding"}
-        %md-input-container
-          .file-upload-wrapper
-            %input{type: "file", aria-label: "Project logo upload", ng-model: "ctrl.parent.newProject.project_logo", id: "project_logo", infilechange: "infilechange"}
-            %label.md-no-float{for: "project_logo"}
-              %span.fa.fa-upload
-              %span.label
-                Project Logo
-      %input{type: "hidden", ng-model: "ctrl.parent.newProject.user", ng-value: "ctrl.parent.user.id", value: "{{ctrl.parent.user.id}}", name: "user", required: "true"}
-      .md-actions{layout: "row"}
-        %ul.errors.text-danger{ng-if: "ctrl.parent.newProject.error != ''", ng-bind-html: "ctrl.parent.htmlSafe(ctrl.parent.newProject.error)"}
-        %md-button.md-primary{ng-click: "ctrl.parent.createProject(ctrl.parent.newProject)"}
-          insert project
+      %form.form#projectForm
+        %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
+          %md-input-container
+            %label
+              Project Name
+            %input{ng-model: "ctrl.parent.newProject.project_name", required: "required"}
+          %md-input-container
+            %label
+              Project URL
+            %input{ng-model: "ctrl.parent.newProject.project_url"}
+          %md-datepicker{ng-model: "ctrl.parent.newProject.deadline", md-placeholder: "Project Deadline"}
+        %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
+          %md-input-container.half
+            %label
+              Client Name
+            %input{ng-model: "ctrl.parent.newProject.client_name"}
+          %md-input-container.half
+            %label
+              Client Email
+            %input{ng-model: "ctrl.parent.newProject.client_email"}
+        %md-content{layout-padding: "layout-padding"}
+          %md-input-container
+            %label
+              Project Description
+            %textarea{ng-model: "ctrl.parent.newProject.project_description", columns: "1", md-maxlength: "350"}
+        %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
+          %md-input-container.half
+            %label
+              Hourly Rate
+            %input{ng-model: "ctrl.parent.newProject.hourly_rate"}
+          %md-input-container.half
+            %label
+              Fixed Rate
+            %input{ng-model: "ctrl.parent.newProject.fixed_Rate"}
+        %md-content{layout-padding: "layout-padding"}
+          %md-input-container
+            .file-upload-wrapper
+              %input{type: "file", aria-label: "Project logo upload", id: "project_logo", infile: "ctrl.parent.newProject.project_logo"}
+              %label.md-no-float{for: "project_logo"}
+                %span.fa.fa-upload
+                %span.label
+                  Project Logo
+        %input{type: "hidden", ng-model: "ctrl.parent.newProject.user", ng-value: "ctrl.parent.user.id", value: "{{ctrl.parent.user.id}}", name: "user", required: true}
+        .md-actions{layout: "row"}
+          %ul.errors.text-danger{ng-if: "ctrl.parent.newProject.error != ''", ng-bind-html: "ctrl.parent.htmlSafe(ctrl.parent.newProject.error)"}
+          %md-button.md-primary{ng-click: "ctrl.parent.createProject(ctrl.parent.newProject)"}
+            insert project

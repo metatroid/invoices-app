@@ -14627,7 +14627,10 @@ nav {
         #app #projects .project-list .project .md-fab-action-item button:hover {
           color: white; }
       #app #projects .project-list .project img.md-avatar {
-        margin-top: 0; }
+        margin-top: 0;
+        margin-right: 13px;
+        max-width: 39px;
+        max-height: 50px; }
       #app #projects .project-list .project .project-info-wrapper {
         width: 30%; }
       #app #projects .project-list .project .timer-btn {

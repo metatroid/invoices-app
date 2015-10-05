@@ -19,3 +19,6 @@ def after_save_interval(sender, **kwargs):
           interval.end = None
           interval.start = None
           interval.save()
+@receiver(pre_delete, sender=Project)
+def delete_logo_with_project(sender, **kwargs):
+  kwargs.get('instance').project_logo.delete(False)

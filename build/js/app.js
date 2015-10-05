@@ -48,7 +48,7 @@ angular.module('invoices.controllers', [])
     );
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', '$timeout', function($scope, $log, $sce, apiSrv, $mdDialog, djResource, $timeout){
+  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
     var Project = djResource('api/projects/:id', {'id': "@id"});
     $scope.projects = Project.query();
     $scope.newProject = new Project();
@@ -78,11 +78,67 @@ angular.module('invoices.controllers', [])
       });
     }
     
+    function xhrfile() {
+      return supportFileAPI() && supportAjaxUploadProgressEvents();
+      function supportFileAPI() {
+          var input = document.createElement('input');
+          input.type = 'file';
+          return 'files' in input;
+      }
+      function supportAjaxUploadProgressEvents() {
+          var xhr = new XMLHttpRequest();
+          return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
+      }
+    }
+    function closeToast(){
+      $mdToast.hide();
+    }
     $scope.createProject = function(data){
-      $scope.newProject.$save(function(project){
+      $log.info(data);
+      if(!xhrfile() && data.project_logo){
+        var toast = $mdToast.simple()
+                      .content('Your browser does not support xhr file uploads. Selected image will be removed.')
+                      .action('Ok')
+                      .highlightAction(false)
+                      .hideDelay(6000)
+                      .position('top right');
+        $mdToast.show(toast).then(function(){
+          if(data.project_logo){
+            data.project_logo = null;
+          }
+        });
+      }
+      //
+      // var form = document.getElementById('projectForm'),
+      //     formData = new FormData(form);
+      // formData.append('project_logo[]', data.project_logo[0]);
+      // $log.info("formdata: ");
+      // $log.info(formData);
+      // $http.post('/api/projects/', formData, {
+      //   transformRequest: angular.identity,
+      //   headers: {'Content-Type': undefined}
+      // }).success(function(project){
+      //   $scope.cancelProject();
+      //   detachProjectAndClearFields(project.id);
+      // }).error(function(error){
+      //   $log.error(error);
+      //   $scope.newProject.error = formatErr(error);
+      // });
+      // var formData = new FormData();
+      // formData.append('project_name', data.project_name);
+      // formData.append('project_logo', data.project_logo);
+      apiSrv.request('POST', 'projects/', data, function(project){
         $scope.cancelProject();
         detachProjectAndClearFields(project.id);
+      }, function(error){
+        $log.error(error);
+        $scope.newProject.error = formatErr(error);
       });
+
+      // $scope.newProject.$save(function(project){
+      //   $scope.cancelProject();
+      //   detachProjectAndClearFields(project.id);
+      // });
     };
     $scope.deleteProject = function(ev, id, index){
       var confirm = $mdDialog.confirm()
@@ -163,7 +219,7 @@ angular.module('invoices.controllers', [])
       apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
         function(data){
           $scope.projects.splice(index, 1, data);
-          timerBtn.innerHTML = "00:00:00";
+          // timerBtn.innerHTML = "00:00:00";
           intervals[id].timerRunning = false;
           $scope.timeEvent = "startTimer";
           $scope.intervalObj.description = "";
@@ -334,14 +390,34 @@ angular.module('invoices.directives', [])
       }
     };
   })
-  .directive('infilechange', function(){
+  .directive('infile', function(){
     return {
+      scope: {
+        infile: "="
+      },
       restrict: 'A',
       link: function($scope, $element, $attrs){
         angular.element($element).on('change', function(e){
-          var filename = '';
+          var reader = new FileReader(),
+              filename = '',
+              input = this,
+              data;
           if(this.files && this.files[0]){
+            reader.onload = function(ev){
+              data = ev.target.result;
+              var preview = document.getElementById('logoPreview') || document.createElement('img');
+              preview.id = "logoPreview";
+              preview.setAttribute('src', reader.result);
+              preview.style.width = "100px";
+              input.parentElement.appendChild(preview);
+              $scope.$apply(function(){
+                $scope.infile = data;
+              });
+            };
+            reader.readAsDataURL(this.files[0]);
             filename = e.target.value.split('\\').pop().length > 14 ? e.target.value.split('\\').pop().slice(0,11)+"&hellip;" : e.target.value.split('\\').pop();
+            // $parse($attrs.infile).assign($scope, $element[0].files[0]);
+            // $scope.$apply();
           }
           if(filename){
             this.nextSibling.querySelector('span.label').innerHTML = filename;
@@ -367,36 +443,36 @@ angular.module('invoices.directives', [])
       }
     };
   })
-  .directive('incounting', ['$interval', 'apiSrv', function($interval, apiSrv){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var self = this,
-              timer,
-              timeSync,
-              startTime,
-              totalElapsed = 0,
-              elapsed = 0,
-              timerEl = angular.element($element),
-              projectId = timerEl[0].getAttribute('data-project'),
-              intervalId = timerEl[0].getAttribute('data-interval');
-          timerEl.on('startTimer', function(){
-            startTime = new Date();
-            timer = $interval(function(){
-              var now = new Date();
-              elapsed = now.getTime() - startTime.getTime();
-              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
-            }, 1001);
-          });
-          angular.element($element).on('stopTimer', function(){
-            $interval.cancel(timer);
-            timer = undefined;
-            totalElapsed += elapsed;
-            elapsed = 0;
-          });
-        }
-      };
-    }])
+  .directive('incounting', ['$interval', function($interval){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        var self = this,
+            timer,
+            timeSync,
+            startTime,
+            totalElapsed = 0,
+            elapsed = 0,
+            timerEl = angular.element($element),
+            projectId = timerEl[0].getAttribute('data-project'),
+            intervalId = timerEl[0].getAttribute('data-interval');
+        timerEl.on('startTimer', function(){
+          startTime = new Date();
+          timer = $interval(function(){
+            var now = new Date();
+            elapsed = now.getTime() - startTime.getTime();
+            angular.element($element).html(msToTimeString(totalElapsed+elapsed));
+          }, 1001);
+        });
+        angular.element($element).on('stopTimer', function(){
+          $interval.cancel(timer);
+          timer = undefined;
+          totalElapsed += elapsed;
+          elapsed = 0;
+        });
+      }
+    };
+  }])
 ;
 angular.module('invoices.filters', [])
   .filter('msToTimeString', function(){

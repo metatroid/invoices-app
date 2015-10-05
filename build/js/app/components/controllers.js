@@ -19,7 +19,7 @@ angular.module('invoices.controllers', [])
     );
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', 'djResource', '$timeout', function($scope, $log, $sce, apiSrv, $mdDialog, djResource, $timeout){
+  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
     var Project = djResource('api/projects/:id', {'id': "@id"});
     $scope.projects = Project.query();
     $scope.newProject = new Project();
@@ -49,11 +49,67 @@ angular.module('invoices.controllers', [])
       });
     }
     
+    function xhrfile() {
+      return supportFileAPI() && supportAjaxUploadProgressEvents();
+      function supportFileAPI() {
+          var input = document.createElement('input');
+          input.type = 'file';
+          return 'files' in input;
+      }
+      function supportAjaxUploadProgressEvents() {
+          var xhr = new XMLHttpRequest();
+          return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
+      }
+    }
+    function closeToast(){
+      $mdToast.hide();
+    }
     $scope.createProject = function(data){
-      $scope.newProject.$save(function(project){
+      $log.info(data);
+      if(!xhrfile() && data.project_logo){
+        var toast = $mdToast.simple()
+                      .content('Your browser does not support xhr file uploads. Selected image will be removed.')
+                      .action('Ok')
+                      .highlightAction(false)
+                      .hideDelay(6000)
+                      .position('top right');
+        $mdToast.show(toast).then(function(){
+          if(data.project_logo){
+            data.project_logo = null;
+          }
+        });
+      }
+      //
+      // var form = document.getElementById('projectForm'),
+      //     formData = new FormData(form);
+      // formData.append('project_logo[]', data.project_logo[0]);
+      // $log.info("formdata: ");
+      // $log.info(formData);
+      // $http.post('/api/projects/', formData, {
+      //   transformRequest: angular.identity,
+      //   headers: {'Content-Type': undefined}
+      // }).success(function(project){
+      //   $scope.cancelProject();
+      //   detachProjectAndClearFields(project.id);
+      // }).error(function(error){
+      //   $log.error(error);
+      //   $scope.newProject.error = formatErr(error);
+      // });
+      // var formData = new FormData();
+      // formData.append('project_name', data.project_name);
+      // formData.append('project_logo', data.project_logo);
+      apiSrv.request('POST', 'projects/', data, function(project){
         $scope.cancelProject();
         detachProjectAndClearFields(project.id);
+      }, function(error){
+        $log.error(error);
+        $scope.newProject.error = formatErr(error);
       });
+
+      // $scope.newProject.$save(function(project){
+      //   $scope.cancelProject();
+      //   detachProjectAndClearFields(project.id);
+      // });
     };
     $scope.deleteProject = function(ev, id, index){
       var confirm = $mdDialog.confirm()
@@ -134,7 +190,7 @@ angular.module('invoices.controllers', [])
       apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
         function(data){
           $scope.projects.splice(index, 1, data);
-          timerBtn.innerHTML = "00:00:00";
+          // timerBtn.innerHTML = "00:00:00";
           intervals[id].timerRunning = false;
           $scope.timeEvent = "startTimer";
           $scope.intervalObj.description = "";
