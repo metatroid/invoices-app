@@ -91,8 +91,69 @@
     }
   }
 }
-
-#app{
+.form{
+  md-dialog-content{
+    padding-top: 0;
+  }
+  md-input-container{
+    min-width: 33%;
+    &.half{
+      min-width: 50%;
+    }
+  }
+  md-datepicker{
+    padding-top: 15px;
+  }
+  .file-upload-wrapper{
+    position: relative;
+    background-color: #808080;
+    padding: 6px 12px;
+    width: 125px;
+    text-align: center;
+    cursor: pointer;
+    span{
+      color: #fff;
+      cursor: pointer;
+      margin-right: 5px;
+      &.label{
+        font-size: 12px;
+        line-height: 20px;
+        margin-right: 0;
+      }
+    }
+    label{
+      top: auto;
+      cursor: pointer;
+    }
+  }
+  input[type=file]{
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+  .md-actions{
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgba(0,0,0,0.12);
+    display: flex;
+    order: 2;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 0;
+    padding-right: 8px;
+    padding-left: 16px;
+    min-height: 52px;
+    overflow: hidden;
+  }
+  button[type=submit]{
+    font-size: 10px;
+    padding: 0 12px;
+  }
+}
+#application{
   .btn{
     span{
       margin-right: 4px;
@@ -103,46 +164,6 @@
   }
   #projectDialog{
     max-height: 88%;
-    md-dialog-content{
-      padding-top: 0;
-    }
-    md-input-container{
-      min-width: 33%;
-      &.half{
-        min-width: 50%;
-      }
-    }
-    md-datepicker{
-      padding-top: 15px;
-    }
-    .file-upload-wrapper{
-      position: relative;
-      background-color: #808080;
-      padding: 6px 12px;
-      width: 125px;
-      text-align: center;
-      cursor: pointer;
-      span{
-        color: #fff;
-        cursor: pointer;
-      }
-      label{
-        top: auto;
-        cursor: pointer;
-      }
-    }
-    input#project_logo{
-      width: 0.1px;
-      height: 0.1px;
-      opacity: 0;
-      overflow: hidden;
-      position: absolute;
-      z-index: -1;
-    }
-    button[type=submit]{
-      font-size: 10px;
-      padding: 0 12px;
-    }
   }
   .project-form-wrapper{
     width: 800px;
@@ -182,6 +203,7 @@
     a{
       color: rgba(255,255,255,0.85);
       font-size: 12px;
+      cursor: pointer;
       span{
         margin-right: 5px;
       }
@@ -209,7 +231,7 @@
       }
     }
   }
-  #projects{
+  #app{
     background-image: linear-gradient(to bottom, rgba(255,255,255,1) 0, rgba(255,255,255,0.5) 100%);
     overflow: auto;
     bottom: 0;
@@ -329,9 +351,6 @@
           margin-bottom: 8px;
           font-size: 42px;
         }
-        // .md-list-item-text{
-        //   flex: 1;
-        // }
         .project-settings{
           position: absolute;
           right: 5px;
@@ -347,5 +366,10 @@
         }
       }
     }
+  }
+  #profile{
+    background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
+    overflow: auto;
+    bottom: 0;
   }
 }

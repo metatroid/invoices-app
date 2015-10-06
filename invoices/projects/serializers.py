@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from invoices.profiles.models import Profile
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
@@ -99,8 +100,29 @@ class ProjectSerializer(serializers.ModelSerializer):
       'statements'
     )
 
+class ProfileSerializer(serializers.ModelSerializer):
+  logo = Base64ImageField(max_length=None, use_url=True, required=False)
+  class Meta:
+    model = Profile
+    fields = (
+      'id',
+      'fullname',
+      'email',
+      'phone',
+      'address_1',
+      'address_2',
+      'region',
+      'website',
+      'logo',
+      'default_rate',
+      'invoice_theme',
+      'created_at',
+      'updated_at'
+    )
+
 class UserSerializer(serializers.ModelSerializer):
   projects = ProjectSerializer(many=True, read_only=True)
+  profile = ProfileSerializer(read_only=True)
   class Meta:
     model = User
     fields = (
@@ -111,5 +133,6 @@ class UserSerializer(serializers.ModelSerializer):
       'last_name',
       'date_joined',
       'last_login',
-      'projects'
+      'projects',
+      'profile'
     )

@@ -7096,50 +7096,83 @@ md-tooltip {
         margin-right: 5px;
         font-size: 12px; }
 
-#app .btn span {
+.form md-dialog-content {
+  padding-top: 0; }
+
+.form md-input-container {
+  min-width: 33%; }
+  .form md-input-container.half {
+    min-width: 50%; }
+
+.form md-datepicker {
+  padding-top: 15px; }
+
+.form .file-upload-wrapper {
+  position: relative;
+  background-color: #808080;
+  padding: 6px 12px;
+  width: 125px;
+  text-align: center;
+  cursor: pointer; }
+  .form .file-upload-wrapper span {
+    color: #fff;
+    cursor: pointer;
+    margin-right: 5px; }
+    .form .file-upload-wrapper span.label {
+      font-size: 12px;
+      line-height: 20px;
+      margin-right: 0; }
+  .form .file-upload-wrapper label {
+    top: auto;
+    cursor: pointer; }
+
+.form input[type=file] {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1; }
+
+.form .md-actions {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: rgba(0, 0, 0, 0.12);
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-order: 2;
+      -ms-flex-order: 2;
+          order: 2;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-justify-content: flex-end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  margin-bottom: 0;
+  padding-right: 8px;
+  padding-left: 16px;
+  min-height: 52px;
+  overflow: hidden; }
+
+.form button[type=submit] {
+  font-size: 10px;
+  padding: 0 12px; }
+
+#application .btn span {
   margin-right: 4px; }
 
-#app nav {
+#application nav {
   margin-bottom: 44px; }
 
-#app #projectDialog {
+#application #projectDialog {
   max-height: 88%; }
-  #app #projectDialog md-dialog-content {
-    padding-top: 0; }
-  #app #projectDialog md-input-container {
-    min-width: 33%; }
-    #app #projectDialog md-input-container.half {
-      min-width: 50%; }
-  #app #projectDialog md-datepicker {
-    padding-top: 15px; }
-  #app #projectDialog .file-upload-wrapper {
-    position: relative;
-    background-color: #808080;
-    padding: 6px 12px;
-    width: 125px;
-    text-align: center;
-    cursor: pointer; }
-    #app #projectDialog .file-upload-wrapper span {
-      color: #fff;
-      cursor: pointer; }
-    #app #projectDialog .file-upload-wrapper label {
-      top: auto;
-      cursor: pointer; }
-  #app #projectDialog input#project_logo {
-    width: 0.1px;
-    height: 0.1px;
-    opacity: 0;
-    overflow: hidden;
-    position: absolute;
-    z-index: -1; }
-  #app #projectDialog button[type=submit] {
-    font-size: 10px;
-    padding: 0 12px; }
 
-#app .project-form-wrapper {
+#application .project-form-wrapper {
   width: 800px; }
 
-#app nav.aside {
+#application nav.aside {
   margin-bottom: 0;
   position: fixed;
   top: 0;
@@ -7148,38 +7181,39 @@ md-tooltip {
   background-color: #0a0a0a;
   padding: 25px 0px;
   width: 140px; }
-  #app nav.aside ul {
+  #application nav.aside ul {
     list-style: none;
     padding: 0; }
-    #app nav.aside ul li a {
+    #application nav.aside ul li a {
       display: block;
       text-align: center;
       padding: 25px 50px;
       color: rgba(255, 255, 255, 0.35);
       font-size: 36px;
       transition: color 0.5s ease; }
-      #app nav.aside ul li a:hover {
+      #application nav.aside ul li a:hover {
         color: rgba(255, 255, 255, 0.85);
         text-decoration: none; }
-      #app nav.aside ul li a.active {
+      #application nav.aside ul li a.active {
         color: rgba(255, 255, 255, 0.85); }
 
-#app .app-actions a {
+#application .app-actions a {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 12px; }
-  #app .app-actions a span {
+  font-size: 12px;
+  cursor: pointer; }
+  #application .app-actions a span {
     margin-right: 5px; }
 
-#app main.main-app {
+#application main.main-app {
   position: relative;
   left: 140px;
   width: calc(100% - 140px); }
-  #app main.main-app md-toolbar.top {
+  #application main.main-app md-toolbar.top {
     height: 63px;
     background-color: transparent;
     color: #1a1a1a;
     border-bottom: 1px solid #444; }
-  #app main.main-app .view-panel {
+  #application main.main-app .view-panel {
     position: fixed;
     left: 140px;
     right: 0;
@@ -7188,19 +7222,19 @@ md-tooltip {
             transform: translateX(-100%);
     transition: -webkit-transform 0.5s ease;
     transition: transform 0.5s ease; }
-    #app main.main-app .view-panel.active {
+    #application main.main-app .view-panel.active {
       -webkit-transform: translateX(0%);
               transform: translateX(0%); }
 
-#app #projects {
+#application #app {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
   overflow: auto;
   bottom: 0; }
-  #app #projects .project-list {
+  #application #app .project-list {
     list-style: none;
     padding: 10px;
     margin: 0; }
-    #app #projects .project-list .project {
+    #application #app .project-list .project {
       padding: 10px;
       border: 1px solid #ddd;
       margin: 10px 0;
@@ -7209,14 +7243,14 @@ md-tooltip {
           -ms-flex-align: start;
               align-items: flex-start;
       position: relative; }
-      #app #projects .project-list .project md-fab-toolbar {
+      #application #app .project-list .project md-fab-toolbar {
         position: absolute;
         right: 0px;
         left: 0px;
         top: 0px; }
-      #app #projects .project-list .project md-toolbar {
+      #application #app .project-list .project md-toolbar {
         background-color: #333; }
-      #app #projects .project-list .project .md-button.md-fab {
+      #application #app .project-list .project .md-button.md-fab {
         width: 88px;
         height: 36px;
         line-height: 24px;
@@ -7225,27 +7259,27 @@ md-tooltip {
         margin: 0;
         color: rgba(255, 255, 255, 0.87);
         background-color: #333; }
-        #app #projects .project-list .project .md-button.md-fab span {
+        #application #app .project-list .project .md-button.md-fab span {
           position: relative;
           z-index: 20; }
-        #app #projects .project-list .project .md-button.md-fab .md-fab-toolbar-background {
+        #application #app .project-list .project .md-button.md-fab .md-fab-toolbar-background {
           background-color: #333;
           border-radius: 0 !important; }
-        #app #projects .project-list .project .md-button.md-fab .md-ripple-container {
+        #application #app .project-list .project .md-button.md-fab .md-ripple-container {
           border-radius: 0; }
-      #app #projects .project-list .project .md-fab-action-item button {
+      #application #app .project-list .project .md-fab-action-item button {
         color: rgba(255, 255, 255, 0.87);
         transition: all 0.5s ease; }
-        #app #projects .project-list .project .md-fab-action-item button:hover {
+        #application #app .project-list .project .md-fab-action-item button:hover {
           color: white; }
-      #app #projects .project-list .project img.md-avatar {
+      #application #app .project-list .project img.md-avatar {
         margin-top: 0;
         margin-right: 13px;
         max-width: 39px;
         max-height: 50px; }
-      #app #projects .project-list .project .project-info-wrapper {
+      #application #app .project-list .project .project-info-wrapper {
         width: 30%; }
-      #app #projects .project-list .project .timer-btn {
+      #application #app .project-list .project .timer-btn {
         position: relative;
         top: -20px;
         min-width: 26px;
@@ -7255,48 +7289,53 @@ md-tooltip {
         line-height: 1;
         min-height: 0;
         left: -8px; }
-      #app #projects .project-list .project .timer-wrapper {
+      #application #app .project-list .project .timer-wrapper {
         -webkit-align-self: center;
             -ms-flex-item-align: center;
                 align-self: center; }
-        #app #projects .project-list .project .timer-wrapper .interval-form-wrapper {
+        #application #app .project-list .project .timer-wrapper .interval-form-wrapper {
           display: none; }
-          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper button {
+          #application #app .project-list .project .timer-wrapper .interval-form-wrapper button {
             font-size: 10px;
             margin-top: 0; }
-          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper label {
+          #application #app .project-list .project .timer-wrapper .interval-form-wrapper label {
             font-size: 10px; }
-          #app #projects .project-list .project .timer-wrapper .interval-form-wrapper md-input-container {
+          #application #app .project-list .project .timer-wrapper .interval-form-wrapper md-input-container {
             padding-bottom: 10px; }
-        #app #projects .project-list .project .timer-wrapper .timer {
+        #application #app .project-list .project .timer-wrapper .timer {
           width: 150px; }
-          #app #projects .project-list .project .timer-wrapper .timer.saving .interval-form-wrapper {
+          #application #app .project-list .project .timer-wrapper .timer.saving .interval-form-wrapper {
             display: block; }
-          #app #projects .project-list .project .timer-wrapper .timer .timer-control {
+          #application #app .project-list .project .timer-wrapper .timer .timer-control {
             font-size: 12px;
             color: #333;
             display: block;
             text-align: center; }
-            #app #projects .project-list .project .timer-wrapper .timer .timer-control span {
+            #application #app .project-list .project .timer-wrapper .timer .timer-control span {
               margin-right: 5px; }
-        #app #projects .project-list .project .timer-wrapper button {
+        #application #app .project-list .project .timer-wrapper button {
           font-size: 32px;
           margin-top: 40px;
           margin-left: auto;
           margin-right: auto;
           display: block; }
-      #app #projects .project-list .project .project-icon {
+      #application #app .project-list .project .project-icon {
         display: block;
         margin-right: 14px;
         margin-bottom: 8px;
         font-size: 42px; }
-      #app #projects .project-list .project .project-settings {
+      #application #app .project-list .project .project-settings {
         position: absolute;
         right: 5px;
         top: 0px; }
-        #app #projects .project-list .project .project-settings a {
+        #application #app .project-list .project .project-settings a {
           color: #333;
           font-size: 10px; }
-      #app #projects .project-list .project h2, #app #projects .project-list .project h3, #app #projects .project-list .project h4 {
+      #application #app .project-list .project h2, #application #app .project-list .project h3, #application #app .project-list .project h4 {
         margin-top: 0;
         margin-bottom: 5px; }
+
+#application #profile {
+  background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
+  overflow: auto;
+  bottom: 0; }

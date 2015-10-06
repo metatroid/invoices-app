@@ -1,10 +1,10 @@
 %nav.aside
   %ul.sidebar
     %li
-      %a.active{href: "#", inreveal: "projects"}
+      %a{ng-class: "{active: $state.current.name === 'app'}", ui-sref: "app"}
         %span.fa.fa-tasks
     %li
-      %a{href: "#"}
+      %a{ng-class: "{active: $state.current.name === 'app.settings'}", ui-sref: "app.settings"}
         %span.fa.fa-cog
     %li
       %a{href: "#"}
@@ -13,13 +13,13 @@
       %a{href: "#"}
         %span.fa.fa-code-fork
   .app-actions
-    %a{href: "#", ng-click: "showNewProjectForm($event)"}
+    %a{ng-click: "showNewProjectForm($event)"}
       %span.fa.fa-plus-square
       New Project
-%main.main-app
+%main.main-app#mainAppView
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
-  #projects.view-panel.active
+  #app.view-panel{ng-class: "{active: currentState === 'app'}"}
     %md-content
       %md-list.project-list
         %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}"}
@@ -75,3 +75,10 @@
                       %input{ng-model: "intervalObj.description", required: "required"}
                     %md-button.md-raised.md-primary{type: "submit"}
                       save time interval
+  #profile.view-panel{ng-class: "{active: currentState === 'app.settings'}"}
+    %md-toolbar.md-default
+      .md-toolbar-tools
+        %h2.md-flex
+          Profile Settings
+    .form-wrapper.user-form-wrapper
+      %form.form#userForm{ui-view: "profile"}

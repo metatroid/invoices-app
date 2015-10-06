@@ -13,12 +13,12 @@ angular.module('invoices.controllers', [])
         $scope.user = user;
         if(user){
           $scope.bodyclass = "app";
-          if(!$state.is('main')){
-            $state.go('main');
+          if($state.is('initial')){
+            $state.go('app');
           }
           $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
             if(toState.name === "initial"){
-              $state.go('main');
+              $state.go('app');
             }
           });
         }
@@ -32,7 +32,20 @@ angular.module('invoices.controllers', [])
     $scope.showAuthForm = true;
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
+  .controller('userCtrl', ['$scope', '$state', '$log', 'apiSrv', function($scope, $state, $log, apiSrv){
+    $scope.updateProfile = function(userData){
+      apiSrv.request('PUT', 'user/'+$scope.user.id+'/', userData, function(data){
+        $log.info(data);
+      }, function(err){
+        $log.error(err);
+      });
+    };
+  }])
+  .controller('appCtrl', ['$rootScope', '$scope', '$state', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
+    $scope.currentState = $state.current.name;
+    $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+      $scope.currentState = toState.name;
+    });
     var Project = djResource('api/projects/:id', {'id': "@id"});
     $scope.projects = Project.query();
     $scope.newProject = new Project();
@@ -42,7 +55,7 @@ angular.module('invoices.controllers', [])
         controller: function(){this.parent = $scope;},
         controllerAs: 'ctrl',
         templateUrl: 'angular/partials/project-new.html',
-        parent: angular.element(document.getElementById('projects')),
+        parent: angular.element(document.querySelector('.view-panel.active')),
         targetEvent: ev,
         clickOutsideToClose: true,
         onComplete: function(){

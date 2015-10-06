@@ -2,7 +2,14 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
+from invoices.profiles.models import Profile
+from django.contrib.auth.models import User
 from decimal import *
+
+@receiver(post_save, sender=User)
+def ensure_profile_exists(sender, **kwargs):
+  if kwargs.get('created', False):
+    Profile.objects.get_or_create(user=kwargs.get('instance'))
 
 @receiver(post_save, sender=Interval)
 def after_save_interval(sender, **kwargs):

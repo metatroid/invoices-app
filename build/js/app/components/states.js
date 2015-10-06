@@ -31,26 +31,36 @@ angular.module('invoices.states', [
         css: cssDir + '/landing.css'
       }
     })
-    .state('main', {
+    .state('app', {
       url: '/invoices',
       views: {
         'main': {
           templateUrl: templateDir + '/main.html'
         },
-        'landing@main': {
+        'landing@app': {
           templateUrl: templateDir + '/auth.html',
           controller: 'authCtrl'
         },
-        'app@main': {
+        'app@app': {
           templateUrl: templateDir + '/app-main.html',
           controller: 'appCtrl'
         },
-        'nav@main': {
+        'nav@app': {
           templateUrl: templateDir + '/nav.html'
         }
       },
       data: {
         css: cssDir + '/app.css'
       }
-    });
+    })
+    .state('app.settings', {
+      url: '/settings',
+      views: {
+        'profile': {
+          templateUrl: templateDir + '/profile.html',
+          controller: 'userCtrl'
+        }
+      }
+    })
+  ;
 }]);

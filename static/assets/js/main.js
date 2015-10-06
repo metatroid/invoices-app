@@ -60103,12 +60103,12 @@ angular.module('invoices.controllers', [])
         $scope.user = user;
         if(user){
           $scope.bodyclass = "app";
-          if(!$state.is('main')){
-            $state.go('main');
+          if($state.is('initial')){
+            $state.go('app');
           }
           $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
             if(toState.name === "initial"){
-              $state.go('main');
+              $state.go('app');
             }
           });
         }
@@ -60122,7 +60122,20 @@ angular.module('invoices.controllers', [])
     $scope.showAuthForm = true;
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
-  .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
+  .controller('userCtrl', ['$scope', '$state', '$log', 'apiSrv', function($scope, $state, $log, apiSrv){
+    $scope.updateProfile = function(userData){
+      apiSrv.request('PUT', 'user/'+$scope.user.id+'/', userData, function(data){
+        $log.info(data);
+      }, function(err){
+        $log.error(err);
+      });
+    };
+  }])
+  .controller('appCtrl', ['$rootScope', '$scope', '$state', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
+    $scope.currentState = $state.current.name;
+    $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+      $scope.currentState = toState.name;
+    });
     var Project = djResource('api/projects/:id', {'id': "@id"});
     $scope.projects = Project.query();
     $scope.newProject = new Project();
@@ -60132,7 +60145,7 @@ angular.module('invoices.controllers', [])
         controller: function(){this.parent = $scope;},
         controllerAs: 'ctrl',
         templateUrl: 'angular/partials/project-new.html',
-        parent: angular.element(document.getElementById('projects')),
+        parent: angular.element(document.querySelector('.view-panel.active')),
         targetEvent: ev,
         clickOutsideToClose: true,
         onComplete: function(){
@@ -60344,11 +60357,6 @@ var smoothScroll = function (element, options) {
   }, 0);
 };
 
-var revealView = function(target){
-  document.querySelector('.view-panel.active').classList.remove('active');
-  document.getElementById(target).classList.add('active');
-};
-
 var msToTimeString = function(ms){
   var seconds = Math.floor(ms / 1000),
       h = 3600,
@@ -60530,20 +60538,23 @@ angular.module('invoices.directives', [])
         }
       };
     }])
-  .directive('inreveal', function(){
-    return {
-      restrict: 'A',
-      link: function($scope, $element, $attrs){
-        var target = $attrs.inreveal;
-        angular.element($element).on('click', function(e){
-          e.preventDefault();
-          document.querySelector('a.active').classList.remove('active');
-          this.classList.add('active');
-          revealView(target);
-        });
-      }
-    };
-  })
+  
+  // .directive('inreveal', function(){
+  //   return {
+  //     restrict: 'A',
+  //     link: function($scope, $element, $attrs){
+  //       angular.element($element).on('click', function(e){
+  //         e.preventDefault();
+  //         document.querySelector('a.active').classList.remove('active');
+  //         this.classList.add('active');
+          
+  //         document.querySelector('.view-panel.active').classList.remove('active');
+  //         document.getElementById(target).classList.add('active');
+  //       });
+  //     }
+  //   };
+  // })
+  
   .directive('infile', function(){
     return {
       scope: {
@@ -60707,26 +60718,36 @@ angular.module('invoices.states', [
         css: cssDir + '/landing.css'
       }
     })
-    .state('main', {
+    .state('app', {
       url: '/invoices',
       views: {
         'main': {
           templateUrl: templateDir + '/main.html'
         },
-        'landing@main': {
+        'landing@app': {
           templateUrl: templateDir + '/auth.html',
           controller: 'authCtrl'
         },
-        'app@main': {
+        'app@app': {
           templateUrl: templateDir + '/app-main.html',
           controller: 'appCtrl'
         },
-        'nav@main': {
+        'nav@app': {
           templateUrl: templateDir + '/nav.html'
         }
       },
       data: {
         css: cssDir + '/app.css'
       }
-    });
+    })
+    .state('app.settings', {
+      url: '/settings',
+      views: {
+        'profile': {
+          templateUrl: templateDir + '/profile.html',
+          controller: 'userCtrl'
+        }
+      }
+    })
+  ;
 }]);

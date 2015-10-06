@@ -49,7 +49,8 @@ INSTALLED_APPS = (
     'invoices',
     'invoices.projects',
     'invoices.intervals',
-    'invoices.statements'
+    'invoices.statements',
+    'invoices.profiles'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -95,7 +96,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/#/invoices'
-SOCIAL_AUTH_LOGIN_URL = '/#/invoices'
+SOCIAL_AUTH_LOGIN_URL = '/'
 SOCIAL_AUTH_FACEBOOK_KEY = config.get('global', 'FBKEY')
 SOCIAL_AUTH_FACEBOOK_SECRET = config.get('global', 'FBSECRET')
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config.get('global', 'GOOGLEID')
