@@ -1,5 +1,8 @@
 angular.module('invoices.controllers', [])
-  .controller('mainCtrl', ['$scope', '$log', 'apiSrv', function($scope, $log, apiSrv){
+  .controller('mainCtrl', ['$rootScope', '$scope', '$state', '$log', 'apiSrv', function($rootScope, $scope, $state, $log, apiSrv){
+    // $scope.$on('$viewContentLoaded', function(event){
+    //   $scope.ready = true;
+    // });
     $scope.showAuthForm = false;
     $scope.toggleAuthForm = function(){
       $scope.showAuthForm = !$scope.showAuthForm;
@@ -8,15 +11,25 @@ angular.module('invoices.controllers', [])
     apiSrv.request('GET', 'user', {}, 
       function(user){
         $scope.user = user;
-        $scope.ready = true;
         if(user){
           $scope.bodyclass = "app";
+          if(!$state.is('main')){
+            $state.go('main');
+          }
+          $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
+            if(toState.name === "initial"){
+              $state.go('main');
+            }
+          });
         }
       }, 
       function(er){
         $log.error(er);
       }
     );
+  }])
+  .controller('authCtrl', ['$scope', function($scope){
+    $scope.showAuthForm = true;
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
   .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){

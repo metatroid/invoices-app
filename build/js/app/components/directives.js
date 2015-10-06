@@ -72,6 +72,18 @@ var msToTimeString = function(ms){
 };
 
 angular.module('invoices.directives', [])
+  .directive('inready', ['$timeout', function($timeout){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var elementClass = $attrs.inready,
+              el = angular.element($element);
+          angular.element(document).ready(function(){
+            $timeout(function(){$element.addClass(elementClass);}, 250);
+          });
+        }
+      };
+    }])
   .directive('inscroll', ['$window', function($window){
     return {
       restrict: 'A',
@@ -136,7 +148,7 @@ angular.module('invoices.directives', [])
         link: function($scope, $elements, $attrs){
           var container = document.getElementById('strip'),
               width = container.clientWidth,
-              height = 350,
+              height = 450,
               canvas = document.getElementById('blur'),
               con = canvas.getContext('2d'),
               rint = 60,

@@ -28,7 +28,10 @@ angular.module('invoices')
   }
 ]);
 angular.module('invoices.controllers', [])
-  .controller('mainCtrl', ['$scope', '$log', 'apiSrv', function($scope, $log, apiSrv){
+  .controller('mainCtrl', ['$rootScope', '$scope', '$state', '$log', 'apiSrv', function($rootScope, $scope, $state, $log, apiSrv){
+    // $scope.$on('$viewContentLoaded', function(event){
+    //   $scope.ready = true;
+    // });
     $scope.showAuthForm = false;
     $scope.toggleAuthForm = function(){
       $scope.showAuthForm = !$scope.showAuthForm;
@@ -37,15 +40,25 @@ angular.module('invoices.controllers', [])
     apiSrv.request('GET', 'user', {}, 
       function(user){
         $scope.user = user;
-        $scope.ready = true;
         if(user){
           $scope.bodyclass = "app";
+          if(!$state.is('main')){
+            $state.go('main');
+          }
+          $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
+            if(toState.name === "initial"){
+              $state.go('main');
+            }
+          });
         }
       }, 
       function(er){
         $log.error(er);
       }
     );
+  }])
+  .controller('authCtrl', ['$scope', function($scope){
+    $scope.showAuthForm = true;
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
   .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
@@ -291,6 +304,18 @@ var msToTimeString = function(ms){
 };
 
 angular.module('invoices.directives', [])
+  .directive('inready', ['$timeout', function($timeout){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var elementClass = $attrs.inready,
+              el = angular.element($element);
+          angular.element(document).ready(function(){
+            $timeout(function(){$element.addClass(elementClass);}, 250);
+          });
+        }
+      };
+    }])
   .directive('inscroll', ['$window', function($window){
     return {
       restrict: 'A',
@@ -355,7 +380,7 @@ angular.module('invoices.directives', [])
         link: function($scope, $elements, $attrs){
           var container = document.getElementById('strip'),
               width = container.clientWidth,
-              height = 350,
+              height = 450,
               canvas = document.getElementById('blur'),
               con = canvas.getContext('2d'),
               rint = 60,
@@ -589,27 +614,47 @@ angular.module('invoices.services')
   }])
 ;
 angular.module('invoices.states', [
-               'ui.router'
+               'ui.router',
+               'uiRouterStyles'
 ])
 .run(['$rootScope', '$state', '$stateParams', function($rootScope, $state, $stateParams){
   $rootScope.$state = $state;
   $rootScope.$stateParams = $stateParams;
 }])
 .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider){
-  var templateDir = 'angular/partials';
+  var templateDir = 'angular/partials',
+      cssDir = "static/assets/css";
 
   $urlRouterProvider.otherwise('/');
 
   $stateProvider
-    .state('main', {
+    .state('initial', {
       url: '/',
       views: {
         'main': {
           templateUrl: templateDir + '/main.html'
         },
-        'landing@main': {
+        'landing@initial': {
           templateUrl: templateDir + '/landing.html',
           controller: 'anonCtrl'
+        },
+        'auth@initial': {
+          templateUrl: templateDir + '/auth.html'
+        }
+      },
+      data: {
+        css: cssDir + '/landing.css'
+      }
+    })
+    .state('main', {
+      url: '/invoices',
+      views: {
+        'main': {
+          templateUrl: templateDir + '/main.html'
+        },
+        'landing@main': {
+          templateUrl: templateDir + '/auth.html',
+          controller: 'authCtrl'
         },
         'app@main': {
           templateUrl: templateDir + '/app-main.html',
@@ -617,10 +662,10 @@ angular.module('invoices.states', [
         },
         'nav@main': {
           templateUrl: templateDir + '/nav.html'
-        },
-        'auth@main': {
-          templateUrl: templateDir + '/auth.html'
         }
+      },
+      data: {
+        css: cssDir + '/app.css'
       }
     });
 }]);

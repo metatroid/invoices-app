@@ -33056,6 +33056,71 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
+/**
+ * @author Manuel Mazzuola
+ * https://github.com/manuelmazzuola/angular-ui-router-styles
+ * Inspired by https://github.com/tennisgent/angular-route-styles
+ */
+
+(function() {
+  'use strict';
+  angular
+    .module('uiRouterStyles', ['ui.router'])
+    .directive('head', uiRouterStylesDirective);
+
+  uiRouterStylesDirective.$inject = ['$rootScope', '$compile', '$state', '$interpolate'];
+  function uiRouterStylesDirective($rootScope, $compile, $state, $interpolate) {
+    var directive = {
+      restrict: 'E',
+      link: uiRouterStylesLink
+    };
+
+    return directive;
+
+    function uiRouterStylesLink(scope, elem) {
+      var start = $interpolate.startSymbol(), end = $interpolate.endSymbol();
+      var html = '<link rel="stylesheet" ng-repeat="(k, css) in routeStyles track by k" ng-href="' + start + 'css' + end + '" >';
+
+      scope.routeStyles = [];
+
+      activate();
+
+      ////
+
+      function activate() {
+        elem.append($compile(html)(scope));
+        $rootScope.$on('$stateChangeSuccess', stateChangeSuccessCallback);
+      }
+
+      // Get the parent state
+      function $$parentState(state) {
+        // Check if state has explicit parent OR we try guess parent from its name
+        var name = state.parent || (/^(.+)\.[^.]+$/.exec(state.name) || [])[1];
+        // If we were able to figure out parent name then get this state
+        return name && $state.get(name);
+      }
+
+      function stateChangeSuccessCallback(evt, toState) {
+        // From current state to the root
+        scope.routeStyles = [];
+        for(var state = toState; state && state.name !== ''; state=$$parentState(state)) {
+          if(state && state.data && state.data.css) {
+            if(!Array.isArray(state.data.css)) {
+              state.data.css = [state.data.css];
+            }
+            angular.forEach(state.data.css, function(css) {
+              if(scope.routeStyles.indexOf(css) === -1) {
+                scope.routeStyles.push(css);
+              }
+            });
+          }
+        }
+        scope.routeStyles.reverse();
+      }
+    }
+  }
+})();
+
 'use strict';
 
 //Portions of this file:
@@ -60024,7 +60089,10 @@ angular.module('invoices')
   }
 ]);
 angular.module('invoices.controllers', [])
-  .controller('mainCtrl', ['$scope', '$log', 'apiSrv', function($scope, $log, apiSrv){
+  .controller('mainCtrl', ['$rootScope', '$scope', '$state', '$log', 'apiSrv', function($rootScope, $scope, $state, $log, apiSrv){
+    // $scope.$on('$viewContentLoaded', function(event){
+    //   $scope.ready = true;
+    // });
     $scope.showAuthForm = false;
     $scope.toggleAuthForm = function(){
       $scope.showAuthForm = !$scope.showAuthForm;
@@ -60033,15 +60101,25 @@ angular.module('invoices.controllers', [])
     apiSrv.request('GET', 'user', {}, 
       function(user){
         $scope.user = user;
-        $scope.ready = true;
         if(user){
           $scope.bodyclass = "app";
+          if(!$state.is('main')){
+            $state.go('main');
+          }
+          $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
+            if(toState.name === "initial"){
+              $state.go('main');
+            }
+          });
         }
       }, 
       function(er){
         $log.error(er);
       }
     );
+  }])
+  .controller('authCtrl', ['$scope', function($scope){
+    $scope.showAuthForm = true;
   }])
   .controller('anonCtrl', ['$scope', function($scope){}])
   .controller('appCtrl', ['$scope', '$log', '$sce', 'apiSrv', '$mdDialog', '$mdToast', 'djResource', '$timeout', '$http', function($scope, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $http){
@@ -60287,6 +60365,18 @@ var msToTimeString = function(ms){
 };
 
 angular.module('invoices.directives', [])
+  .directive('inready', ['$timeout', function($timeout){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var elementClass = $attrs.inready,
+              el = angular.element($element);
+          angular.element(document).ready(function(){
+            $timeout(function(){$element.addClass(elementClass);}, 250);
+          });
+        }
+      };
+    }])
   .directive('inscroll', ['$window', function($window){
     return {
       restrict: 'A',
@@ -60351,7 +60441,7 @@ angular.module('invoices.directives', [])
         link: function($scope, $elements, $attrs){
           var container = document.getElementById('strip'),
               width = container.clientWidth,
-              height = 350,
+              height = 450,
               canvas = document.getElementById('blur'),
               con = canvas.getContext('2d'),
               rint = 60,
@@ -60585,27 +60675,47 @@ angular.module('invoices.services')
   }])
 ;
 angular.module('invoices.states', [
-               'ui.router'
+               'ui.router',
+               'uiRouterStyles'
 ])
 .run(['$rootScope', '$state', '$stateParams', function($rootScope, $state, $stateParams){
   $rootScope.$state = $state;
   $rootScope.$stateParams = $stateParams;
 }])
 .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider){
-  var templateDir = 'angular/partials';
+  var templateDir = 'angular/partials',
+      cssDir = "static/assets/css";
 
   $urlRouterProvider.otherwise('/');
 
   $stateProvider
-    .state('main', {
+    .state('initial', {
       url: '/',
       views: {
         'main': {
           templateUrl: templateDir + '/main.html'
         },
-        'landing@main': {
+        'landing@initial': {
           templateUrl: templateDir + '/landing.html',
           controller: 'anonCtrl'
+        },
+        'auth@initial': {
+          templateUrl: templateDir + '/auth.html'
+        }
+      },
+      data: {
+        css: cssDir + '/landing.css'
+      }
+    })
+    .state('main', {
+      url: '/invoices',
+      views: {
+        'main': {
+          templateUrl: templateDir + '/main.html'
+        },
+        'landing@main': {
+          templateUrl: templateDir + '/auth.html',
+          controller: 'authCtrl'
         },
         'app@main': {
           templateUrl: templateDir + '/app-main.html',
@@ -60613,10 +60723,10 @@ angular.module('invoices.states', [
         },
         'nav@main': {
           templateUrl: templateDir + '/nav.html'
-        },
-        'auth@main': {
-          templateUrl: templateDir + '/auth.html'
         }
+      },
+      data: {
+        css: cssDir + '/app.css'
       }
     });
 }]);

@@ -1,0 +1,284 @@
+@import 'libs/bootstrap/bootstrap';
+
+#landing{
+  #graphic{
+    height: 75vh;
+    min-height: 450px;
+    max-height: 700px;
+    background-color: #000;
+    background-image: url(/static/assets/img/blurbg2.jpg);
+    background-size: cover;
+    position: relative;
+  }
+  .heading{
+    position: relative;
+    z-index: 6;
+    h1{
+      color: darken(#01acd0, 10%);
+      letter-spacing: .25em;
+      font-variant: small-caps;
+      font-weight: 700;
+      // text-shadow: 2px 2px 2px darken(#9eeeff, 50%);
+      // text-shadow: 2px 2px 2px #00829e, 0px 15px 2px #00829e;
+      // @include longshadow();
+      text-shadow: 0 -1px 0 rgba(#01acd0, 0.25), 0 1px 1px rgba(darken(#01acd0, 20%), 0.75);
+      position: relative;
+    }
+  }
+}
+.mockup{
+  background-image: url(/static/assets/img/laptop.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  height: 85vh;
+  position: relative;
+  z-index: 5;
+  opacity: 0;
+  transform: translateY(250px);
+  transition: opacity .75s ease, transform 1s ease;
+}
+.initialized{
+  #landing{
+    .mockup{
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+}
+#info{
+  margin-bottom: 60px;
+  padding-top: 40px;
+  clear: both;
+  overflow: hidden;
+  .panel{
+    text-align: center;
+    position:relative;
+    .inside{
+      min-height: 250px;
+      padding: 16px;
+      position: relative;
+      z-index: 3;
+      background-color: #fff;
+      box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+    }
+    &:before, &:after{
+      content:"";
+      position:absolute;
+      z-index:1;
+      box-shadow:0 0 20px rgba(0,0,0,0.8);
+      top:50%;
+      bottom:0;
+      left:10px;
+      right:10px;
+      border-radius:100px / 10px;
+    }
+    &:after{
+      right:10px;
+      left:auto;
+      transform:skew(8deg) rotate(3deg);
+    }
+    &:hover{
+      p span{
+        transform: scale(.75);
+      }
+    }
+    &[inview=fadeIn]{
+      opacity: 0;
+      transition: opacity .75s ease;
+      &.inview{
+        opacity: 1;
+      }
+    }
+    &[inview=slideInLeft]{
+      opacity: 0;
+      transform: translateX(-250px);
+      transition: opacity .75s ease, transform .5s ease;
+      &.inview{
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+    &[inview=slideInRight]{
+      opacity: 0;
+      transform: translateX(250px);
+      transition: opacity .75s ease, transform .5s ease;
+      &.inview{
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+    h4{
+      font-family: "Oswald", serif;
+      font-weight: 700;
+      letter-spacing: .05em;
+      padding-bottom: 5px;
+      border-bottom: 1px dotted #000;
+    }
+    p{
+      padding: 20px;
+      span{
+        font-size: 42px;
+        transform: scale(1);
+        transition: all .5s ease;
+        color: #333;
+        display: block;
+        margin-bottom: 20px;
+      }
+    }
+  }
+}
+#strip{
+  background-image: linear-gradient(to bottom, #0a365d, #030f1b);
+  height: 450px;
+  position: relative;
+  canvas{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .container{
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+  }
+  h2{
+    color: rgba(lighten(#01829d, 65%), 0.5);
+    font-size: 64px;
+    text-align: center;
+    font-family: "News Cycle", sans-serif;
+    font-weight: 400;
+  }
+}
+#features{
+  padding: 60px 0;
+  overflow: hidden;
+  .row{
+    margin-bottom: 80px;
+    display: flex;
+    align-items: center;
+  }
+  .screenshot{
+    padding: 12px;
+    &[inview=slideInLeft]{
+      opacity: 0;
+      transform: translateX(-250px);
+      transition: opacity .75s ease, transform .5s ease;
+      &.inview{
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+    &[inview=slideInRight]{
+      opacity: 0;
+      transform: translateX(250px);
+      transition: opacity .75s ease, transform .5s ease;
+      &.inview{
+        opacity: 1;
+        transform: translateX(0px);
+      }
+    }
+    img{
+      max-width: 100%;
+    }
+  }
+  .feature{
+    padding: 50px;
+    opacity: 0;
+    transition: opacity .75s ease;
+    &.inview{
+      opacity: 1;
+    }
+    h3{
+      font-family: "Oswald", sans-serif;
+      margin-top: 0;
+      font-size: 32px;
+      text-shadow: 0px 1px 0px rgba(0,0,0,0.5);
+      color: rgba(0,0,0,0.5);
+    }
+    p{
+      font-size: 16px;
+      line-height: 1.5;
+      font-family: "Poiret One", serif;
+    }
+  }
+}
+#foot{
+  background-color: #000;
+  padding: 25px 0;
+  a{
+    text-transform: lowercase;
+    font-variant: small-caps;
+    letter-spacing: .05em;
+    font-weight: 600;
+    color: #e7e7e7;
+    transition: color .5s ease;
+    &:hover{
+      color: #5e6262;
+      text-decoration: none;
+    }
+  }
+  strong{
+    position: relative;
+    a{
+      color: #e7e7e7;
+      text-transform: uppercase;
+      letter-spacing: .25em;
+      font-weight: bold;
+      font-variant: normal;
+      &:hover{
+        text-decoration: none;
+        color: #e7e7e7;
+      }
+    }
+    &:after{
+      content: 'metatroid.com';
+      text-transform: uppercase;
+      letter-spacing: .25em;
+      position:absolute;
+      left:2px;
+      text-shadow:-1px 0 #d11d00;
+      top:0;
+      color:#e7e7e7;
+      background:#000;
+      overflow:hidden;
+      clip:rect(0,900px,0,0); 
+      animation:noise-anim 5s infinite linear alternate-reverse;
+    }
+    &:before{
+      content: 'metatroid.com';
+      text-transform: uppercase;
+      position:absolute;
+      left:-2px;
+      text-shadow:1px 0 #01acd0;
+      letter-spacing: .25em;
+      top:0;
+      color:#e7e7e7;
+      background:#000;
+      overflow:hidden;
+      clip:rect(0,900px,0,0); 
+      animation:noise-anim-2 8s infinite linear alternate-reverse;
+    }
+  }
+}
+@keyframes noise-anim{
+  $steps:20;
+  @for $i from 0 through $steps{
+    #{percentage($i*(1/$steps))}{
+      clip:rect(random(18)+px,9999px,random(18)+px,0);
+    }
+  }
+}
+@keyframes noise-anim-2{
+  $steps:20;
+  @for $i from 0 through $steps{
+    #{percentage($i*(1/$steps))}{
+      clip:rect(random(18)+px,9999px,random(18)+px,0);
+    }
+  }
+}
+
+
+
