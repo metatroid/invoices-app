@@ -60414,7 +60414,7 @@ angular.module('invoices.directives', [])
           var elementClass = $attrs.inready,
               el = angular.element($element);
           angular.element(document).ready(function(){
-            $timeout(function(){$element.addClass(elementClass);}, 250);
+            $element.addClass(elementClass);
           });
         }
       };
