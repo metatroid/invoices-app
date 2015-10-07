@@ -151,3 +151,24 @@ nav{
     }
   }
 }
+// landing page header animation
+.mockup{
+  background-image: url(/static/assets/img/laptop.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  height: 85vh;
+  position: relative;
+  z-index: 5;
+  opacity: 0;
+  transform: translateY(250px);
+  transition: opacity .75s ease, transform 1s ease;
+}
+.initialized{
+  #landing{
+    .mockup{
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+}

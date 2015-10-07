@@ -39,26 +39,26 @@ nav{
     }
   }
 }
-.mockup{
-  background-image: url(/static/assets/img/laptop.png);
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-  height: 85vh;
-  position: relative;
-  z-index: 5;
-  opacity: 0;
-  transform: translateY(250px);
-  transition: opacity .75s ease-in, transform 1s ease-in;
-}
-.initialized{
-  #landing{
-    .mockup{
-      opacity: 1;
-      transform: translateY(0px);
-    }
-  }
-}
+// .mockup{
+//   background-image: url(/static/assets/img/laptop.png);
+//   background-repeat: no-repeat;
+//   background-size: contain;
+//   background-position: center;
+//   height: 85vh;
+//   position: relative;
+//   z-index: 5;
+//   opacity: 0;
+//   transform: translateY(250px);
+//   transition: opacity .75s ease-in, transform 1s ease-in;
+// }
+// .initialized{
+//   #landing{
+//     .mockup{
+//       opacity: 1;
+//       transform: translateY(0px);
+//     }
+//   }
+// }
 #info{
   margin-bottom: 60px;
   padding-top: 40px;
