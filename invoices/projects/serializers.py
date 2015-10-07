@@ -4,6 +4,7 @@ from invoices.profiles.models import Profile
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
+from decimal import Decimal
 
 class Base64ImageField(serializers.ImageField):
   """
@@ -120,9 +121,18 @@ class ProfileSerializer(serializers.ModelSerializer):
       'updated_at'
     )
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.HyperlinkedModelSerializer):
   projects = ProjectSerializer(many=True, read_only=True)
-  profile = ProfileSerializer(read_only=True)
+  # profile = ProfileSerializer()
+  fullname = serializers.CharField(source='profile.fullname', allow_blank=True)
+  email = serializers.EmailField(source='profile.email', allow_blank=True)
+  phone = serializers.CharField(source='profile.phone', allow_blank=True)
+  address_1 = serializers.CharField(source='profile.address_1', allow_blank=True)
+  address_2 = serializers.CharField(source='profile.address_2', allow_blank=True)
+  region = serializers.CharField(source='profile.region', allow_blank=True, default="US/Eastern")
+  website = serializers.URLField(source='profile.website', allow_blank=True)
+  default_rate = serializers.DecimalField(source='profile.default_rate', max_digits=8, decimal_places=2, default=Decimal('0.00'))
+
   class Meta:
     model = User
     fields = (
@@ -134,5 +144,28 @@ class UserSerializer(serializers.ModelSerializer):
       'date_joined',
       'last_login',
       'projects',
-      'profile'
+      'fullname',
+      'email',
+      'phone',
+      'address_1',
+      'address_2',
+      'region',
+      'website',
+      'default_rate'
     )
+  
+  def create(self, validated_data):
+    profile_data = validated_data.pop('profile', None)
+    user = super(UserSerializer, self).create(validated_data)
+    self.create_or_update_profile(user, profile_data)
+    return user
+
+  def update(self, instance, validated_data):
+    profile_data = validated_data.pop('profile', None)
+    self.create_or_update_profile(instance, profile_data)
+    return super(UserSerializer, self).update(instance, validated_data)
+
+  def create_or_update_profile(self, user, profile_data):
+    profile, created = Profile.objects.get_or_create(user=user, defaults=profile_data)
+    if not created and profile_data is not None:
+      super(UserSerializer, self).update(profile, profile_data)

@@ -18,7 +18,7 @@
             %label
               Project URL
             %input{ng-model: "ctrl.parent.newProject.project_url"}
-          %md-datepicker{ng-model: "ctrl.parent.newProject.deadline", md-placeholder: "Project Deadline"}
+          %md-datepicker{ng-model: "ctrl.parent.newProject.deadline_date", md-placeholder: "Project Deadline"}
         %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
           %md-input-container.half
             %label
@@ -41,7 +41,7 @@
           %md-input-container.half
             %label
               Fixed Rate
-            %input{ng-model: "ctrl.parent.newProject.fixed_Rate"}
+            %input{ng-model: "ctrl.parent.newProject.fixed_rate"}
         %md-content{layout-padding: "layout-padding"}
           %md-input-container
             .file-upload-wrapper

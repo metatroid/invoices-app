@@ -7,8 +7,6 @@ def logo_path(instance, filename):
     return 'user_logos/%d/%s' % (instance.user.id, filename)
 
 class Profile(models.Model):
-  def __str__(self):
-    return self.fullname + "'s Profile"
   user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE, null=True, blank=True)
   fullname = models.CharField(max_length=25, blank=True, null=True)
   email = models.EmailField(blank=True, null=True)

@@ -1,5 +1,19 @@
 @import 'libs/bootstrap/bootstrap';
-
+$dark: #2B2B2D;
+$darkgray: #0c1626;
+$bluegray: #596887;
+$lightgray: #AEB6B9;
+body{
+  color: $darkgray;
+}
+nav{
+  a{
+    color: $bluegray;
+    &:hover{
+      color: $lightgray;
+    }
+  }
+}
 #landing{
   #graphic{
     height: 75vh;
@@ -14,14 +28,13 @@
     position: relative;
     z-index: 6;
     h1{
-      color: darken(#01acd0, 10%);
+      // color: darken(#01acd0, 10%);
+      color: darken($bluegray, 25%);
       letter-spacing: .25em;
-      font-variant: small-caps;
       font-weight: 700;
-      // text-shadow: 2px 2px 2px darken(#9eeeff, 50%);
-      // text-shadow: 2px 2px 2px #00829e, 0px 15px 2px #00829e;
-      // @include longshadow();
-      text-shadow: 0 -1px 0 rgba(#01acd0, 0.25), 0 1px 1px rgba(darken(#01acd0, 20%), 0.75);
+      font-family: "News Cycle", sans-serif;
+      font-size: 22px;
+      margin-top: 32px;
       position: relative;
     }
   }
@@ -36,7 +49,7 @@
   z-index: 5;
   opacity: 0;
   transform: translateY(250px);
-  transition: opacity .75s ease, transform 1s ease;
+  transition: opacity .75s ease-in, transform 1s ease-in;
 }
 .initialized{
   #landing{
@@ -85,7 +98,7 @@
     }
     &[inview=fadeIn]{
       opacity: 0;
-      transition: opacity .75s ease;
+      transition: opacity .75s ease-in;
       &.inview{
         opacity: 1;
       }
@@ -93,7 +106,7 @@
     &[inview=slideInLeft]{
       opacity: 0;
       transform: translateX(-250px);
-      transition: opacity .75s ease, transform .5s ease;
+      transition: opacity .75s ease-in, transform .5s ease-in;
       &.inview{
         opacity: 1;
         transform: translateX(0px);
@@ -102,7 +115,7 @@
     &[inview=slideInRight]{
       opacity: 0;
       transform: translateX(250px);
-      transition: opacity .75s ease, transform .5s ease;
+      transition: opacity .75s ease-in, transform .5s ease-in;
       &.inview{
         opacity: 1;
         transform: translateX(0px);
@@ -120,8 +133,8 @@
       span{
         font-size: 42px;
         transform: scale(1);
-        transition: all .5s ease;
-        color: #333;
+        transition: all .5s ease-in;
+        color: #2B2B2D;
         display: block;
         margin-bottom: 20px;
       }
@@ -159,13 +172,16 @@
     margin-bottom: 80px;
     display: flex;
     align-items: center;
+    &:last-of-type{
+      margin-bottom: 0;
+    }
   }
   .screenshot{
     padding: 12px;
     &[inview=slideInLeft]{
       opacity: 0;
       transform: translateX(-250px);
-      transition: opacity .75s ease, transform .5s ease;
+      transition: opacity .75s ease-in, transform .5s ease-in;
       &.inview{
         opacity: 1;
         transform: translateX(0px);
@@ -174,7 +190,7 @@
     &[inview=slideInRight]{
       opacity: 0;
       transform: translateX(250px);
-      transition: opacity .75s ease, transform .5s ease;
+      transition: opacity .75s ease-in, transform .5s ease-in;
       &.inview{
         opacity: 1;
         transform: translateX(0px);
@@ -187,7 +203,7 @@
   .feature{
     padding: 50px;
     opacity: 0;
-    transition: opacity .75s ease;
+    transition: opacity .75s ease-in;
     &.inview{
       opacity: 1;
     }
@@ -196,12 +212,27 @@
       margin-top: 0;
       font-size: 32px;
       text-shadow: 0px 1px 0px rgba(0,0,0,0.5);
-      color: rgba(0,0,0,0.5);
+      // color: rgba(0,0,0,0.5);
+      color: $darkgray;
     }
     p{
       font-size: 16px;
       line-height: 1.5;
       font-family: "Poiret One", serif;
+      color: $darkgray;
+    }
+  }
+  .cta{
+    text-align: center;
+    h4{
+      font-size: 32px;
+      margin-bottom: 25px;
+      font-family: "Lato";
+      font-weight: 300;
+    }
+    a{
+      color: #666;
+      padding: 6px 24px;
     }
   }
 }
@@ -214,7 +245,7 @@
     letter-spacing: .05em;
     font-weight: 600;
     color: #e7e7e7;
-    transition: color .5s ease;
+    transition: color .5s ease-in;
     &:hover{
       color: #5e6262;
       text-decoration: none;

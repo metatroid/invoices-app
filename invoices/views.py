@@ -11,10 +11,12 @@ from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
 from invoices.projects.forms import ProjectForm
+import logging
+logger = logging.getLogger(__name__)
 
 class UserStatus(APIView):
   permission_classes = (AllowAny,)
-  def get(self, request):
+  def get(self, request, format=None):
     user = request.user
     if(user.is_active):
       return Response(UserSerializer(user).data)
@@ -179,6 +181,7 @@ def project_new(request):
   return render(request, 'project/project_edit.html', {'form': form})
 
 def index_view(request):
+  # logger.debug("")
   return render(request, 'index.html')
 
 def logout(request):

@@ -2,7 +2,7 @@
   %md-input-container
     %label
       Full name
-    %input{ng-model: "user.profile.fullname"}
+    %input{ng-model: "user.fullname"}
   %md-input-container
     %label
       Username
@@ -15,41 +15,28 @@
   %md-input-container
     %label
       Phone
-    %input{ng-model: "user.profile.phone"}
+    %input{ng-model: "user.phone"}
   %md-input-container
     %label
       Address 1
-    %input{ng-model: "user.profile.address_1"}
+    %input{ng-model: "user.address_1"}
   %md-input-container
     %label
       Address 2
-    %input{ng-model: "user.profile.address_2"}
+    %input{ng-model: "user.address_2"}
 %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
-  %md-input-container.half
+  %md-input-container
     %label
       Website
-    %input{ng-model: "user.profile.website"}
-  %md-input-container.half
+    %input{ng-model: "user.website"}
+  %md-input-container
     %label
       Default rate
-    %input{ng-model: "user.profile.default_rate"}
-%md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
-  %md-input-container.half
+    %input{ng-model: "user.default_rate"}
+  %md-input-container
     %label
       Timezone
-    %input{ng-model: "user.profile.region"}
-  %md-input-container.half
-    %label
-      Invoice theme
-    %input{ng-model: "user.profile.invoice_theme"}
-%md-content{layout-padding: "layout-padding"}
-  %md-input-container
-    .file-upload-wrapper
-      %input{type: "file", aria-label: "User logo upload", id: "logo", infile: "user.profile.logo"}
-      %label.md-no-float{for: "logo"}
-        %span.fa.fa-upload
-        %span.label
-          Logo
+    %input{ng-model: "user.region"}
 .md-actions{layout: "row"}
   %md-button.md-primary{ng-click: "updateProfile(user)"}
     save settings
