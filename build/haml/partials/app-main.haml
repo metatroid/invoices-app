@@ -34,6 +34,8 @@
                   %span.fa.fa-remove
                 %md-button.md-icon-button{aria-label: "invoice"}
                   %span.fa.fa-sticky-note
+                %md-button.md-icon-button{aria-label: "intervals", ng-click: "showIntervalList($event, project.id, $index)"}
+                  %span.fa.fa-clock-o
                 %md-button.md-icon-button{aria-label: "settings"}
                   %span.fa.fa-cog
           %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}

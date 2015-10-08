@@ -1,10 +1,12 @@
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 from django.dispatch import receiver
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.profiles.models import Profile
 from django.contrib.auth.models import User
 from decimal import *
+import logging
+logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=User)
 def ensure_profile_exists(sender, **kwargs):
@@ -15,17 +17,27 @@ def ensure_profile_exists(sender, **kwargs):
 def after_save_interval(sender, **kwargs):
     if(kwargs.get('created') == False):
       interval = kwargs.get('instance')
-      if(len(interval.description) > 0):
-        if(interval.end is not None and interval.start is not None):
-          intervalDuration = interval.end - interval.start
-          project = Project.objects.get(pk=interval.project.id)
-          project.total_time = project.total_time + intervalDuration.total_seconds()
-          project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
-          project.save()
-          interval.total = intervalDuration
-          interval.end = None
-          interval.start = None
-          interval.save()
+      intervalDuration = interval.end - interval.start
+      if(interval.total != intervalDuration):
+        interval.total = intervalDuration
+        interval.save()
+      project = Project.objects.get(pk=interval.project.id)
+      seconds = 0
+      for i in project.intervals.all():
+        seconds = seconds + i.total.total_seconds()
+      project.total_time = seconds
+      project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
+      project.save()
+
+@receiver(pre_delete, sender=Interval)
+def before_delete_interval(sender, **kwargs):
+  interval = kwargs.get('instance')
+  intervalDuration = interval.end - interval.start
+  project = Project.objects.get(pk=interval.project.id)
+  project.total_time = project.total_time - intervalDuration.total_seconds()
+  project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
+  project.save()
+
 @receiver(pre_delete, sender=Project)
 def delete_logo_with_project(sender, **kwargs):
   kwargs.get('instance').project_logo.delete(False)

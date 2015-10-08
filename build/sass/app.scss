@@ -100,6 +100,12 @@
     &.half{
       min-width: 50%;
     }
+    &.third1{
+      max-width: 33.333%;
+    }
+    &.third2{
+      max-width: 66.666%;
+    }
   }
   md-datepicker{
     padding-top: 15px;
@@ -371,5 +377,22 @@
     background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
     overflow: auto;
     bottom: 0;
+  }
+}
+
+md-bottom-sheet{
+  min-height: 600px;
+}
+.interval-list{
+  .md-actions{
+    min-height: 0;
+    justify-content: center;
+    .md-button{
+      text-align: center;
+      height: 36px;
+      width: 32px;
+      line-height: 36px;
+      margin: 0;
+    }
   }
 }

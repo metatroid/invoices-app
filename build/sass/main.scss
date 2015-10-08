@@ -5,6 +5,9 @@ $header: #1D2437;
 body{
   height: auto;
 }
+.borderless{
+  border: none !important;
+}
 .unstyled{
   list-style: none;
   padding: 0;
@@ -14,6 +17,18 @@ body{
   li{
     float: left;
   }
+}
+.inline-flex{
+  display: flex;
+  > div{
+    flex: 1;
+  }
+}
+.self-center{
+  align-self: center;
+}
+.auto{
+  width: 100%;
 }
 *:focus{
   outline: none !important;

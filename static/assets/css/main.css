@@ -2195,6 +2195,9 @@ th {
 body {
   height: auto; }
 
+.borderless {
+  border: none !important; }
+
 .unstyled {
   list-style: none;
   padding: 0; }
@@ -2203,6 +2206,23 @@ body {
   overflow: hidden; }
   .inline li {
     float: left; }
+
+.inline-flex {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex; }
+  .inline-flex > div {
+    -webkit-flex: 1;
+        -ms-flex: 1;
+            flex: 1; }
+
+.self-center {
+  -webkit-align-self: center;
+      -ms-flex-item-align: center;
+          align-self: center; }
+
+.auto {
+  width: 100%; }
 
 *:focus {
   outline: none !important; }

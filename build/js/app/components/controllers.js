@@ -62,12 +62,14 @@ angular.module('invoices.controllers', [])
                           '$log', 
                           '$sce', 
                           'apiSrv', 
-                          '$mdDialog', 
+                          '$mdDialog',
+                          '$mdBottomSheet', 
                           '$mdToast', 
                           'djResource', 
                           '$timeout', 
                           '$filter', 
-    function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdToast, djResource, $timeout, $filter){
+    function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter){
+      $scope.openProject;
       $scope.currentState = $state.current.name;
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         $scope.currentState = toState.name;
@@ -174,14 +176,21 @@ angular.module('invoices.controllers', [])
         intervals[id].timerRunning = true;
         var timerEl = document.getElementById("project_"+id).querySelector(".timer");
         timerEl.classList.remove('saving');
-        apiSrv.request('POST', 'projects/'+id+'/intervals/', {},
-         function(data){
-          intervals[id].interval = data.id;
-         },
-         function(err){
-          $log.error(err);
-         }
-        );
+        if($scope.timers.indexOf(id) === -1){
+          //create
+          $scope.timers.push(id);
+          apiSrv.request('POST', 'projects/'+id+'/intervals/', {start: (new Date())},
+           function(data){
+            intervals[id].interval = data.id;
+           },
+           function(err){
+            $log.error(err);
+           }
+          );
+        } else {
+          //update
+        }
+        
       };
       var stopTimer = function(id){
         $scope.timeEvent = "stopTimer";
@@ -203,10 +212,8 @@ angular.module('invoices.controllers', [])
         var ix = $scope.timers.indexOf(id);
         if(!timerRunning && (typeof intervals[id] === "undefined" || !intervals[id].timerRunning)){
           startTimer(id);
-          $scope.timers.push(id);
         } else {
           stopTimer(id);
-          $scope.timers.splice(ix, 1);
         }
       };
 
@@ -221,8 +228,8 @@ angular.module('invoices.controllers', [])
         apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
           function(data){
             $scope.projects.splice(index, 1, data);
-            // timerBtn.innerHTML = "00:00:00";
             intervals[id].timerRunning = false;
+            $scope.timers.splice(index, 1);
             $scope.timeEvent = "startTimer";
             $scope.intervalObj.description = "";
           },
@@ -230,6 +237,65 @@ angular.module('invoices.controllers', [])
             $log.error(err);
           }
         );
+      };
+      function timeDeltaToSeconds(delta){
+        var pieces = delta.split(":"),
+            hours = pieces[0],
+            minutes = pieces[1],
+            seconds = pieces[2],
+            timeDiff = (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseFloat(seconds);
+        return timeDiff;
+      }
+      $scope.showIntervalList = function(ev, pid, index){
+        $scope.openProject = index;
+        $mdBottomSheet.show({
+          controller: function(){
+            this.parent = $scope;
+            var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
+            this.parent.newInterval = new Interval();
+            this.parent.intervals = Interval.query({project_id: pid});
+            this.parent.project = Project.get({id: pid});
+            this.parent.updateInterval = function(interval, ev, index){
+              var start = new Date(interval.start),
+                  diff = interval.total,
+                  timeDiff = timeDeltaToSeconds(diff),
+                  newEnd = new Date(start.getTime() + timeDiff*1000);
+              interval.end = newEnd;
+              apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
+                function(data){
+                  $scope.projects.splice($scope.openProject, 1, data);
+                  project = data;
+                },
+                function(err){
+                  $log.error(err);
+                }
+              );
+            };
+            this.parent.deleteInterval = function(interval, ev, index){
+              var confirm = $mdDialog.confirm()
+                  .title('You are about to delete this time period.')
+                  .content('This action cannot be undone. Are you sure you wish to proceed?')
+                  .ariaLabel('Confirm delete')
+                  .targetEvent(ev)
+                  .ok('Delete this interval')
+                  .cancel('Cancel');
+              $mdDialog.show(confirm).then(function() {
+                apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
+                  function(data){
+                    $scope.intervals.splice(index, 1);
+                  },
+                  function(err){
+                    $log.error(err);
+                  }
+                );
+              }, function() {
+                $log.info('cancelled delete');
+              });
+            };
+          },
+          controllerAs: 'ctrl',
+          templateUrl: 'angular/partials/interval-list.html'
+        });
       };
 
       $scope.htmlSafe = $sce.trustAsHtml;
