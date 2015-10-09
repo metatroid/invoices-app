@@ -7345,7 +7345,17 @@ md-tooltip {
   bottom: 0; }
 
 md-bottom-sheet {
-  min-height: 600px; }
+  top: 0; }
+
+.interval-list .md-subheader-inner {
+  padding-left: 0;
+  padding-right: 0; }
+  .interval-list .md-subheader-inner .md-subheader-content {
+    border-bottom: 1px solid #999; }
+    .interval-list .md-subheader-inner .md-subheader-content:after {
+      content: '';
+      display: block;
+      clear: both; }
 
 .interval-list .md-actions {
   min-height: 0;

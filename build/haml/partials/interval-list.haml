@@ -5,7 +5,26 @@
         %strong
           Project: 
         {{ctrl.parent.project.project_name}}
-      %md-list-item.interval.form{ng-repeat: "interval in ctrl.parent.intervals", id: "interval_{{interval.id}}"}
+      %md-list-item.interval.form.auto
+        .auto{layout: "row"}
+          .inline-flex{flex: "90"}
+            %div{flex: "33"}
+              %md-input-container
+                %label
+                  Duration
+                %input{ng-model: "ctrl.parent.newInterval.total"}
+            %div{flex: "67"}
+              %md-input-container
+                %label
+                  Description
+                %input{ng-model: "ctrl.parent.newInterval.description"}
+          .self-center{flex: "10"}
+            .md-actions.borderless{layout: "row"}
+              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.insertInterval(newInterval, $event)", title: "Add New Time Interval"}
+                %span.fa.fa-plus-circle
+              %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(newInterval, $event)", title: "Clear Fields"}
+                %span.fa.fa-remove
+      %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals", id: "interval_{{interval.id}}"}
         .auto{layout: "row"}
           .inline-flex{flex: "90"}
             %div{flex: "33"}
@@ -20,7 +39,7 @@
                 %input{ng-model: "interval.description"}
           .self-center{flex: "10"}
             .md-actions.borderless{layout: "row"}
-              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.updateInterval(interval, $event, $index)"}
+              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.updateInterval(interval, $event, $index)", title: "Update Time Interval"}
                 %span.fa.fa-check-circle
-              %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.deleteInterval(interval, $event, $index)"}
+              %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
                 %span.fa.fa-remove

@@ -53,5 +53,5 @@
         %input{type: "hidden", ng-model: "ctrl.parent.newProject.user", ng-value: "ctrl.parent.user.id", value: "{{ctrl.parent.user.id}}", name: "user", required: true}
         .md-actions{layout: "row"}
           %ul.errors.text-danger{ng-if: "ctrl.parent.newProject.error != ''", ng-bind-html: "ctrl.parent.htmlSafe(ctrl.parent.newProject.error)"}
-          %md-button.md-primary{ng-click: "ctrl.parent.createProject(ctrl.parent.newProject)"}
+          %md-button.md-primary.insert-btn{ng-click: "ctrl.parent.createProject(ctrl.parent.newProject)"}
             insert project

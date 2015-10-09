@@ -8,6 +8,10 @@ body{
 .borderless{
   border: none !important;
 }
+.md-button.insert-btn{
+  text-transform: lowercase;
+  font-variant: small-caps;
+}
 .unstyled{
   list-style: none;
   padding: 0;
