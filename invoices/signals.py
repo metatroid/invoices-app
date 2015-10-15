@@ -15,8 +15,8 @@ def ensure_profile_exists(sender, **kwargs):
 
 @receiver(post_save, sender=Interval)
 def after_save_interval(sender, **kwargs):
-    if(kwargs.get('created') == False):
-      interval = kwargs.get('instance')
+    interval = kwargs.get('instance')
+    if(interval.end):
       intervalDuration = interval.end - interval.start
       if(interval.total != intervalDuration):
         interval.total = intervalDuration
@@ -29,12 +29,27 @@ def after_save_interval(sender, **kwargs):
       project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
       project.save()
 
+@receiver(post_delete, sender=Interval)
+def after_delete_interval(sender, **kwargs):
+    interval = kwargs.get('instance')
+    project = Project.objects.get(pk=interval.project.id)
+    seconds = 0
+    for i in project.intervals.all():
+      seconds = seconds + i.total.total_seconds()
+    project.total_time = seconds
+    project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
+    project.save()
+
 @receiver(pre_delete, sender=Interval)
 def before_delete_interval(sender, **kwargs):
+  print("pre delete interval")
   interval = kwargs.get('instance')
   intervalDuration = interval.end - interval.start
+  print("Duration: "+str(intervalDuration))
   project = Project.objects.get(pk=interval.project.id)
+  print("start time: "+str(project.total_time))
   project.total_time = project.total_time - intervalDuration.total_seconds()
+  print("end time: "+str(project.total_time))
   project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
   project.save()
 

@@ -69,7 +69,7 @@ angular.module('invoices.controllers', [])
                           '$timeout', 
                           '$filter', 
     function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter){
-      $scope.openProject;
+      $scope.openProject = 0;
       $scope.currentState = $state.current.name;
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         $scope.currentState = toState.name;
@@ -256,6 +256,7 @@ angular.module('invoices.controllers', [])
             this.parent.intervals = Interval.query({project_id: pid});
             this.parent.project = Project.get({id: pid});
             this.parent.updateInterval = function(interval, ev, index){
+              var that = this;
               var start = new Date(interval.start),
                   diff = interval.total,
                   timeDiff = timeDeltaToSeconds(diff),
@@ -264,7 +265,7 @@ angular.module('invoices.controllers', [])
               apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
                 function(data){
                   $scope.projects.splice($scope.openProject, 1, data);
-                  project = data;
+                  that.project = data;
                 },
                 function(err){
                   $log.error(err);
@@ -272,6 +273,7 @@ angular.module('invoices.controllers', [])
               );
             };
             this.parent.deleteInterval = function(interval, ev, index){
+              var that = this;
               var confirm = $mdDialog.confirm()
                   .title('You are about to delete this time period.')
                   .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -283,6 +285,10 @@ angular.module('invoices.controllers', [])
                 apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
                   function(data){
                     $scope.intervals.splice(index, 1);
+                    Project.get({id: interval.project}, function(project){
+                      $scope.projects.splice($scope.openProject, 1, project);
+                      that.project = project;
+                    });
                   },
                   function(err){
                     $log.error(err);
@@ -292,9 +298,38 @@ angular.module('invoices.controllers', [])
                 $log.info('cancelled delete');
               });
             };
+            this.parent.insertInterval = function(interval, ev){
+              var that = this;
+              var start = new Date(),
+                  diff = interval.total,
+                  timeDiff = timeDeltaToSeconds(diff),
+                  end = new Date(start.getTime() + timeDiff*1000);
+              interval.end = end;
+              interval.start = start;
+              apiSrv.request('POST', 'projects/'+pid+'/intervals/', interval,
+                function(data){
+                  var targetInterval = Interval.get({project_id: data.project, id: data.id}, function(){
+                    that.intervals.push(targetInterval);
+                    that.newInterval = new Interval();
+                  });
+                  Project.get({id: data.project}, function(project){
+                    $scope.projects.splice($scope.openProject, 1, project);
+                    that.project = project;
+                  });
+                },
+                function(err){
+                  $log.error(err);
+                }
+              );
+            };
+            this.parent.clearInterval = function(interval, ev){
+              this.newInterval.description = "";
+              this.newInterval.total = "";
+            };
           },
           controllerAs: 'ctrl',
-          templateUrl: 'angular/partials/interval-list.html'
+          templateUrl: 'angular/partials/interval-list.html',
+          parent: angular.element(document.querySelector('.view-panel.active'))
         });
       };
 

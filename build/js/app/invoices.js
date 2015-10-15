@@ -5,7 +5,8 @@ angular.module('invoices', [
                'invoices.services',
                'invoices.directives',
                'invoices.filters',
-               'djangoRESTResources'
+               'djangoRESTResources',
+               'ui.mask'
 ]);
 
 angular.module('invoices.states', []);

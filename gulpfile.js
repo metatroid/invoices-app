@@ -3,7 +3,7 @@ var $ = require('gulp-load-plugins')();
 
 //copy bower components to build dir
 gulp.task('bowercopy', function(){
-  gulp.src(['bower_components/angular/angular.js', 'bower_components/angular-ui-router/release/angular-ui-router.js', 'bower_components/angular-ui-router-styles/ui-router-styles.js', 'bower_components/angular-animate/angular-animate.js', 'bower_components/angular-aria/angular-aria.js', 'bower_components/angular-material/angular-material.js'])
+  gulp.src(['bower_components/angular/angular.js', 'bower_components/angular-ui-router/release/angular-ui-router.js', 'bower_components/angular-ui-router-styles/ui-router-styles.js', 'bower_components/angular-animate/angular-animate.js', 'bower_components/angular-aria/angular-aria.js', 'bower_components/angular-material/angular-material.js', 'bower_components/angular-ui-mask/dist/mask.js'])
     .pipe($.rename({dirname: ''}))
     .pipe(gulp.dest('build/js/libs/'));
   gulp.src(['bower_components/bootstrap-sass/assets/stylesheets/**/*'])
@@ -28,7 +28,7 @@ gulp.task('js', function(){
 
 //compile libs+app js
 gulp.task('jsall', ['js'], function(){
-  gulp.src(['build/js/libs/angular.js', 'build/js/libs/angular-ui-router.js', 'build/js/libs/ui-router-styles.js', 'build/js/libs/angular-django-rest-resource.js', 'build/js/libs/angular-animate.js', 'build/js/libs/angular-aria.js', 'build/js/libs/angular-material.js', 'build/js/app.js'])
+  gulp.src(['build/js/libs/angular.js', 'build/js/libs/angular-ui-router.js', 'build/js/libs/ui-router-styles.js', 'build/js/libs/angular-django-rest-resource.js', 'build/js/libs/angular-animate.js', 'build/js/libs/angular-aria.js', 'build/js/libs/angular-material.js', 'build/js/libs/mask.js', 'build/js/app.js'])
     .pipe($.concat('main.js'))
     .pipe(gulp.dest('static/assets/js'))
     .pipe($.rename('main.min.js'))

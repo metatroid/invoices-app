@@ -97,6 +97,8 @@ class IntervalList(APIView):
     project = Project.objects.get(pk=project_id, user=request.user.id)
     if serializer.is_valid():
       serializer.save(project=project)
+      # projectSerial = ProjectSerializer(project)
+      # return Response(projectSerial.data, status=status.HTTP_201_CREATED)
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

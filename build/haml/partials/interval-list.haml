@@ -5,6 +5,10 @@
         %strong
           Project: 
         {{ctrl.parent.project.project_name}}
+        .pull-right
+          %strong
+            Total: 
+          {{ctrl.parent.project.total_time | secondsToTimeString}}
       %md-list-item.interval.form.auto
         .auto{layout: "row"}
           .inline-flex{flex: "90"}
@@ -12,7 +16,7 @@
               %md-input-container
                 %label
                   Duration
-                %input{ng-model: "ctrl.parent.newInterval.total"}
+                %input{ng-model: "ctrl.parent.newInterval.total", ui-mask: "99:99:99.999999", ui-mask-use-viewvalue: "true", infocus: "auto"}
             %div{flex: "67"}
               %md-input-container
                 %label
@@ -20,9 +24,9 @@
                 %input{ng-model: "ctrl.parent.newInterval.description"}
           .self-center{flex: "10"}
             .md-actions.borderless{layout: "row"}
-              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.insertInterval(newInterval, $event)", title: "Add New Time Interval"}
+              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.insertInterval(ctrl.parent.newInterval, $event)", title: "Add New Time Interval"}
                 %span.fa.fa-plus-circle
-              %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(newInterval, $event)", title: "Clear Fields"}
+              %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(ctrl.parent.newInterval, $event)", title: "Clear Fields"}
                 %span.fa.fa-remove
       %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals", id: "interval_{{interval.id}}"}
         .auto{layout: "row"}

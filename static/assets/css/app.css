@@ -7345,7 +7345,8 @@ md-tooltip {
   bottom: 0; }
 
 md-bottom-sheet {
-  top: 0; }
+  top: 0;
+  height: calc(100% - 80px); }
 
 .interval-list .md-subheader-inner {
   padding-left: 0;
