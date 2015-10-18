@@ -62,10 +62,10 @@
             .timer
               %md-button.counter{incounting: true, data-project: "{{project.id}}"}
                 00:00:00
-              %a.timer-control.timer-pause{href: "#", ng-show: "timers.indexOf(project.id) != -1", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+              %a.timer-control.timer-pause{href: "#", ng-show: "intervals[project.id].timerRunning === true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
                 %span.fa.fa-pause
                 pause
-              %a.timer-control.timer-resume{href: "#", ng-show: "timers.indexOf(project.id) == -1", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+              %a.timer-control.timer-resume{href: "#", ng-show: "intervals[project.id].timerRunning !== true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
                 %span.fa.fa-play-circle
                 start
               .interval-form-wrapper
@@ -77,6 +77,8 @@
                       %input{ng-model: "intervalObj.description", required: "required"}
                     %md-button.md-raised.md-primary{type: "submit"}
                       save time interval
+                    %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index)"}
+                      discard
   #profile.view-panel{ng-class: "{active: currentState === 'app.settings'}"}
     %md-toolbar.md-default
       .md-toolbar-tools

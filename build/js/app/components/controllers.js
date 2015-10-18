@@ -166,14 +166,23 @@ angular.module('invoices.controllers', [])
         });
       };
 
+      function timeDeltaToSeconds(delta){
+        var pieces = delta.split(":"),
+            hours = pieces[0],
+            minutes = pieces[1],
+            seconds = pieces[2],
+            timeDiff = (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseFloat(seconds);
+        return timeDiff;
+      }
       $scope.timeEvent = "startTimer";
       var timerRunning = false;
       $scope.timers = [];
-      var intervals = {};
+      $scope.intervals = {};
+      var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
       var startTimer = function(id){
         $scope.timeEvent = "startTimer";
-        intervals[id] = {};
-        intervals[id].timerRunning = true;
+        $scope.intervals[id] = typeof $scope.intervals[id] === "undefined" ? {} : $scope.intervals[id];
+        $scope.intervals[id].timerRunning = true;
         var timerEl = document.getElementById("project_"+id).querySelector(".timer");
         timerEl.classList.remove('saving');
         if($scope.timers.indexOf(id) === -1){
@@ -181,7 +190,7 @@ angular.module('invoices.controllers', [])
           $scope.timers.push(id);
           apiSrv.request('POST', 'projects/'+id+'/intervals/', {start: (new Date())},
            function(data){
-            intervals[id].interval = data.id;
+            $scope.intervals[id].interval = data.id;
            },
            function(err){
             $log.error(err);
@@ -194,23 +203,31 @@ angular.module('invoices.controllers', [])
       };
       var stopTimer = function(id){
         $scope.timeEvent = "stopTimer";
-        intervals[id].timerRunning = false;
-        var intervalId = intervals[id].interval,
-            timerEl = document.getElementById("project_"+id).querySelector(".timer");
+        $scope.intervals[id].timerRunning = false;
+        var intervalId = $scope.intervals[id].interval,
+            timerEl = document.getElementById("project_"+id).querySelector(".timer"),
+            counter = document.getElementById("project_"+id).querySelector(".counter");
         timerEl.setAttribute('data-interval', intervalId);
         timerEl.classList.add('saving');
-        apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', {end: (new Date())},
-          function(data){
-            document.getElementById("project_"+id).querySelector(".counter").setAttribute('data-interval', intervalId);
-          },
-          function(err){
-            $log.error(err);
-          }
-        );
+        // $scope.timers.splice($scope.timers.indexOf(id), 1);
+        Interval.get({project_id: id, id: intervalId}, function(interval){
+          var start = new Date(interval.start),
+              diff = counter.textContent,
+              timeDiff = timeDeltaToSeconds(diff),
+              newEnd = new Date(start.getTime() + timeDiff*1000);
+          apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', {end: newEnd},
+            function(data){
+              document.getElementById("project_"+id).querySelector(".counter").setAttribute('data-interval', intervalId);
+            },
+            function(err){
+              $log.error(err);
+            }
+          );
+        });
       };
       $scope.startstopTimer = function(id){
         var ix = $scope.timers.indexOf(id);
-        if(!timerRunning && (typeof intervals[id] === "undefined" || !intervals[id].timerRunning)){
+        if(!timerRunning && (typeof $scope.intervals[id] === "undefined" || !$scope.intervals[id].timerRunning)){
           startTimer(id);
         } else {
           stopTimer(id);
@@ -222,13 +239,13 @@ angular.module('invoices.controllers', [])
         var intervalData = {
           "description": $scope.intervalObj.description
         };
-        var intervalId = intervals[id].interval,
+        var intervalId = $scope.intervals[id].interval,
             timerEl = document.getElementById("project_"+id).querySelector(".timer"),
             timerBtn = timerEl.querySelector('.counter');
         apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
           function(data){
             $scope.projects.splice(index, 1, data);
-            intervals[id].timerRunning = false;
+            $scope.intervals[id].timerRunning = false;
             $scope.timers.splice(index, 1);
             $scope.timeEvent = "startTimer";
             $scope.intervalObj.description = "";
@@ -238,14 +255,24 @@ angular.module('invoices.controllers', [])
           }
         );
       };
-      function timeDeltaToSeconds(delta){
-        var pieces = delta.split(":"),
-            hours = pieces[0],
-            minutes = pieces[1],
-            seconds = pieces[2],
-            timeDiff = (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseFloat(seconds);
-        return timeDiff;
-      }
+      $scope.discardInterval = function(id, index){
+        var intervalId = $scope.intervals[id].interval,
+            timerEl = document.getElementById("project_"+id).querySelector(".timer"),
+            timerBtn = timerEl.querySelector('.counter');
+        apiSrv.request('DELETE', 'projects/'+id+'/intervals/'+intervalId+'/', {},
+          function(data){
+            $scope.projects.splice(index, 1, data);
+            $scope.intervals[id].timerRunning = false;
+            $scope.timers.splice(index, 1);
+            $scope.timeEvent = "startTimer";
+            // $scope.intervalObj.description = "";
+            // timerEl.classList.remove('saving');
+          },
+          function(err){
+            $log.error(err);
+          }
+        );
+      };
       $scope.showIntervalList = function(ev, pid, index){
         $scope.openProject = index;
         $mdBottomSheet.show({

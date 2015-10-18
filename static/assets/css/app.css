@@ -7301,13 +7301,16 @@ md-tooltip {
           display: none; }
           #application #app .project-list .project .timer-wrapper .interval-form-wrapper button {
             font-size: 10px;
-            margin-top: 0; }
+            margin-top: 0;
+            float: left; }
+            #application #app .project-list .project .timer-wrapper .interval-form-wrapper button:first-of-type {
+              margin-right: 13px; }
           #application #app .project-list .project .timer-wrapper .interval-form-wrapper label {
             font-size: 10px; }
           #application #app .project-list .project .timer-wrapper .interval-form-wrapper md-input-container {
             padding-bottom: 10px; }
         #application #app .project-list .project .timer-wrapper .timer {
-          width: 150px; }
+          width: 215px; }
           #application #app .project-list .project .timer-wrapper .timer.saving .interval-form-wrapper {
             display: block; }
           #application #app .project-list .project .timer-wrapper .timer .timer-control {

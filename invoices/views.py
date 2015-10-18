@@ -131,7 +131,9 @@ class IntervalDetail(APIView):
   def delete(self, request, project_id, pk, format=None):
     interval = self.get_object(project_id, pk, request)
     interval.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    project_object = self.get_project(project_id, request)
+    project = ProjectSerializer(project_object)
+    return Response(project.data)
 
 class StatementList(APIView):
   permission_classes = (IsAuthenticated,)

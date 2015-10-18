@@ -318,6 +318,10 @@
             button{
               font-size: 10px;
               margin-top: 0;
+              float: left;
+              &:first-of-type{
+                margin-right: 13px;
+              }
             }
             label{
               font-size: 10px;
@@ -327,7 +331,7 @@
             }
           }
           .timer{
-            width: 150px;
+            width: 215px;
             &.saving{
               .interval-form-wrapper{
                 display: block;
