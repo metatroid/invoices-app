@@ -1,0 +1,12 @@
+%md-dialog#invoicePreview
+  %md-toolbar
+    .md-toolbar-tools
+      %h2
+        %strong
+          {{ctrl.parent.project.project_name}}
+        invoice
+      %span{flex: "flex"}
+      %md-button.md-icon-button{ng-click: "ctrl.parent.closeDialog()", aria-label: "Cancel"}
+        %span.fa.fa-caret-down
+  %md-dialog-content
+    invoice here...

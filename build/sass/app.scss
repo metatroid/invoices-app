@@ -1,4 +1,11 @@
 @import 'libs/angular-material';
+md-menu-item{
+  > .md-button{
+    md-icon{
+      line-height: 24px;
+    }
+  }
+}
 *{
   box-sizing: border-box;
 }
@@ -289,6 +296,10 @@
             &:hover{
               color: rgba(255,255,255,1);
             }
+            md-icon{
+              color: rgba(255,255,255,0.87);
+              line-height: 24px;
+            }
           }
         }
         img.md-avatar{
@@ -411,5 +422,11 @@ md-bottom-sheet{
       line-height: 36px;
       margin: 0;
     }
+  }
+}
+
+#invoicePreview{
+  @media(min-width: 768px){
+    width: 888px;
   }
 }

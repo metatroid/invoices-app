@@ -61009,6 +61009,39 @@ angular.module('invoices.controllers', [])
         });
       };
 
+      $scope.showInvoiceMenu = function($mdOpenMenu, ev){
+        $mdOpenMenu(ev);
+      };
+      $scope.openInvoiceDialog = function(projectId, ev){
+        apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
+          $mdDialog.show({
+            controller: function(){
+              this.parent = $scope;
+              this.parent.project = project;
+            },
+            controllerAs: 'ctrl',
+            templateUrl: 'angular/partials/invoice-display.html',
+            parent: angular.element(document.querySelector('.view-panel.active')),
+            targetEvent: ev,
+            clickOutsideToClose: true
+          });
+        }, function(err){$log.error(err);});
+      };
+
+      // $scope.showInvoiceDisplay = function(ev, pid, index){
+      //   $scope.openProject = index;
+      //   $mdBottomSheet.show({
+      //     controller: function(){
+      //       this.parent = $scope;
+      //       this.parent.project = Project.get({id: pid});
+      //       this.parent.intervals = Interval.query({project_id: pid});
+      //     },
+      //     controllerAs: 'ctrl',
+      //     templateUrl: 'angular/partials/invoice-display.html',
+      //     parent: angular.element(document.querySelector('.view-panel.active'))
+      //   });
+      // };
+
       $scope.htmlSafe = $sce.trustAsHtml;
       var formatErr = function(err){
         var errString = JSON.stringify(err),

@@ -7022,6 +7022,9 @@ md-tooltip {
   md-whiteframe {
     border: 1px solid #fff; } }
 
+md-menu-item > .md-button md-icon {
+  line-height: 24px; }
+
 * {
   box-sizing: border-box; }
 
@@ -7276,6 +7279,9 @@ md-tooltip {
         transition: all 0.5s ease; }
         #application #app .project-list .project .md-fab-action-item button:hover {
           color: white; }
+        #application #app .project-list .project .md-fab-action-item button md-icon {
+          color: rgba(255, 255, 255, 0.87);
+          line-height: 24px; }
       #application #app .project-list .project img.md-avatar {
         margin-top: 0;
         margin-right: 13px;
@@ -7372,3 +7378,7 @@ md-bottom-sheet {
     width: 32px;
     line-height: 36px;
     margin: 0; }
+
+@media (min-width: 768px) {
+  #invoicePreview {
+    width: 888px; } }

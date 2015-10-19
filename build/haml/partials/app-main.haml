@@ -32,8 +32,27 @@
               %md-fab-actions.md-toolbar-tools
                 %md-button.md-icon-button{aria-label: "remove", ng-click: "deleteProject($event, project.id, $index)"}
                   %span.fa.fa-remove
-                %md-button.md-icon-button{aria-label: "invoice"}
-                  %span.fa.fa-sticky-note
+                %md-menu{md-position-mode: "target-right target"}
+                  %md-button.md-icon-button{aria-label: "invoice", ng-click: "showInvoiceMenu($mdOpenMenu, $event)"}
+                    %md-icon{md-menu-origin: true}
+                      %span.fa.fa-list-alt
+                  %md-menu-content{width: "2"}
+                    %md-menu-item
+                      %md-button{ng-click: "openInvoiceDialog(project.id, $event)"}
+                        %md-icon{md-menu-align-target: true}
+                          %span.fa.fa-magic
+                        Generate invoice
+                    %md-menu-item
+                      %md-button
+                        %md-icon
+                          %span.fa.fa-download
+                        Direct download
+                    %md-menu-item
+                      %md-button
+                        %md-icon
+                          %span.fa.fa-files-o
+                        Past invoices
+
                 %md-button.md-icon-button{aria-label: "intervals", ng-click: "showIntervalList($event, project.id, $index)"}
                   %span.fa.fa-clock-o
                 %md-button.md-icon-button{aria-label: "settings"}
