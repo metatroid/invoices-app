@@ -55,8 +55,8 @@
 
                 %md-button.md-icon-button{aria-label: "intervals", ng-click: "showIntervalList($event, project.id, $index)"}
                   %span.fa.fa-clock-o
-                %md-button.md-icon-button{aria-label: "settings"}
-                  %span.fa.fa-cog
+                %md-button.md-icon-button{aria-label: "edit", ng-click: "showProjectEditor($event, project.id, $index)"}
+                  %span.fa.fa-edit
           %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}
           %span.project-icon.fa.fa-folder{ng-if: "!project.project_logo"}
           .md-list-item-text.project-info-wrapper{layout: "column"}

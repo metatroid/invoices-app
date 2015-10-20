@@ -60718,6 +60718,11 @@ angular.module('invoices.controllers', [])
                           '$timeout', 
                           '$filter', 
     function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter){
+      function pad(n, width, z){
+        z = z || '0';
+        n = n + '';
+        return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+      }
       $scope.openProject = 0;
       $scope.currentState = $state.current.name;
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
@@ -61018,6 +61023,8 @@ angular.module('invoices.controllers', [])
             controller: function(){
               this.parent = $scope;
               this.parent.project = project;
+              this.parent.today = new Date();
+              this.parent.invoice_number = pad(project.statements.length + 1, 3);
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/invoice-display.html',
@@ -61026,6 +61033,47 @@ angular.module('invoices.controllers', [])
             clickOutsideToClose: true
           });
         }, function(err){$log.error(err);});
+      };
+      $scope.showProjectEditor = function(ev, projectId, index){
+        apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
+          $mdDialog.show({
+            controller: function(){
+              this.parent = $scope;
+              this.parent.project = project;
+              this.parent.project.deadline = $filter('date')(this.parent.project.deadline, 'yyyy-MM-dd'); // js date format workaround
+              this.parent.project_index = index;
+            },
+            controllerAs: 'ctrl',
+            templateUrl: 'angular/partials/project-edit.html',
+            parent: angular.element(document.querySelector('.view-panel.active')),
+            targetEvent: ev,
+            clickOutsideToClose: true
+          });
+        }, function(err){$log.error(err);});
+      };
+      $scope.updateProject = function(data, index){
+        if(!xhrfile() && data.project_logo){
+          var toast = $mdToast.simple()
+                        .content('Your browser does not support xhr file uploads. Selected image will be removed.')
+                        .action('Ok')
+                        .highlightAction(false)
+                        .hideDelay(6000)
+                        .position('top right');
+          $mdToast.show(toast).then(function(){
+            if(data.project_logo){
+              data.project_logo = null;
+            }
+          });
+        }
+        data.deadline = data.dead_date; // js date format workaround
+        apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
+          $scope.closeDialog();
+          $scope.projects.splice(index, 1, project);
+        }, function(err){$log.error(err);});
+        // $scope.newProject.$save(function(project){
+        //   $scope.closeDialog();
+        //   detachProjectAndClearFields(project.id);
+        // });
       };
 
       // $scope.showInvoiceDisplay = function(ev, pid, index){
@@ -61431,6 +61479,51 @@ angular.module('invoices.filters', [])
       if(minutes < 10) minutes = "0"+minutes;
       timeString = hours +":"+ minutes +":"+scnds;
       return timeString;
+    };
+  })
+  .filter('telephone', function(){
+    return function(telephone){
+      if(!telephone){
+        return "";
+      }
+      var value = telephone.toString().trim().replace(/^\+/, '');
+      if(value.match(/[^0-9]/)){
+        return telephone;
+      }
+      var country, city, number;
+      switch(value.length){
+        case 10:
+          country = 1;
+          city = value.slice(0,3);
+          number = value.slice(3);
+          break;
+        case 11:
+          country = value[0];
+          city = value.slice(1,4);
+          number = value.slice(4);
+          break;
+        case 12:
+          country = value.slice(0,3);
+          city = value.slice(3,5);
+          number = value.slice(5);
+          break;
+        default:
+          return telephone;
+      }
+      if(country === 1){
+        country = "";
+      }
+      number = number.slice(0, 3) + '-' + number.slice(3);
+      return (country + " (" + city + ") " + number).trim();
+    };
+  })
+  .filter('minutes', function(){
+    return function(delta){
+      var pieces = delta.split(":"),
+          hours = pieces[0],
+          minutes = pieces[1],
+          seconds = pieces[2];
+      return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
     };
   })
 ;

@@ -9,4 +9,83 @@
       %md-button.md-icon-button{ng-click: "ctrl.parent.closeDialog()", aria-label: "Cancel"}
         %span.fa.fa-caret-down
   %md-dialog-content
-    invoice here...
+    #invoice{contenteditable: "true"}
+      .stripe
+      .invoice-header
+        %h1.pull-left
+          INVOICE
+        %span.date.pull-right
+          {{ctrl.parent.today | date:'MMM dd, yyyy'}}
+        .heading{layout: "column"}
+          .header{layout: "row", layout-wrap: true}
+            %div{flex: "50"}
+              FROM
+            %div{flex: "50"}
+              TO
+          .in-out-box{flex: "100", layout: "row"}
+            .icon{flex: "15"}
+              %img{src: "/static/assets/img/outbox.svg"}
+            .contact{flex: "35"}
+              {{ctrl.parent.user.fullname}}<br>
+              {{ctrl.parent.user.address_1}}<br>
+              {{ctrl.parent.user.address_2}}<br>
+              {{ctrl.parent.user.phone | telephone}}<br>
+              {{ctrl.parent.user.email}}
+            .icon{flex: "15"}
+              %img{src: "/static/assets/img/inbox.svg"}
+            .contact{flex: "35"}
+              {{ctrl.parent.project.client_name}}<br>
+              {{ctrl.parent.project.client_email}}<br>
+              {{ctrl.parent.project.project_description}}
+      .invoice-info
+        .project
+          %h2
+            %strong
+              {{ctrl.parent.project.project_name}} 
+            {{ctrl.parent.invoice_number}}
+        .intervals
+          %table.table
+            %thead
+              %tr
+                %th
+                  Duration
+                %th
+                  Description
+                %th
+                  Rate
+                %th
+                  Total
+            %tbody
+              %tr{ng-repeat: "interval in ctrl.parent.project.intervals"}
+                %td
+                  {{interval.total}}
+                %td
+                  {{interval.description}}
+                %td
+                  {{ctrl.parent.project.hourly_rate | currency}}
+                %td
+                  {{(ctrl.parent.project.hourly_rate * (interval.total | minutes)) | currency}}
+          .totals
+            .label
+              subtotal
+            .value
+              {{0 | currency}}
+            .label.disabled
+              tax
+            .value.disabled
+            .label.disabled
+              shipping
+            .value.disabled
+            .label
+              total
+            .value
+              {{0 | currency}}
+          .notes
+            %h3
+              Notes
+            .note
+              &nbsp;
+            .note
+              &nbsp;
+            .note
+              &nbsp;

@@ -69,6 +69,11 @@ angular.module('invoices.controllers', [])
                           '$timeout', 
                           '$filter', 
     function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter){
+      function pad(n, width, z){
+        z = z || '0';
+        n = n + '';
+        return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+      }
       $scope.openProject = 0;
       $scope.currentState = $state.current.name;
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
@@ -369,6 +374,8 @@ angular.module('invoices.controllers', [])
             controller: function(){
               this.parent = $scope;
               this.parent.project = project;
+              this.parent.today = new Date();
+              this.parent.invoice_number = pad(project.statements.length + 1, 3);
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/invoice-display.html',
@@ -377,6 +384,47 @@ angular.module('invoices.controllers', [])
             clickOutsideToClose: true
           });
         }, function(err){$log.error(err);});
+      };
+      $scope.showProjectEditor = function(ev, projectId, index){
+        apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
+          $mdDialog.show({
+            controller: function(){
+              this.parent = $scope;
+              this.parent.project = project;
+              this.parent.project.deadline = $filter('date')(this.parent.project.deadline, 'yyyy-MM-dd'); // js date format workaround
+              this.parent.project_index = index;
+            },
+            controllerAs: 'ctrl',
+            templateUrl: 'angular/partials/project-edit.html',
+            parent: angular.element(document.querySelector('.view-panel.active')),
+            targetEvent: ev,
+            clickOutsideToClose: true
+          });
+        }, function(err){$log.error(err);});
+      };
+      $scope.updateProject = function(data, index){
+        if(!xhrfile() && data.project_logo){
+          var toast = $mdToast.simple()
+                        .content('Your browser does not support xhr file uploads. Selected image will be removed.')
+                        .action('Ok')
+                        .highlightAction(false)
+                        .hideDelay(6000)
+                        .position('top right');
+          $mdToast.show(toast).then(function(){
+            if(data.project_logo){
+              data.project_logo = null;
+            }
+          });
+        }
+        data.deadline = data.dead_date; // js date format workaround
+        apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
+          $scope.closeDialog();
+          $scope.projects.splice(index, 1, project);
+        }, function(err){$log.error(err);});
+        // $scope.newProject.$save(function(project){
+        //   $scope.closeDialog();
+        //   detachProjectAndClearFields(project.id);
+        // });
       };
 
       // $scope.showInvoiceDisplay = function(ev, pid, index){

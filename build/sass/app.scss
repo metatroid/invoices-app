@@ -428,5 +428,182 @@ md-bottom-sheet{
 #invoicePreview{
   @media(min-width: 768px){
     width: 888px;
+    max-height: 90%;
+  }
+}
+#invoice{
+  background-color: #fafafa;
+  padding: 0 10px 10px;
+  .stripe{
+    height: 22px;
+    margin-bottom: 55px;
+    margin-left: -10px;
+    margin-right: -10px;
+    background: repeating-linear-gradient(-50deg, #fafafa, #fafafa 0px, #fafafa 22px, #00226f 23px, #07002a 53px, #fafafa 54px, #fafafa 76px, #ff0000 77px, #f20000 107px);
+  }
+  .invoice-header{
+    h1{
+      margin-top: 0;
+    }
+    .date{
+      margin-top: 16px;
+    }
+    .heading{
+      clear: both;
+      .header{
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        padding: 12px 10px 8px;
+        font-weight: bold;
+        margin-left: -10px;
+        margin-right: -10px;
+        div{
+          padding-left: 5px;
+        }
+      }
+      .in-out-box{
+        padding-bottom: 20px;
+        margin-left: -10px;
+        margin-right: -10px;
+        position: relative;
+        &:after{
+          content: '';
+          display: block;
+          height: 1px;
+          position: absolute;
+          left: 10px;
+          right: 10px;
+          bottom: 0;
+          background-color: #ccc;
+        }
+        &:before{
+          content: '';
+          display: block;
+          width: 1px;
+          position: absolute;
+          left: 50%;
+          top: 0;
+          bottom: 0;
+          background-color: #ccc;
+          margin-left: -1px;
+        }
+        .icon{
+          padding-left: 10px;
+          img{
+            max-width: 100px;
+          }
+        }
+        .contact{
+          padding-top: 12px;
+          line-height: 1.4;
+          font-size: 18px;
+          letter-spacing: -.05em;
+        }
+      }
+    }
+  }
+  .table{
+    border-collapse: collapse;
+    border-spacing: 0;
+    max-width: 100%;
+    width: 100%;
+    > thead,
+    > tbody{
+      > tr{
+        > th,
+        > td{
+          padding: 16px 8px 8px;
+          vertical-align: top;
+          border-top: 1px solid #ddd;
+        }
+      }
+    }
+    > thead{
+      > tr{
+        > th{
+          vertical-align: bottom;
+          border-bottom: 1px solid #ddd;
+          border-top: none;
+          text-align: left;
+          background-color: #eee;
+          padding-top: 4px;
+          padding-bottom: 2px;
+          font-size: 12px;
+          letter-spacing: -.05em;
+        }
+      }
+    }
+  }
+  .invoice-info{
+    .project{
+      h2{
+        font-weight: normal;
+      }
+    }
+    .intervals{
+      .table{
+        margin-bottom: 75px;
+      }
+      .totals{
+        float: right;
+        background-color: #f2f2f2;
+        padding: 10px 10px 5px 75px;
+        margin-bottom: 35px;
+        &:after{
+          content: '';
+          display: block;
+          width: 0;
+          clear: both;
+        }
+        .label{
+          color: #444;
+          text-transform: uppercase;
+          font-size: 18px;
+          float: left;
+          text-align: right;
+          width: 100px;
+          padding: 5px 0;
+          clear: both;
+          margin-right: 10px;
+          margin-bottom: 5px;
+          &.disabled{
+            color: #666;
+          }
+        }
+        .value{
+          background-color: #fefefe;
+          padding: 5px 0 5px 5px;
+          float: left;
+          font-size: 18px;
+          width: 150px;
+          color: #444;
+          margin-bottom: 5px;
+          &.disabled{
+            background-color: transparent;
+          }
+        }
+      }
+      .notes{
+        border: 1px solid #ccc;
+        padding: 5px 5px 36px;
+        clear: both;
+        h3{
+          text-transform: uppercase;
+          color: #939393;
+          font-size: 18px;
+          margin-top: 0;
+          margin-bottom: 0;
+          padding: 5px 0 0 5px;
+        }
+        .note{
+          border-bottom: 1px dotted #ccc;
+          font-size: 25px;
+          color: #666;
+          margin-left: 3%;
+          margin-right: 3%;
+          padding: 5px 0 0;
+        }
+      }
+    }
   }
 }

@@ -75,7 +75,7 @@ class StatementSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
   intervals = IntervalSerializer(many=True, read_only=True)
   statements = StatementSerializer(many=True, read_only=True)
-  project_logo = Base64ImageField(max_length=None, use_url=True, required=False)
+  project_logo = Base64ImageField(max_length=None, use_url=True, required=False, allow_null=True)
   class Meta:
     model = Project
     fields = (
