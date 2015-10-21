@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, render_to_response
 from django.contrib.auth import logout as auth_logout
 from django.http import Http404
 from rest_framework.views import APIView
@@ -11,6 +11,12 @@ from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
 from invoices.projects.forms import ProjectForm
+# from io import StringIO
+# from xhtml2pdf import pisa
+# from django.template.loader import get_template
+# from django.template import Context
+# from django.http import HttpResponse
+# from cgi import escape
 import logging
 logger = logging.getLogger(__name__)
 
@@ -191,3 +197,28 @@ def index_view(request):
 def logout(request):
   auth_logout(request)
   return redirect('/')
+
+  # def render_to_pdf(template_src, context_dict):
+  #   template = get_template(template_src)
+  #   context = Context(context_dict)
+  #   html  = template.render(context)
+  #   result = StringIO.StringIO()
+
+  #   pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+  #   if not pdf.err:
+  #     return HttpResponse(result.getvalue(), content_type='application/pdf')
+  #   return HttpResponse('We had some errors<pre>%s</pre>' % escape(html))
+
+def generate_invoice(request):
+  statement = Statement.objects.get(pk=request.GET.get('statement', None))
+  #rudimentary security
+  project = Project.objects.get(pk=statement.project)
+  if(project.user == request.user.id):
+    invoice = statement.markup
+  else:
+    invoice = "Unauthorized access"
+  return render(request, 'invoice.html', {"invoice": invoice})
+  # return render_to_pdf('invoice.html', {
+  #  'pagesize': 'A4',
+  #  'invoice': results
+  # })

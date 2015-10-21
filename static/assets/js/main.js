@@ -61070,25 +61070,11 @@ angular.module('invoices.controllers', [])
           $scope.closeDialog();
           $scope.projects.splice(index, 1, project);
         }, function(err){$log.error(err);});
-        // $scope.newProject.$save(function(project){
-        //   $scope.closeDialog();
-        //   detachProjectAndClearFields(project.id);
-        // });
       };
 
-      // $scope.showInvoiceDisplay = function(ev, pid, index){
-      //   $scope.openProject = index;
-      //   $mdBottomSheet.show({
-      //     controller: function(){
-      //       this.parent = $scope;
-      //       this.parent.project = Project.get({id: pid});
-      //       this.parent.intervals = Interval.query({project_id: pid});
-      //     },
-      //     controllerAs: 'ctrl',
-      //     templateUrl: 'angular/partials/invoice-display.html',
-      //     parent: angular.element(document.querySelector('.view-panel.active'))
-      //   });
-      // };
+      $scope.saveInvoice = function(projectId, html){
+        $log.info(html);
+      };
 
       $scope.htmlSafe = $sce.trustAsHtml;
       var formatErr = function(err){
@@ -61448,6 +61434,20 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+  .directive("insave", ['$mdDialog', '$log', 'apiSrv', function($mdDialog, $log, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('click', function(){
+            var projectId = $attrs.insave,
+                invoiceHtml = document.getElementById('invoice').outerHTML;
+            apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
+              $mdDialog.cancel();
+            }, function(err){$log.error(err);});
+          });
+        }
+      };
+    }])
 ;
 angular.module('invoices.filters', [])
   .filter('msToTimeString', function(){
@@ -61517,7 +61517,7 @@ angular.module('invoices.filters', [])
       return (country + " (" + city + ") " + number).trim();
     };
   })
-  .filter('minutes', function(){
+  .filter('timeDeltaToHours', function(){
     return function(delta){
       var pieces = delta.split(":"),
           hours = pieces[0],

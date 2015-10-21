@@ -421,25 +421,11 @@ angular.module('invoices.controllers', [])
           $scope.closeDialog();
           $scope.projects.splice(index, 1, project);
         }, function(err){$log.error(err);});
-        // $scope.newProject.$save(function(project){
-        //   $scope.closeDialog();
-        //   detachProjectAndClearFields(project.id);
-        // });
       };
 
-      // $scope.showInvoiceDisplay = function(ev, pid, index){
-      //   $scope.openProject = index;
-      //   $mdBottomSheet.show({
-      //     controller: function(){
-      //       this.parent = $scope;
-      //       this.parent.project = Project.get({id: pid});
-      //       this.parent.intervals = Interval.query({project_id: pid});
-      //     },
-      //     controllerAs: 'ctrl',
-      //     templateUrl: 'angular/partials/invoice-display.html',
-      //     parent: angular.element(document.querySelector('.view-panel.active'))
-      //   });
-      // };
+      $scope.saveInvoice = function(projectId, html){
+        $log.info(html);
+      };
 
       $scope.htmlSafe = $sce.trustAsHtml;
       var formatErr = function(err){

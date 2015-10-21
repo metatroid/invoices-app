@@ -340,4 +340,18 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+  .directive("insave", ['$mdDialog', '$log', 'apiSrv', function($mdDialog, $log, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('click', function(){
+            var projectId = $attrs.insave,
+                invoiceHtml = document.getElementById('invoice').outerHTML;
+            apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
+              $mdDialog.cancel();
+            }, function(err){$log.error(err);});
+          });
+        }
+      };
+    }])
 ;

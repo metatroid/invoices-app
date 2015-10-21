@@ -2,11 +2,19 @@ from django.db.models.signals import pre_save, post_save, pre_delete, post_delet
 from django.dispatch import receiver
 from invoices.projects.models import Project
 from invoices.intervals.models import Interval
+from invoices.statements.models import Statement
 from invoices.profiles.models import Profile
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
 from decimal import *
 import logging
 logger = logging.getLogger(__name__)
+
+@receiver(post_save, sender=Statement)
+def gen_pdf_post_save(sender, **kwargs):
+  if kwargs.get('created', True):
+    statement = kwargs.get('instance')
+    redirect('/invoice?statement='+str(statement.id))
 
 @receiver(post_save, sender=User)
 def ensure_profile_exists(sender, **kwargs):

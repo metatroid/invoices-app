@@ -66,7 +66,7 @@ angular.module('invoices.filters', [])
       return (country + " (" + city + ") " + number).trim();
     };
   })
-  .filter('minutes', function(){
+  .filter('timeDeltaToHours', function(){
     return function(delta){
       var pieces = delta.split(":"),
           hours = pieces[0],

@@ -9,6 +9,10 @@
       %md-button.md-icon-button{ng-click: "ctrl.parent.closeDialog()", aria-label: "Cancel"}
         %span.fa.fa-caret-down
   %md-dialog-content
+    %md-button.md-icon-button{insave: "{{ctrl.parent.project.id}}"}
+      %md-icon
+        %span.fa.fa-save
+      save
     #invoice{contenteditable: "true"}
       .stripe
       .invoice-header
@@ -64,7 +68,7 @@
                 %td
                   {{ctrl.parent.project.hourly_rate | currency}}
                 %td
-                  {{(ctrl.parent.project.hourly_rate * (interval.total | minutes)) | currency}}
+                  {{(ctrl.parent.project.hourly_rate * (interval.total | timeDeltaToHours)) | currency}}
           .totals
             .label
               subtotal

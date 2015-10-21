@@ -430,10 +430,29 @@ md-bottom-sheet{
     width: 888px;
     max-height: 90%;
   }
+  button{
+    display: block;
+    width: 56px;
+    line-height: 24px;
+    min-height: 24px;
+    height: 24px;
+    float: right;
+    margin-top: -15px;
+    border-radius: 0;
+    text-align: right;
+    margin-right: 10px;
+    md-icon{
+      line-height: 22px;
+      margin-right: 8px;
+      width: auto;
+    }
+    > span{}
+  }
 }
 #invoice{
   background-color: #fafafa;
   padding: 0 10px 10px;
+  margin-top: 20px;
   .stripe{
     height: 22px;
     margin-bottom: 55px;
