@@ -73,7 +73,7 @@
             .label
               subtotal
             .value
-              {{0 | currency}}
+              {{ctrl.parent.project.balance | currency}}
             .label.disabled
               tax
             .value.disabled
@@ -83,7 +83,7 @@
             .label
               total
             .value
-              {{0 | currency}}
+              {{ctrl.parent.project.balance | currency}}
           .notes
             %h3
               Notes

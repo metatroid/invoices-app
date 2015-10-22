@@ -423,10 +423,6 @@ angular.module('invoices.controllers', [])
         }, function(err){$log.error(err);});
       };
 
-      $scope.saveInvoice = function(projectId, html){
-        $log.info(html);
-      };
-
       $scope.htmlSafe = $sce.trustAsHtml;
       var formatErr = function(err){
         var errString = JSON.stringify(err),

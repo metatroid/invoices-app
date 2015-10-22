@@ -212,11 +212,12 @@ def logout(request):
 def generate_invoice(request):
   statement = Statement.objects.get(pk=request.GET.get('statement', None))
   #rudimentary security
-  project = Project.objects.get(pk=statement.project)
-  if(project.user == request.user.id):
-    invoice = statement.markup
-  else:
-    invoice = "Unauthorized access"
+  # project = Project.objects.get(pk=statement.project)
+  # if(project.user == request.user.id):
+  #   invoice = statement.markup
+  # else:
+  #   invoice = "Unauthorized access"
+  invoice = statement.markup
   return render(request, 'invoice.html', {"invoice": invoice})
   # return render_to_pdf('invoice.html', {
   #  'pagesize': 'A4',

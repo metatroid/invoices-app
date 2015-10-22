@@ -349,6 +349,7 @@ angular.module('invoices.directives', [])
                 invoiceHtml = document.getElementById('invoice').outerHTML;
             apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
               $mdDialog.cancel();
+              window.open(invoice.url);
             }, function(err){$log.error(err);});
           });
         }
