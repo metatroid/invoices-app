@@ -96,7 +96,7 @@
                       %input{ng-model: "intervalObj.description", required: "required"}
                     %md-button.md-raised.md-primary{type: "submit"}
                       save time interval
-                    %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index)"}
+                    %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index, $event)"}
                       discard
   #profile.view-panel{ng-class: "{active: currentState === 'app.settings'}"}
     %md-toolbar.md-default

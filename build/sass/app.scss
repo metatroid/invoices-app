@@ -387,6 +387,28 @@ md-menu-item{
         }
       }
     }
+    .invoice-btn{
+      display: block;
+      width: 100%;
+      line-height: 24px;
+      min-height: 24px;
+      height: 42px;
+      border-radius: 0;
+      text-align: center;
+      margin: 20px auto -20px;
+      background-color: #efefef;
+      padding: 10px;
+      md-icon{
+        line-height: 22px;
+        margin-right: 8px;
+        width: auto;
+      }
+      a{
+        display: block;
+        text-decoration: none;
+        color: #000;
+      }
+    }
   }
   #profile{
     background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
@@ -446,7 +468,9 @@ md-bottom-sheet{
       margin-right: 8px;
       width: auto;
     }
-    > span{}
+  }
+  .hidden{
+    display: none;
   }
 }
 #invoice{

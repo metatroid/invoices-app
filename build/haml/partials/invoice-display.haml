@@ -13,6 +13,7 @@
       %md-icon
         %span.fa.fa-save
       save
+    %md-progress-linear.hidden{md-mode: "indeterminate"}
     #invoice{contenteditable: "true"}
       .stripe
       .invoice-header
@@ -38,9 +39,9 @@
             .icon{flex: "15"}
               %img{src: "/static/assets/img/inbox.svg"}
             .contact{flex: "35"}
-              {{ctrl.parent.project.client_name}}<br>
-              {{ctrl.parent.project.client_email}}<br>
-              {{ctrl.parent.project.project_description}}
+              {{ctrl.parent.project.client_name || "Client Name"}}<br>
+              {{ctrl.parent.project.client_email || "Client Email"}}<br>
+              {{ctrl.parent.project.project_description || "Project Description"}}
       .invoice-info
         .project
           %h2

@@ -7347,6 +7347,25 @@ md-menu-item > .md-button md-icon {
       #application #app .project-list .project h2, #application #app .project-list .project h3, #application #app .project-list .project h4 {
         margin-top: 0;
         margin-bottom: 5px; }
+  #application #app .invoice-btn {
+    display: block;
+    width: 100%;
+    line-height: 24px;
+    min-height: 24px;
+    height: 42px;
+    border-radius: 0;
+    text-align: center;
+    margin: 20px auto -20px;
+    background-color: #efefef;
+    padding: 10px; }
+    #application #app .invoice-btn md-icon {
+      line-height: 22px;
+      margin-right: 8px;
+      width: auto; }
+    #application #app .invoice-btn a {
+      display: block;
+      text-decoration: none;
+      color: #000; }
 
 #application #profile {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
@@ -7399,6 +7418,9 @@ md-bottom-sheet {
     line-height: 22px;
     margin-right: 8px;
     width: auto; }
+
+#invoicePreview .hidden {
+  display: none; }
 
 #invoice {
   background-color: #fafafa;

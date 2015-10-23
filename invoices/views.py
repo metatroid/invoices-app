@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, render_to_response
 from django.contrib.auth import logout as auth_logout
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
@@ -11,12 +11,8 @@ from invoices.projects.models import Project
 from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
 from invoices.projects.forms import ProjectForm
-# from io import StringIO
-# from xhtml2pdf import pisa
-# from django.template.loader import get_template
-# from django.template import Context
-# from django.http import HttpResponse
-# from cgi import escape
+import os
+from configparser import RawConfigParser
 import logging
 logger = logging.getLogger(__name__)
 
@@ -212,14 +208,21 @@ def logout(request):
 def generate_invoice(request):
   statement = Statement.objects.get(pk=request.GET.get('statement', None))
   #rudimentary security
-  # project = Project.objects.get(pk=statement.project)
-  # if(project.user == request.user.id):
-  #   invoice = statement.markup
-  # else:
-  #   invoice = "Unauthorized access"
-  invoice = statement.markup
-  return render(request, 'invoice.html', {"invoice": invoice})
-  # return render_to_pdf('invoice.html', {
-  #  'pagesize': 'A4',
-  #  'invoice': results
-  # })
+  BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  config = RawConfigParser()
+  if(os.path.isfile(os.path.join(BASE_DIR, 'config.overrides.ini'))):
+      config.readfp(open(os.path.join(BASE_DIR, 'config.overrides.ini')))
+  else:
+      config.readfp(open(os.path.join(BASE_DIR, 'config.ini')))
+  valid_host = config.get('hostname', 'SITE_HOST')
+  request_host = request.META['SERVER_NAME']
+  if(valid_host == request_host):
+    project = Project.objects.get(pk=statement.project.id)
+    if(str(project.user.id) == str(request.user.id) or "wkhtmltopdf" in request.META['HTTP_USER_AGENT']):
+      invoice = statement.markup
+      return render(request, 'invoice.html', {"pagesize": "A4", "invoice": invoice})
+    else:
+      return HttpResponse('Unauthorized', status=401)
+  else:
+    return HttpResponse('Unauthorized', status=401)
+  

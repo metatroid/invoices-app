@@ -214,7 +214,6 @@ angular.module('invoices.controllers', [])
             counter = document.getElementById("project_"+id).querySelector(".counter");
         timerEl.setAttribute('data-interval', intervalId);
         timerEl.classList.add('saving');
-        // $scope.timers.splice($scope.timers.indexOf(id), 1);
         Interval.get({project_id: id, id: intervalId}, function(interval){
           var start = new Date(interval.start),
               diff = counter.textContent,
@@ -260,23 +259,30 @@ angular.module('invoices.controllers', [])
           }
         );
       };
-      $scope.discardInterval = function(id, index){
+      $scope.discardInterval = function(id, index, ev){
         var intervalId = $scope.intervals[id].interval,
-            timerEl = document.getElementById("project_"+id).querySelector(".timer"),
-            timerBtn = timerEl.querySelector('.counter');
-        apiSrv.request('DELETE', 'projects/'+id+'/intervals/'+intervalId+'/', {},
-          function(data){
-            $scope.projects.splice(index, 1, data);
-            $scope.intervals[id].timerRunning = false;
-            $scope.timers.splice(index, 1);
-            $scope.timeEvent = "startTimer";
-            // $scope.intervalObj.description = "";
-            // timerEl.classList.remove('saving');
-          },
-          function(err){
-            $log.error(err);
-          }
-        );
+            confirm = $mdDialog.confirm()
+              .title('You are about to discard this time period.')
+              .content('This action cannot be undone. Are you sure you wish to proceed?')
+              .ariaLabel('Confirm discard')
+              .targetEvent(ev)
+              .ok('Discard this interval')
+              .cancel('Cancel');
+        $mdDialog.show(confirm).then(function() {
+          apiSrv.request('DELETE', 'projects/'+id+'/intervals/'+intervalId+'/', {},
+            function(data){
+              $scope.projects.splice(index, 1, data);
+              $scope.intervals[id].timerRunning = false;
+              $scope.timers.splice(index, 1);
+              $scope.timeEvent = "startTimer";
+            },
+            function(err){
+              $log.error(err);
+            }
+          );
+        }, function() {
+          $log.info('cancelled delete');
+        });
       };
       $scope.showIntervalList = function(ev, pid, index){
         $scope.openProject = index;

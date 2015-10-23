@@ -7,25 +7,31 @@ from invoices.profiles.models import Profile
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from decimal import *
+from django.db.models import Count
 import datetime
 import os
+from configparser import RawConfigParser
 import logging
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Statement)
 def gen_pdf_post_save(sender, **kwargs):
   if kwargs.get('created', True):
-    logger.debug("GENERATING INVOICE")
     statement = kwargs.get('instance')
     project = Project.objects.get(pk=statement.project.id)
-    invoiceUrl = "http://django.dev/invoice?statement="+str(statement.id)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config = RawConfigParser()
+    if(os.path.isfile(os.path.join(BASE_DIR, 'config.overrides.ini'))):
+        config.readfp(open(os.path.join(BASE_DIR, 'config.overrides.ini')))
+    else:
+        config.readfp(open(os.path.join(BASE_DIR, 'config.ini')))
+    host = config.get('hostname', 'SITE_HOST')
+    invoiceUrl = "http://"+host+"/invoice?statement="+str(statement.id)
     invoicePath = os.path.abspath(os.path.dirname(__name__)) + "/static/uploads/invoices/"+str(project.user)+"/"+str(project.id)+"/"
-    invoiceFilename = project.project_name+"_"+datetime.date.today().strftime('%m-%d-%Y')+".pdf"
+    invoiceFilename = project.project_name+"_"+str(project.statements.count())+"_"+datetime.date.today().strftime('%m-%d-%Y')+".pdf"
     mkdirCmd = "mkdir -p %s"%(invoicePath)
-    logger.debug("MKDIR: "+mkdirCmd)
     os.system(mkdirCmd)
     pdfCmd = "wkhtmltopdf.sh %s %s%s"%(invoiceUrl,invoicePath,invoiceFilename)
-    logger.debug("WKHTMLTOPDF: "+pdfCmd)
     os.system(pdfCmd)
     statement.url = "/static/uploads/invoices/"+str(project.user)+"/"+str(project.id)+"/"+invoiceFilename
     statement.save()
@@ -74,3 +80,10 @@ def before_delete_interval(sender, **kwargs):
 @receiver(pre_delete, sender=Project)
 def delete_logo_with_project(sender, **kwargs):
   kwargs.get('instance').project_logo.delete(False)
+
+@receiver(pre_delete, sender=Project)
+def delete_pdfs_with_project(sender, **kwargs):
+  project = kwargs.get('instance')
+  invoiceDir = os.path.abspath(os.path.dirname(__name__)) + "/static/uploads/invoices/"+str(project.user)+"/"+str(project.id)+"/"
+  rmCmd = "rm -rf %s"%(invoiceDir)
+  os.system(rmCmd)
