@@ -55,6 +55,9 @@ class IntervalSerializer(serializers.ModelSerializer):
       'end',
       'total',
       'description',
+      'included',
+      'position',
+      'work_day',
       'project',
       'created_at',
       'updated_at'

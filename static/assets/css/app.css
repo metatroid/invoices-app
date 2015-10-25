@@ -7386,6 +7386,39 @@ md-bottom-sheet {
       display: block;
       clear: both; }
 
+.interval-list .sortable md-list-item {
+  padding-left: 25px;
+  position: relative; }
+  .interval-list .sortable md-list-item:before {
+    content: '\f0c9';
+    font-family: 'FontAwesome';
+    color: #333;
+    font-size: 8px;
+    text-align: center;
+    line-height: 16px;
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 15px;
+    height: 15px;
+    background-color: transparent;
+    cursor: move;
+    cursor: -webkit-grab;
+    cursor: grab; }
+  .interval-list .sortable md-list-item:active {
+    cursor: -webkit-grabbing;
+    cursor: grabbing; }
+    .interval-list .sortable md-list-item:active * {
+      cursor: -webkit-grabbing;
+      cursor: grabbing; }
+    .interval-list .sortable md-list-item:active:before {
+      cursor: -webkit-grabbing;
+      cursor: grabbing; }
+  .interval-list .sortable md-list-item.sv-helper {
+    -webkit-transform: translate(-145px, -140px);
+            transform: translate(-145px, -140px); }
+
 .interval-list .md-actions {
   min-height: 0;
   -webkit-justify-content: center;
@@ -7506,6 +7539,11 @@ md-bottom-sheet {
     font-weight: normal; }
   #invoice .invoice-info .intervals .table {
     margin-bottom: 75px; }
+    #invoice .invoice-info .intervals .table tbody tr.sv-helper {
+      -webkit-transform: translate(-265px, -115px);
+              transform: translate(-265px, -115px); }
+    #invoice .invoice-info .intervals .table tbody tr td:nth-child(3) {
+      width: 465px; }
   #invoice .invoice-info .intervals .totals {
     float: right;
     background-color: #f2f2f2;

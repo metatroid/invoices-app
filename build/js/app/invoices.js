@@ -6,7 +6,9 @@ angular.module('invoices', [
                'invoices.directives',
                'invoices.filters',
                'djangoRESTResources',
-               'ui.mask'
+               'ui.mask',
+               'datetime',
+               'angular-sortable-view'
 ]);
 
 angular.module('invoices.states', []);

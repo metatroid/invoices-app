@@ -53,6 +53,8 @@
             %thead
               %tr
                 %th
+                  Date
+                %th
                   Duration
                 %th
                   Description
@@ -60,8 +62,10 @@
                   Rate
                 %th
                   Total
-            %tbody
-              %tr{ng-repeat: "interval in ctrl.parent.project.intervals"}
+            %tbody{sv-root: "sv-root", sv-part: "ctrl.parent.project.intervals"}
+              %tr{ng-repeat: "interval in ctrl.parent.project.intervals", sv-element: "sv-element"}
+                %td
+                  {{interval.work_day | date:'MM/dd'}}
                 %td
                   {{interval.total}}
                 %td

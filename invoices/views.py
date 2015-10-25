@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework import status
+from rest_framework.decorators import api_view
 from invoices.projects.serializers import UserSerializer, ProjectSerializer, IntervalSerializer, StatementSerializer
 from django.contrib.auth.models import User
 from invoices.projects.models import Project
@@ -12,6 +13,7 @@ from invoices.intervals.models import Interval
 from invoices.statements.models import Statement
 from invoices.projects.forms import ProjectForm
 import os
+import json
 from configparser import RawConfigParser
 import logging
 logger = logging.getLogger(__name__)
@@ -182,6 +184,17 @@ class StatementDetail(APIView):
     statement.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['POST'])
+def ProjectIntervalSort(request, pk, format=None):
+  data = json.loads(request.body.decode('utf-8'))
+  sortedIntervals = data['intervalList']
+  for index, item in enumerate(sortedIntervals):
+    interval = Interval.objects.get(pk=item['id'])
+    interval.position = index
+    interval.save()
+  project = Project.objects.get(pk=pk)
+  return Response(ProjectSerializer(project).data)
+
 def project_new(request):
   form = ProjectForm()
   return render(request, 'project/project_edit.html', {'form': form})
@@ -193,17 +206,6 @@ def index_view(request):
 def logout(request):
   auth_logout(request)
   return redirect('/')
-
-  # def render_to_pdf(template_src, context_dict):
-  #   template = get_template(template_src)
-  #   context = Context(context_dict)
-  #   html  = template.render(context)
-  #   result = StringIO.StringIO()
-
-  #   pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
-  #   if not pdf.err:
-  #     return HttpResponse(result.getvalue(), content_type='application/pdf')
-  #   return HttpResponse('We had some errors<pre>%s</pre>' % escape(html))
 
 def generate_invoice(request):
   statement = Statement.objects.get(pk=request.GET.get('statement', None))

@@ -6,7 +6,9 @@ angular.module('invoices', [
                'invoices.directives',
                'invoices.filters',
                'djangoRESTResources',
-               'ui.mask'
+               'ui.mask',
+               'datetime',
+               'angular-sortable-view'
 ]);
 
 angular.module('invoices.states', []);
@@ -97,8 +99,10 @@ angular.module('invoices.controllers', [])
                           '$mdToast', 
                           'djResource', 
                           '$timeout', 
-                          '$filter', 
-    function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter){
+                          '$filter',
+                          'datetime',
+                          'orderByFilter',
+    function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter, datetime, orderByFilter){
       function pad(n, width, z){
         z = z || '0';
         n = n + '';
@@ -275,12 +279,13 @@ angular.module('invoices.controllers', [])
         };
         var intervalId = $scope.intervals[id].interval,
             timerEl = document.getElementById("project_"+id).querySelector(".timer"),
-            timerBtn = timerEl.querySelector('.counter');
+            timerBtn = timerEl.querySelector('.counter'),
+            intervalIx = $scope.timers.indexOf(intervalId);
         apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
           function(data){
             $scope.projects.splice(index, 1, data);
             $scope.intervals[id].timerRunning = false;
-            $scope.timers.splice(index, 1);
+            $scope.timers.splice(intervalIx, 1);
             $scope.timeEvent = "startTimer";
             $scope.intervalObj.description = "";
           },
@@ -318,10 +323,16 @@ angular.module('invoices.controllers', [])
         $scope.openProject = index;
         $mdBottomSheet.show({
           controller: function(){
+            var it = this;
             this.parent = $scope;
             var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
             this.parent.newInterval = new Interval();
-            this.parent.intervals = Interval.query({project_id: pid});
+            this.parent.intervals = Interval.query({project_id: pid}, function(intervals){
+              for(var i=0;i<intervals.length;i++){
+                intervals[i].work_date = new Date(intervals[i].work_day);
+              }
+              it.parent.intervals = orderByFilter(intervals, ['position', 'work_day']);
+            });
             this.parent.project = Project.get({id: pid});
             this.parent.updateInterval = function(interval, ev, index){
               var that = this;
@@ -330,6 +341,7 @@ angular.module('invoices.controllers', [])
                   timeDiff = timeDeltaToSeconds(diff),
                   newEnd = new Date(start.getTime() + timeDiff*1000);
               interval.end = newEnd;
+              interval.work_day = interval.work_date;
               apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
                 function(data){
                   $scope.projects.splice($scope.openProject, 1, data);
@@ -374,12 +386,12 @@ angular.module('invoices.controllers', [])
                   end = new Date(start.getTime() + timeDiff*1000);
               interval.end = end;
               interval.start = start;
+              interval.work_day = interval.work_date;
               apiSrv.request('POST', 'projects/'+pid+'/intervals/', interval,
                 function(data){
-                  var targetInterval = Interval.get({project_id: data.project, id: data.id}, function(){
-                    that.intervals.push(targetInterval);
-                    that.newInterval = new Interval();
-                  });
+                  data.work_date = new Date(data.work_day);
+                  that.intervals.push(data);
+                  that.newInterval = new Interval();
                   Project.get({id: data.project}, function(project){
                     $scope.projects.splice($scope.openProject, 1, project);
                     that.project = project;
@@ -393,6 +405,22 @@ angular.module('invoices.controllers', [])
             this.parent.clearInterval = function(interval, ev){
               this.newInterval.description = "";
               this.newInterval.total = "";
+            };
+            this.parent.sortIntervals = function(item, partFrom, partTo, indexFrom, indexTo){
+              var that = this;
+              var project_id = item.project,
+                  data = {intervalList: partFrom};
+              apiSrv.request('POST', 'projects/'+project_id+'/interval_sort/', data,
+                function(data){
+                  for(var i=0;i<data.intervals.length;i++){
+                    data.intervals[i].work_date = new Date(data.intervals[i].work_day);
+                  }
+                  that.intervals = data.intervals;
+                },
+                function(err){
+                  $log.error(err);
+                }
+              );
             };
           },
           controllerAs: 'ctrl',
