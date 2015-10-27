@@ -34,7 +34,6 @@ class UserDetail(APIView):
         return User.objects.get(pk=pk)
       return User.objects.get(pk=req.user.id)
     except User.DoesNotExist:
-      # raise Http404
       return User.objects.get(pk=req.user.id)
   def get(self, request, pk, format=None):
     user = self.get_object(pk, request)
@@ -56,7 +55,7 @@ class UserDetail(APIView):
 class ProjectList(APIView):
   permission_classes = (IsAuthenticated,)
   def get(self, request, format=None):
-    projects = Project.objects.all().filter(user=request.user.id).order_by('-created_at')
+    projects = Project.objects.all().filter(user=request.user.id)
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
   def post(self, request, format=None):
@@ -101,8 +100,6 @@ class IntervalList(APIView):
     project = Project.objects.get(pk=project_id, user=request.user.id)
     if serializer.is_valid():
       serializer.save(project=project)
-      # projectSerial = ProjectSerializer(project)
-      # return Response(projectSerial.data, status=status.HTTP_201_CREATED)
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -183,6 +180,18 @@ class StatementDetail(APIView):
     statement = self.get_object(project_id, pk, request)
     statement.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+def ProjectSort(request, format=None):
+  data = json.loads(request.body.decode('utf-8'))
+  sortedProjects = data['projectList']
+  for index, item in enumerate(sortedProjects):
+    project = Project.objects.get(pk=item['id'])
+    project.position = index
+    project.save()
+  projects = Project.objects.all().filter(user=request.user.id)
+  serializer = ProjectSerializer(projects, many=True)
+  return Response(serializer.data)
 
 @api_view(['POST'])
 def ProjectIntervalSort(request, pk, format=None):

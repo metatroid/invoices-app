@@ -7220,6 +7220,8 @@ md-menu-item > .md-button md-icon {
     background-color: transparent;
     color: #1a1a1a;
     border-bottom: 1px solid #444; }
+  #application main.main-app .application-progress-indicator {
+    margin-top: -5px; }
   #application main.main-app .view-panel {
     position: fixed;
     left: 140px;
@@ -7250,6 +7252,9 @@ md-menu-item > .md-button md-icon {
           -ms-flex-align: start;
               align-items: flex-start;
       position: relative; }
+      #application #app .project-list .project.sv-helper {
+        -webkit-transform: translate(-140px, -50px);
+                transform: translate(-140px, -50px); }
       #application #app .project-list .project md-fab-toolbar {
         position: absolute;
         right: 0px;
@@ -7599,7 +7604,9 @@ md-bottom-sheet {
       color: #444;
       margin-bottom: 5px; }
       #invoice .invoice-info .intervals .totals .value.disabled {
-        background-color: transparent; }
+        background-color: transparent;
+        text-align: right;
+        padding-right: 5px; }
   #invoice .invoice-info .intervals .notes {
     border: 1px solid #ccc;
     padding: 5px 5px 36px;

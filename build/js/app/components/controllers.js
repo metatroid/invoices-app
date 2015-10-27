@@ -76,17 +76,32 @@ angular.module('invoices.controllers', [])
         n = n + '';
         return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
       }
+      var progressIndicator = document.querySelector('.application-progress-indicator');
       $scope.openProject = 0;
       $scope.currentState = $state.current.name;
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         $scope.currentState = toState.name;
       });
       var Project = djResource('api/projects/:id', {'id': "@id"});
-      $scope.projects = Project.query();
+      $scope.projects = Project.query(function(projects){
+        projects = orderByFilter(projects, ['position', 'created_at']);
+      });
       $scope.newProject = new Project();
       $scope.newProject.hourly_rate = $scope.user.default_rate;
       $scope.newProject.deadline = $filter('date')($scope.newProject.deadline_date, 'yyyy-MM-dd'); // js date format workaround
-
+      $scope.sortProjects = function(item, partFrom, partTo, indexFrom, indexTo){
+        progressIndicator.classList.remove("hidden");
+        var data = {projectList: partFrom};
+        apiSrv.request('POST', 'projects/project_sort/', data,
+          function(data){
+            progressIndicator.classList.add("hidden");
+          },
+          function(err){
+            $log.error(err);
+            progressIndicator.classList.add("hidden");
+          }
+        );
+      };
       $scope.showNewProjectForm = function(ev){
         $mdDialog.show({
           controller: function(){

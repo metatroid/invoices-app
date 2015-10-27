@@ -235,6 +235,9 @@ md-menu-item{
       color: #1a1a1a;
       border-bottom: 1px solid #444;
     }
+    .application-progress-indicator{
+      margin-top: -5px;
+    }
     .view-panel{
       position: fixed;
       left: 140px;
@@ -262,6 +265,9 @@ md-menu-item{
         background-color: #fff;
         align-items: flex-start;
         position: relative;
+        &.sv-helper{
+          transform: translate(-140px, -50px);
+        }
         md-fab-toolbar{
           position: absolute;
           right: 0px;
@@ -701,6 +707,8 @@ md-bottom-sheet{
           margin-bottom: 5px;
           &.disabled{
             background-color: transparent;
+            text-align: right;
+            padding-right: 5px;
           }
         }
       }

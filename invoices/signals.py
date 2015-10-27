@@ -69,15 +69,6 @@ def after_delete_interval(sender, **kwargs):
       project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
       project.save()
 
-# @receiver(pre_delete, sender=Interval)
-# def before_delete_interval(sender, **kwargs):
-#   interval = kwargs.get('instance')
-#   intervalDuration = interval.end - interval.start
-#   project = Project.objects.get(pk=interval.project.id)
-#   project.total_time = project.total_time - intervalDuration.total_seconds()
-#   project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
-#   project.save()
-
 @receiver(pre_delete, sender=Project)
 def delete_logo_with_project(sender, **kwargs):
   kwargs.get('instance').project_logo.delete(False)

@@ -246,23 +246,6 @@ angular.module('invoices.directives', [])
         }
       };
     }])
-  
-  // .directive('inreveal', function(){
-  //   return {
-  //     restrict: 'A',
-  //     link: function($scope, $element, $attrs){
-  //       angular.element($element).on('click', function(e){
-  //         e.preventDefault();
-  //         document.querySelector('a.active').classList.remove('active');
-  //         this.classList.add('active');
-          
-  //         document.querySelector('.view-panel.active').classList.remove('active');
-  //         document.getElementById(target).classList.add('active');
-  //       });
-  //     }
-  //   };
-  // })
-  
   .directive('infile', function(){
     return {
       scope: {
@@ -308,8 +291,6 @@ angular.module('invoices.directives', [])
           var timerEvent = $attrs.intimer;
           var timeEvent = new Event(timerEvent);
           el.dispatchEvent(timeEvent);
-          // console.log('dispatched '+timerEvent+' to element: '+el);
-          // console.log(this.parentElement);
         });
       }
     };

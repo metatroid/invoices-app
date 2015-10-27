@@ -19,10 +19,11 @@
 %main.main-app#mainAppView
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
+  %md-progress-linear.application-progress-indicator.hidden{md-mode: "indeterminate"}
   #app.view-panel{ng-class: "{active: currentState === 'app'}"}
     %md-content
-      %md-list.project-list
-        %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}"}
+      %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
+        %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}", sv-element: "sv-element", data-id: "{{project.id}}", data-position: "{{project.position}}"}
           %md-fab-toolbar{md-open: "closed", md-direction: "left", count: "4"}
             %md-fab-trigger
               %md-button.md-fab{aria-label: "menu"}

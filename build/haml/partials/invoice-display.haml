@@ -76,14 +76,15 @@
                   {{(ctrl.parent.project.hourly_rate * (interval.total | timeDeltaToHours)) | currency}}
           .totals
             .label
-              subtotal
+              hours
             .value
-              {{ctrl.parent.project.invoice_balance | currency}}
+              {{ctrl.parent.project.invoice_hours}}
             .label.disabled
-              tax
+              rate
             .value.disabled
+              {{ctrl.parent.project.hourly_rate | currency}}
             .label.disabled
-              shipping
+              other
             .value.disabled
             .label
               total

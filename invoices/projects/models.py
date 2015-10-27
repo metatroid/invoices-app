@@ -2,6 +2,7 @@ from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
 from django.db import models
+from positions.fields import PositionField
 
 def logo_path(instance, filename):
     return 'project_logos/%d/%s/%s' % (instance.user.id, instance.project_name, filename)
@@ -11,6 +12,7 @@ class Project(models.Model):
     return self.project_name+" ("+str(self.id)+")"
   user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='projects', on_delete=models.CASCADE, null=True, blank=True)
   project_name = models.CharField(max_length=50)
+  position = PositionField(collection="user", default=0)
   project_description = models.TextField(blank=True, null=True)
   project_url = models.URLField(max_length=200, blank=True, null=True)
   project_logo = models.ImageField(upload_to=logo_path, blank=True, null=True)
@@ -36,5 +38,14 @@ class Project(models.Model):
     return self.fixed_rate if self.fixed_rate > 0 else balance
   invoice_balance = property(_invoice_balance)
 
+  def _invoice_hours(self):
+    intervals = self.intervals.all().filter(included=True)
+    seconds = 0
+    for i in intervals:
+      seconds = seconds + i.total.total_seconds()
+    return "{0:.4f}".format(Decimal(seconds/3600))
+  invoice_balance = property(_invoice_balance)
+  invoice_hours = property(_invoice_hours)
+
   class Meta:
-    ordering = ('created_at',)
+    ordering = ('position','created_at',)
