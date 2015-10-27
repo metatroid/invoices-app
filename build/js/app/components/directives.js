@@ -239,6 +239,10 @@ angular.module('invoices.directives', [])
             this.getX = function() { return this.x; };
             this.getY = function() { return this.y; };
           }
+          window.onresize = function(e){
+            width = container.clientWidth;
+            canvas.width = width;
+          };
         }
       };
     }])

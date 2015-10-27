@@ -9,11 +9,38 @@
                 info
             %li
               %a{href: "#", ng-click: "toggleAuthForm()"}
-                auth
+                authorization
         .heading
           %h1
-            Invoice
+            Invoices
         .mockup
+          .symbol
+            -#cube
+              .side.side1
+                -#%a{href: "/#/invoices"}
+                  enter
+              .side.side2
+                -#%a{href: "/#/invoices"}
+                  enter
+              .side.side3
+                -#%a{href: "/#/invoices"}
+                  enter
+              .side.side4
+                -#%a{href: "/#/invoices"}
+                  enter
+              .side.side5
+                -#%a{href: "/#/invoices"}
+                  enter
+              .side.side6
+                -#%a{href: "/#/invoices"}
+                  enter
+                
+          .screen
+            .cta
+              %p
+                {{domain}} is an AngularJS + Django powered time tracking and invoice generation web application built to simplify your project billing, tracking, and invoicing. Organize your work, track hours, and generate PDF invoices through an easy to use interface. Register or login to get started!
+              %a.btn.btn-default{href: "#", ng-click: "toggleAuthForm()"}
+                Let's Go!
 #info
   .container
     .row
@@ -80,7 +107,7 @@
             Feature Heading
           %p
             Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint <strong>occaecat cupidatat non proident</strong>, sunt in culpa qui officia deserunt mollit anim id est laborum.
-    .row
+    -#.row
       .col-xs-12
         .cta
           %h4

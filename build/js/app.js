@@ -70,7 +70,7 @@ angular.module('invoices.controllers', [])
   ])
   .controller('anonCtrl', ['$scope', 
     function($scope){
-      //
+      $scope.domain = window.location.hostname.charAt(0).toUpperCase() + window.location.hostname.slice(1);
     }
   ])
   .controller('userCtrl', [
@@ -319,6 +319,10 @@ angular.module('invoices.controllers', [])
           $log.info('cancelled delete');
         });
       };
+      function intervalProgressIndicator(showEl, hideEl){
+        showEl.classList.remove('hidden');
+        hideEl.classList.add('hidden');
+      }
       $scope.showIntervalList = function(ev, pid, index){
         $scope.openProject = index;
         $mdBottomSheet.show({
@@ -336,6 +340,10 @@ angular.module('invoices.controllers', [])
             this.parent.project = Project.get({id: pid});
             this.parent.updateInterval = function(interval, ev, index){
               var that = this;
+              var actionsParent = ev.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.interval-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
               var start = new Date(interval.start),
                   diff = interval.total,
                   timeDiff = timeDeltaToSeconds(diff),
@@ -344,16 +352,30 @@ angular.module('invoices.controllers', [])
               interval.work_day = interval.work_date;
               apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
                 function(data){
+                  $timeout.cancel(intervalIndicator);
                   $scope.projects.splice($scope.openProject, 1, data);
                   that.project = data;
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
+                  actions.querySelector('button.update-btn').classList.add('success');
+                  $timeout(function(){
+                    actions.querySelector('button.update-btn').classList.remove('success');
+                  }, 1000);
                 },
                 function(err){
+                  $timeout.cancel(intervalIndicator);
                   $log.error(err);
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
                 }
               );
             };
             this.parent.deleteInterval = function(interval, ev, index){
               var that = this;
+              var actionsParent = ev.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.interval-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
               var confirm = $mdDialog.confirm()
                   .title('You are about to delete this time period.')
                   .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -364,22 +386,39 @@ angular.module('invoices.controllers', [])
               $mdDialog.show(confirm).then(function() {
                 apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
                   function(data){
+                    $timeout.cancel(intervalIndicator);
                     $scope.intervals.splice(index, 1);
                     Project.get({id: interval.project}, function(project){
                       $scope.projects.splice($scope.openProject, 1, project);
                       that.project = project;
                     });
+                    progress.classList.add('hidden');
+                    actions.classList.remove('hidden');
+                    actions.querySelector('button.delete-btn').classList.add('success');
+                    $timeout(function(){
+                      actions.querySelector('button.delete-btn').classList.remove('success');
+                    }, 1000);
                   },
                   function(err){
+                    $timeout.cancel(intervalIndicator);
                     $log.error(err);
+                    progress.classList.add('hidden');
+                    actions.classList.remove('hidden');
                   }
                 );
               }, function() {
+                $timeout.cancel(intervalIndicator);
                 $log.info('cancelled delete');
+                progress.classList.add('hidden');
+                actions.classList.remove('hidden');
               });
             };
             this.parent.insertInterval = function(interval, ev){
               var that = this;
+              var actionsParent = ev.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.interval-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
               var start = new Date(),
                   diff = interval.total,
                   timeDiff = timeDeltaToSeconds(diff),
@@ -389,6 +428,7 @@ angular.module('invoices.controllers', [])
               interval.work_day = interval.work_date;
               apiSrv.request('POST', 'projects/'+pid+'/intervals/', interval,
                 function(data){
+                  $timeout.cancel(intervalIndicator);
                   data.work_date = new Date(data.work_day);
                   that.intervals.push(data);
                   that.newInterval = new Interval();
@@ -396,15 +436,25 @@ angular.module('invoices.controllers', [])
                     $scope.projects.splice($scope.openProject, 1, project);
                     that.project = project;
                   });
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
+                  actions.querySelector('button.insert-btn').classList.add('success');
+                  $timeout(function(){
+                    actions.querySelector('button.insert-btn').classList.remove('success');
+                  }, 1000);
                 },
                 function(err){
+                  $timeout.cancel(intervalIndicator);
                   $log.error(err);
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
                 }
               );
             };
             this.parent.clearInterval = function(interval, ev){
               this.newInterval.description = "";
               this.newInterval.total = "";
+              this.newInterval.work_date = "";
             };
             this.parent.sortIntervals = function(item, partFrom, partTo, indexFrom, indexTo){
               var that = this;
@@ -744,6 +794,10 @@ angular.module('invoices.directives', [])
             this.getX = function() { return this.x; };
             this.getY = function() { return this.y; };
           }
+          window.onresize = function(e){
+            width = container.clientWidth;
+            canvas.width = width;
+          };
         }
       };
     }])

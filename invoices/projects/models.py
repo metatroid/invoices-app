@@ -6,6 +6,15 @@ from django.db import models
 def logo_path(instance, filename):
     return 'project_logos/%d/%s/%s' % (instance.user.id, instance.project_name, filename)
 
+# class ProjectManager(models.Manager):
+#   def invoice_balance(self):
+#     intervals = self.intervals.all().filter(included=True)
+#     seconds = 0
+#     for i in intervals:
+#       seconds = seconds + i.total.total_seconds()
+#     balance = self.hourly_rate * Decimal(seconds/3600)
+#     return self.fixed_rate if self.fixed_rate > 0 else balance
+
 class Project(models.Model):
   def __str__(self):
     return self.project_name+" ("+str(self.id)+")"
@@ -26,6 +35,15 @@ class Project(models.Model):
   paid = models.BooleanField(default=False)
   created_at = models.DateTimeField(default=timezone.now)
   updated_at = models.DateTimeField(auto_now=True)
+  # objects = ProjectManager()
+  def _invoice_balance(self):
+    intervals = self.intervals.all().filter(included=True)
+    seconds = 0
+    for i in intervals:
+      seconds = seconds + i.total.total_seconds()
+    balance = self.hourly_rate * Decimal(seconds/3600)
+    return self.fixed_rate if self.fixed_rate > 0 else balance
+  invoice_balance = property(_invoice_balance)
 
   class Meta:
     ordering = ('created_at',)

@@ -94,6 +94,7 @@ class ProjectSerializer(serializers.ModelSerializer):
       'hourly_rate',
       'fixed_rate',
       'balance',
+      'invoice_balance',
       'payments',
       'completed',
       'paid',

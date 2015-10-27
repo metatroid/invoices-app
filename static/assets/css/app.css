@@ -7386,6 +7386,17 @@ md-bottom-sheet {
       display: block;
       clear: both; }
 
+.interval-list .interval .md-ripple-container {
+  opacity: 0; }
+
+.interval-list .interval .md-list-item-inner {
+  padding-right: 0; }
+
+.interval-list .interval .interval-action-progress {
+  height: 50px; }
+  .interval-list .interval .interval-action-progress md-progress-circular {
+    height: 20px; }
+
 .interval-list .sortable md-list-item {
   padding-left: 25px;
   position: relative; }
@@ -7419,6 +7430,15 @@ md-bottom-sheet {
     -webkit-transform: translate(-145px, -140px);
             transform: translate(-145px, -140px); }
 
+.interval-list md-input-container label,
+.interval-list md-input-container .md-placeholder,
+.interval-list md-input-container label,
+.interval-list md-input-container .md-placeholder {
+  color: rgba(0, 0, 0, 0.54); }
+
+.interval-list md-checkbox {
+  margin: 2px 8px; }
+
 .interval-list .md-actions {
   min-height: 0;
   -webkit-justify-content: center;
@@ -7429,7 +7449,10 @@ md-bottom-sheet {
     height: 36px;
     width: 32px;
     line-height: 36px;
-    margin: 0; }
+    margin: 0;
+    transition: color 0.5s ease; }
+    .interval-list .md-actions .md-button.success {
+      color: #0a0; }
 
 @media (min-width: 768px) {
   #invoicePreview {

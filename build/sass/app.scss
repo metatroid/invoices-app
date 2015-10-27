@@ -1,4 +1,7 @@
 @import 'libs/angular-material';
+$successColor: #0a0;
+$warnColor: #a00;
+$infoColor: #00a;
 md-menu-item{
   > .md-button{
     md-icon{
@@ -434,6 +437,20 @@ md-bottom-sheet{
       }
     }
   }
+  .interval{
+    .md-ripple-container{
+      opacity: 0;
+    }
+    .md-list-item-inner{
+      padding-right: 0;
+    }
+    .interval-action-progress{
+      height: 50px;
+      md-progress-circular{
+        height: 20px;
+      }
+    }
+  }
   .sortable{
     md-list-item{
       padding-left: 25px;
@@ -469,6 +486,16 @@ md-bottom-sheet{
       }
     }
   }
+  md-input-container,
+  md-input-container,{
+    label,
+    .md-placeholder{
+      color: rgba(0,0,0,0.54);
+    }
+  }
+  md-checkbox{
+    margin: 2px 8px;
+  }
   .md-actions{
     min-height: 0;
     justify-content: center;
@@ -478,6 +505,10 @@ md-bottom-sheet{
       width: 32px;
       line-height: 36px;
       margin: 0;
+      transition: color .5s ease;
+      &.success{
+        color: $successColor;
+      }
     }
   }
 }

@@ -28,8 +28,10 @@
                   Date
                 %input{datetime: "yyyy-MM-dd", ng-model: "ctrl.parent.newInterval.work_date"}
           .self-center{flex: "10"}
+            .interval-action-progress.hidden
+              %md-progress-circular{md-mode: "indeterminate", md-diameter: "20px"}
             .md-actions.borderless{layout: "row"}
-              %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.insertInterval(ctrl.parent.newInterval, $event)", title: "Add New Time Interval"}
+              %md-button.md-icon-button.insert-btn{aria-label: "update", ng-click: "ctrl.parent.insertInterval(ctrl.parent.newInterval, $event)", title: "Add New Time Interval"}
                 %span.fa.fa-plus-circle
               %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(ctrl.parent.newInterval, $event)", title: "Clear Fields"}
                 %span.fa.fa-remove
@@ -48,13 +50,19 @@
                     Description
                   %input{ng-model: "interval.description"}
               %div{flex: "25"}
-                %md-input-container
+                %md-input-container.inline-85
                   %label
                     Date
                   %input{datetime: "yyyy-MM-dd", ng-model: "interval.work_date"}
+                %md-input-container.inline-15
+                  %label
+                    Include
+                  %md-checkbox{ng-model: "interval.included", ng-init: "interval.included", aria-label: "Include checkbox"}
             .self-center{flex: "10"}
+              .interval-action-progress.hidden
+                %md-progress-circular{md-mode: "indeterminate", md-diameter: "20px"}
               .md-actions.borderless{layout: "row"}
-                %md-button.md-icon-button{aria-label: "update", ng-click: "ctrl.parent.updateInterval(interval, $event, $index)", title: "Update Time Interval"}
+                %md-button.md-icon-button.update-btn{aria-label: "update", ng-click: "ctrl.parent.updateInterval(interval, $event, $index)", title: "Update Time Interval"}
                   %span.fa.fa-check-circle
-                %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
+                %md-button.md-icon-button.delete-btn{aria-label: "remove", ng-click: "ctrl.parent.deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
                   %span.fa.fa-remove

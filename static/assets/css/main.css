@@ -2198,6 +2198,9 @@ body {
 .borderless {
   border: none !important; }
 
+.hidden {
+  display: none !important; }
+
 .md-button.insert-btn {
   text-transform: lowercase;
   font-variant: small-caps; }
@@ -2220,6 +2223,55 @@ body {
         -ms-flex: 1;
             flex: 1; }
 
+.inline-10 {
+  width: 10%;
+  min-width: 10% !important;
+  display: inline-block; }
+  .inline-10 input {
+    width: 100% !important; }
+
+.inline-15 {
+  width: 15%;
+  min-width: 15% !important;
+  display: inline-block; }
+  .inline-15 input {
+    width: 100% !important; }
+
+.inline-25 {
+  width: 25%;
+  min-width: 25% !important;
+  display: inline-block; }
+  .inline-25 input {
+    width: 100% !important; }
+
+.inline-50 {
+  width: 50%;
+  min-width: 50% !important;
+  display: inline-block; }
+  .inline-50 input {
+    width: 100% !important; }
+
+.inline-75 {
+  width: 75%;
+  min-width: 75% !important;
+  display: inline-block; }
+  .inline-75 input {
+    width: 100% !important; }
+
+.inline-85 {
+  width: 85%;
+  min-width: 85% !important;
+  display: inline-block; }
+  .inline-85 input {
+    width: 100% !important; }
+
+.inline-90 {
+  width: 90%;
+  min-width: 90% !important;
+  display: inline-block; }
+  .inline-90 input {
+    width: 100% !important; }
+
 .self-center {
   -webkit-align-self: center;
       -ms-flex-item-align: center;
@@ -2232,7 +2284,7 @@ body {
   outline: none !important; }
 
 body {
-  background-color: #f0f0f0;
+  background-color: #fff !important;
   background-image: url(/static/assets/img/old-mathematics.png); }
   body.app {
     background-image: url(/static/assets/img/grid.gif); }
@@ -2346,7 +2398,7 @@ nav {
     color: #0a0a0a; }
 
 .mockup {
-  background-image: url(/static/assets/img/laptop.png);
+  background-image: url(/static/assets/img/_laptop.png);
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
