@@ -32,71 +32,79 @@ nav{
     background-size: cover;
     background-position: center;
     position: relative;
-    .mockup{
-      perspective: 10000px;
+    // .mockup{
+    //   perspective: 10000px;
       .screen{
         position: absolute;
-        top: 50%;
+        top: 45%;
         left: 50%;
-        transform: translate(-50%,-50%);
-        width: 444px;
-        padding-left: 200px;
+        // right: 30px;
+        transform: translate(0%,-50%);
+        // width: 444px;
+        width: calc(50% - 50px);
+        padding-left: 50px;
         padding-right: 50px;
         height: 215px;
         @media(min-height: 600px){
-          width: 565px;
-          padding-left: 275px;
+          // width: 565px;
+          padding-left: 0px;
           padding-right: 0px;
           font-size: 12px;
         }
         color: rgba(5,255,5,0.5);
         font-size: 10px;
+        z-index: 9;
         .cta{
-          background-color: rgba(0,0,0,0.35);
-          border: 1px solid rgba(5,255,5,0.5);
+          background-color: rgba(0,0,0,0.8);
+          // border: 1px solid rgba(5,255,5,0.5);
           padding: 25px;
           position: relative;
-          &:before,
-          &:after{
-            content: '';
-            display: block;
-            width: 25px;
-            height: 25px;
-            background-color: #fff;
-            border-radius: 150px;
-            top: 50%;
-            transform: translateY(-50%);
-            position: absolute;
-          }
-          &:before{
-            left: -189px;
-            background-color: rgba(#118d8c, 0.95);
-            // background: radial-gradient(ellipse at center, #139d98 0%, #0e756f 100%);
-            // opacity: .75;
-            z-index: 3;
-            box-shadow: -60px 0 0 rgba(#860000, .75);
-          }
-          &:after{
-            left: -129px;
-            background-color: rgba(#860000, 0.75);
-            // background: radial-gradient(ellipse at center, #9e0004 0%, #710000 100%);
-            // opacity: .75;
-            z-index: 2;
-          }
+          color: $lightgray;
+          line-height: 1.5;
           a{
             background-color: rgba(0,0,0,0.35);
-            border: 1px solid rgba(5,255,5,0.5);
+            border: none;// 1px solid rgba(5,255,5,0.5);
             border-radius: 0;
             color: rgba(5,255,5,0.5);
           }
         }
       }
       .symbol{
-        position: relative;
-        top: 260px;
-        left: 325px;
-        width: calc(100% - 325px);
+        position: absolute;
+        top: 50%;
+        left: 0px;
+        transform: translateY(-50%);
         z-index: 9;
+        display: none;
+        >div{
+          width: 25px;
+          height: 25px;
+          background-color: #fff;
+          border-radius: 15px;
+          border: 1px solid rgba(0,0,0,0.15);
+          top: 50%;
+          transform: translateY(-50%);
+          position: absolute;
+          opacity: .75;
+          &:nth-child(2){
+            left: 89px;
+            // background-color: rgba(#118d8c, 0.95);
+            background: radial-gradient(ellipse at center, #139d98 0%, #0e756f 100%);
+            box-shadow: -10px 0 5px rgba(mix(#9e0004, #710000, 50%), .65), 10px 0 5px rgba(mix(#9e0004, #710000, 50%), .65);
+          }
+          &:nth-child(1){
+            left: 149px;
+            // background-color: rgba(#860000, 0.75);
+            background: radial-gradient(ellipse at center, #9e0004 0%, #710000 100%);
+            box-shadow: -10px 0 5px rgba(mix(#139d98, #0e756f, 50%), .65), 10px 0 5px rgba(mix(#9e0004, #710000, 50%), .65);
+          }
+          &:nth-child(3){
+            left: 29px;
+            // background-color: rgba(#860000, 0.75);
+            background: radial-gradient(ellipse at center, #9e0004 0%, #710000 100%);
+            box-shadow: 10px 0 5px rgba(mix(#139d98, #0e756f, 50%), .65), -10px 0 5px rgba(mix(#9e0004, #710000, 50%), .65);
+          }
+        }
       }
       #cube{
         width: 100px;
@@ -165,7 +173,7 @@ nav{
           transform: translateY(-95px) rotateX(90deg);
         }
       }
-    }
+    // }
   }
   .heading{
     position: relative;
@@ -186,7 +194,7 @@ nav{
 
 #info{
   margin-bottom: 60px;
-  padding-top: 40px;
+  padding-top: 200px;
   clear: both;
   overflow: hidden;
   .panel{

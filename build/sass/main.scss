@@ -232,7 +232,7 @@ nav{
 }
 // landing page header animation
 .mockup{
-  background-image: url(/static/assets/img/_laptop.png);
+  background-image: url(/static/assets/img/_laptop_screen.png);
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
@@ -241,14 +241,14 @@ nav{
   position: relative;
   z-index: 5;
   opacity: 0;
-  transform: translateY(250px);
+  transform: translateY(250px) translateX(-35%);
   transition: opacity .75s ease, transform 1s ease;
 }
 .initialized{
   #landing{
     .mockup{
       opacity: 1;
-      transform: translateY(0px);
+      transform: translateY(0px) translateX(-35%);
     }
   }
 }
