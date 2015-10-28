@@ -7167,17 +7167,16 @@ md-menu-item > .md-button md-icon {
   font-size: 10px;
   padding: 0 12px; }
 
+#projectDialog {
+  max-height: 88%; }
+  #projectDialog .project-form-wrapper {
+    width: 800px; }
+
 #application .btn span {
   margin-right: 4px; }
 
 #application nav {
   margin-bottom: 44px; }
-
-#application #projectDialog {
-  max-height: 88%; }
-
-#application .project-form-wrapper {
-  width: 800px; }
 
 #application nav.aside {
   margin-bottom: 0;
@@ -7279,12 +7278,17 @@ md-menu-item > .md-button md-icon {
           border-radius: 0 !important; }
         #application #app .project-list .project .md-button.md-fab .md-ripple-container {
           border-radius: 0; }
-      #application #app .project-list .project .md-fab-action-item button {
+      #application #app .project-list .project .md-fab-action-item a {
+        line-height: 52px; }
+      #application #app .project-list .project .md-fab-action-item button,
+      #application #app .project-list .project .md-fab-action-item a {
         color: rgba(255, 255, 255, 0.87);
         transition: all 0.5s ease; }
-        #application #app .project-list .project .md-fab-action-item button:hover {
+        #application #app .project-list .project .md-fab-action-item button:hover,
+        #application #app .project-list .project .md-fab-action-item a:hover {
           color: white; }
-        #application #app .project-list .project .md-fab-action-item button md-icon {
+        #application #app .project-list .project .md-fab-action-item button md-icon,
+        #application #app .project-list .project .md-fab-action-item a md-icon {
           color: rgba(255, 255, 255, 0.87);
           line-height: 24px; }
       #application #app .project-list .project img.md-avatar {

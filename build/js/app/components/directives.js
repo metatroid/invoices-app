@@ -325,7 +325,7 @@ angular.module('invoices.directives', [])
       }
     };
   }])
-  .directive("insave", ['$mdDialog', '$log', 'apiSrv', function($mdDialog, $log, apiSrv){
+  .directive("insave", ['$rootScope', '$state', '$mdDialog', '$log', 'apiSrv', function($rootScope, $state, $mdDialog, $log, apiSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -345,7 +345,10 @@ angular.module('invoices.directives', [])
                   .ariaLabel('Invoice link')
                   .ok('Dismiss')
                   .targetEvent(ev)
-              );
+              ).finally(function(){
+                $rootScope.dialogOpen = false;
+                $state.go("app");
+              });
             }, function(err){$log.error(err);});
           });
         }

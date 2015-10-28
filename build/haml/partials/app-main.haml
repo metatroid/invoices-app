@@ -13,14 +13,14 @@
       %a{href: "#"}
         %span.fa.fa-code-fork
   .app-actions
-    %a{ng-click: "showNewProjectForm($event)"}
+    %a{ui-sref: "app.newProject($event)"}
       %span.fa.fa-plus-square
       New Project
 %main.main-app#mainAppView
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
   %md-progress-linear.application-progress-indicator.hidden{md-mode: "indeterminate"}
-  #app.view-panel{ng-class: "{active: currentState === 'app'}"}
+  #app.view-panel{ng-class: "{active: currentState !== 'app.settings'}"}
     %md-content
       %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
         %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}", sv-element: "sv-element", data-id: "{{project.id}}", data-position: "{{project.position}}"}
@@ -39,7 +39,7 @@
                       %span.fa.fa-list-alt
                   %md-menu-content{width: "2"}
                     %md-menu-item
-                      %md-button{ng-click: "openInvoiceDialog(project.id, $event)"}
+                      %md-button{ui-sref: "app.invoicePreview({id: project.id, event: $event})"}
                         %md-icon{md-menu-align-target: true}
                           %span.fa.fa-magic
                         Generate invoice
@@ -54,9 +54,9 @@
                           %span.fa.fa-files-o
                         Past invoices
 
-                %md-button.md-icon-button{aria-label: "intervals", ng-click: "showIntervalList($event, project.id, $index)"}
+                %md-button.md-icon-button{aria-label: "intervals", ui-sref: "app.intervalList({id: project.id, index: $index, event: $event})"}
                   %span.fa.fa-clock-o
-                %md-button.md-icon-button{aria-label: "edit", ng-click: "showProjectEditor($event, project.id, $index)"}
+                %md-button.md-icon-button{aria-label: "edit", ui-sref: "app.editProject({id: project.id, index: $index, event: $event})"}
                   %span.fa.fa-edit
           %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}
           %span.project-icon.fa.fa-folder{ng-if: "!project.project_logo"}

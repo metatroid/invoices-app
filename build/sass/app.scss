@@ -169,6 +169,12 @@ md-menu-item{
     padding: 0 12px;
   }
 }
+#projectDialog{
+  max-height: 88%;
+  .project-form-wrapper{
+    width: 800px;
+  }
+}
 #application{
   .btn{
     span{
@@ -177,12 +183,6 @@ md-menu-item{
   }
   nav{
     margin-bottom: 44px;
-  }
-  #projectDialog{
-    max-height: 88%;
-  }
-  .project-form-wrapper{
-    width: 800px;
   }
   nav.aside{
     margin-bottom: 0;
@@ -299,7 +299,11 @@ md-menu-item{
           }
         }
         .md-fab-action-item{
-          button{
+          a{
+            line-height: 52px;
+          }
+          button,
+          a{
             color: rgba(255,255,255,0.87);
             transition: all .5s ease;
             &:hover{

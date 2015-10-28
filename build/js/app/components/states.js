@@ -32,7 +32,7 @@ angular.module('invoices.states', [
       }
     })
     .state('app', {
-      url: '/invoices',
+      url: '/projects',
       views: {
         'main': {
           templateUrl: templateDir + '/main.html'
@@ -61,6 +61,18 @@ angular.module('invoices.states', [
           controller: 'userCtrl'
         }
       }
+    })
+    .state('app.newProject', {
+      url: '/new'
+    })
+    .state('app.editProject', {
+      url: '/edit/:id/:index/:event'
+    })
+    .state('app.intervalList', {
+      url: '/intervals/:id/:index/:event'
+    })
+    .state('app.invoicePreview', {
+      url: '/invoice/:id/:event'
     })
   ;
 }]);
