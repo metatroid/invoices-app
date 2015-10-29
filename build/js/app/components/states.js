@@ -74,5 +74,8 @@ angular.module('invoices.states', [
     .state('app.invoicePreview', {
       url: '/invoice/:id/:event'
     })
+    .state('app.invoiceList', {
+      url: '/invoices/:id/:event'
+    })
   ;
 }]);

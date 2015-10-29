@@ -7463,6 +7463,42 @@ md-bottom-sheet {
     .interval-list .md-actions .md-button.success {
       color: #0a0; }
 
+.invoice-list .invoice {
+  background-color: #efefef; }
+  .invoice-list .invoice .preview {
+    width: 800px;
+    height: 1200px;
+    position: absolute;
+    z-index: 99;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%) scale(0.25);
+            transform: translate(-50%, -50%) scale(0.25);
+    margin-left: 0px;
+    margin-top: -32px; }
+  .invoice-list .invoice md-grid-tile-footer {
+    z-index: 999;
+    background-color: #000; }
+    .invoice-list .invoice md-grid-tile-footer figcaption {
+      width: 100%; }
+      .invoice-list .invoice md-grid-tile-footer figcaption .invoice-action-progress {
+        float: left;
+        position: absolute;
+        top: -25px; }
+      .invoice-list .invoice md-grid-tile-footer figcaption .md-actions {
+        float: right;
+        transition: -webkit-transform 0.5s ease;
+        transition: transform 0.5s ease; }
+        .invoice-list .invoice md-grid-tile-footer figcaption .md-actions button,
+        .invoice-list .invoice md-grid-tile-footer figcaption .md-actions a {
+          color: rgba(255, 255, 255, 0.87); }
+        .invoice-list .invoice md-grid-tile-footer figcaption .md-actions.hidden {
+          display: -webkit-flex !important;
+          display: -ms-flexbox !important;
+          display: flex !important;
+          -webkit-transform: translateY(-100%);
+                  transform: translateY(-100%); }
+
 @media (min-width: 768px) {
   #invoicePreview {
     width: 888px;
@@ -7483,6 +7519,9 @@ md-bottom-sheet {
     line-height: 22px;
     margin-right: 8px;
     width: auto; }
+
+#invoicePreview.edit-invoice button {
+  width: 77px; }
 
 #invoicePreview .hidden {
   display: none; }

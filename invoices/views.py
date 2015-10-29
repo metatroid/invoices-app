@@ -172,9 +172,8 @@ class StatementDetail(APIView):
     statement = self.get_object(project_id, pk, request)
     serializer = StatementSerializer(statement, data=request.data)
     if serializer.is_valid():
-      project_object = self.get_project(project_id, request)
-      project = ProjectSerializer(project_object)
-      return Response(project.data)
+      serializer.save()
+      return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   def delete(self, request, project_id, pk, format=None):
     statement = self.get_object(project_id, pk, request)

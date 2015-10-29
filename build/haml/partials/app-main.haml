@@ -23,7 +23,7 @@
   #app.view-panel{ng-class: "{active: currentState !== 'app.settings'}"}
     %md-content
       %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
-        %md-list-item.project{ng-repeat: "project in projects", id: "project_{{project.id}}", sv-element: "sv-element", data-id: "{{project.id}}", data-position: "{{project.position}}"}
+        %md-list-item.project{id: "project_{{project.id}}", ng-repeat: "project in projects", sv-element: "sv-element", data-pid: "{{project.id}}", data-position: "{{project.position}}"}
           %md-fab-toolbar{md-open: "closed", md-direction: "left", count: "4"}
             %md-fab-trigger
               %md-button.md-fab{aria-label: "menu"}
@@ -48,7 +48,7 @@
                         %md-icon
                           %span.fa.fa-download
                         Direct download
-                    %md-menu-item
+                    %md-menu-item{ui-sref: "app.invoiceList({id: project.id, event: $event})"}
                       %md-button
                         %md-icon
                           %span.fa.fa-files-o

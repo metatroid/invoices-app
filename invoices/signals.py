@@ -10,6 +10,8 @@ from decimal import *
 from django.db.models import Count
 import datetime
 import os
+from os import path
+import time
 from configparser import RawConfigParser
 import logging
 logger = logging.getLogger(__name__)
@@ -28,13 +30,35 @@ def gen_pdf_post_save(sender, **kwargs):
     host = config.get('hostname', 'SITE_HOST')
     invoiceUrl = "http://"+host+"/invoice?statement="+str(statement.id)
     invoicePath = os.path.abspath(os.path.dirname(__name__)) + "/static/uploads/invoices/"+str(project.user)+"/"+str(project.id)+"/"
-    invoiceFilename = project.project_name+"_"+str(project.statements.count())+"_"+datetime.date.today().strftime('%m-%d-%Y')+".pdf"
+    invoiceFilename = project.project_name.replace(" ", "_")+"_"+str(project.statements.count())+"_"+datetime.date.today().strftime('%m-%d-%Y')+".pdf"
     mkdirCmd = "mkdir -p %s"%(invoicePath)
     os.system(mkdirCmd)
     pdfCmd = "wkhtmltopdf.sh %s %s%s"%(invoiceUrl,invoicePath,invoiceFilename)
     os.system(pdfCmd)
     statement.url = "/static/uploads/invoices/"+str(project.user)+"/"+str(project.id)+"/"+invoiceFilename
     statement.save()
+
+@receiver(post_save, sender=Statement)
+def gen_pdf_post_update(sender, **kwargs):
+  statement = kwargs.get('instance')
+  project = Project.objects.get(pk=statement.project.id)
+  BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  config = RawConfigParser()
+  if(os.path.isfile(os.path.join(BASE_DIR, 'config.overrides.ini'))):
+      config.readfp(open(os.path.join(BASE_DIR, 'config.overrides.ini')))
+  else:
+      config.readfp(open(os.path.join(BASE_DIR, 'config.ini')))
+  host = config.get('hostname', 'SITE_HOST')
+  invoiceUrl = "http://"+host+"/invoice?statement="+str(statement.id)
+  invoicePath = os.path.abspath(os.path.dirname(__name__))
+  invoiceFilename = statement.url
+  now = time.time()
+  pdf_created_at = os.stat(invoicePath+invoiceFilename).st_mtime
+  logger.debug("PDF CREATED AT: "+str(pdf_created_at))
+  logger.debug("NOW: "+str(now))
+  if pdf_created_at < (now - 10):
+    pdfCmd = "wkhtmltopdf.sh %s %s%s"%(invoiceUrl,invoicePath,invoiceFilename)
+    os.system(pdfCmd)
 
 @receiver(post_save, sender=User)
 def ensure_profile_exists(sender, **kwargs):

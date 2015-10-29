@@ -62470,6 +62470,11 @@ angular.module('invoices.controllers', [])
                   ev = $state.params.event;
               $rootScope.$emit("showInvoice", {id: id, ev: ev});
             }
+            if($state.is("app.invoiceList")){
+              var id = $state.params.id,
+                  ev = $state.params.event;
+              $rootScope.$emit("showInvoices", {id: id, ev: ev});
+            }
             $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
               if(toState.name === "initial"){
                 $state.go('app');
@@ -62545,6 +62550,9 @@ angular.module('invoices.controllers', [])
       $rootScope.$on("showInvoice", function(event, args){
         $scope.openInvoiceDialog(args.id, args.e);
       });
+      $rootScope.$on("showInvoices", function(event, args){
+        $scope.openInvoiceList(args.id, args.e);
+      });
 
       $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         $scope.currentState = toState.name;
@@ -62568,12 +62576,17 @@ angular.module('invoices.controllers', [])
               e = toParams.event;
           $scope.openInvoiceDialog(id, e);
         }
+        if(toState.name === "app.invoiceList"){
+          var id = toParams.id,
+              e = toParams.event;
+          $scope.openInvoiceList(id, e);
+        }
         if(fromState.name === "app.newProject" || fromState.name === "app.editProject" || fromState.name === "app.invoicePreview" || fromState.name === "app.intervalList"){
           if($rootScope.dialogOpen){
             $scope.closeDialog();
           }
         }
-        if(fromState.name === "app.intervalList"){
+        if(fromState.name === "app.intervalList" || fromState.name === "app.invoiceList"){
           if($rootScope.sheetOpen){
             $mdBottomSheet.hide();
           }
@@ -62739,6 +62752,7 @@ angular.module('invoices.controllers', [])
       $scope.intervals = {};
       var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
       var startTimer = function(id){
+        $log.info("id:"+id);
         $scope.timeEvent = "startTimer";
         $scope.intervals[id] = typeof $scope.intervals[id] === "undefined" ? {} : $scope.intervals[id];
         $scope.intervals[id].timerRunning = true;
@@ -62839,7 +62853,7 @@ angular.module('invoices.controllers', [])
           $log.info('cancelled delete');
         });
       };
-      function intervalProgressIndicator(showEl, hideEl){
+      function itemProgressIndicator(showEl, hideEl){
         showEl.classList.remove('hidden');
         hideEl.classList.add('hidden');
       }
@@ -62864,7 +62878,7 @@ angular.module('invoices.controllers', [])
               var actionsParent = ev.target.parentElement.parentElement.parentElement,
                   progress = actionsParent.querySelector('.interval-action-progress'),
                   actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
+              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
               var start = new Date(interval.start),
                   diff = interval.total,
                   timeDiff = timeDeltaToSeconds(diff),
@@ -62896,7 +62910,7 @@ angular.module('invoices.controllers', [])
               var actionsParent = ev.target.parentElement.parentElement.parentElement,
                   progress = actionsParent.querySelector('.interval-action-progress'),
                   actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
+              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
               var confirm = $mdDialog.confirm()
                   .title('You are about to delete this time period.')
                   .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -62939,7 +62953,7 @@ angular.module('invoices.controllers', [])
               var actionsParent = ev.target.parentElement.parentElement.parentElement,
                   progress = actionsParent.querySelector('.interval-action-progress'),
                   actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(intervalProgressIndicator, 500, true, progress, actions);
+              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
               var start = new Date(),
                   diff = interval.total,
                   timeDiff = timeDeltaToSeconds(diff),
@@ -62951,6 +62965,7 @@ angular.module('invoices.controllers', [])
                 function(data){
                   $timeout.cancel(intervalIndicator);
                   data.work_date = new Date(data.work_day);
+                  data.position = -1;
                   that.intervals.push(data);
                   that.newInterval = new Interval();
                   Project.get({id: data.project}, function(project){
@@ -63025,6 +63040,138 @@ angular.module('invoices.controllers', [])
             }
           });
         }, function(err){$log.error(err);});
+      };
+      
+      $scope.openInvoiceList = function(pid, ev){
+        $rootScope.sheetOpen = true;
+        $mdBottomSheet.show({
+          controller: function(){
+            var it = this;
+            this.parent = $scope;
+            var Invoice = djResource('api/projects/:project_id/statements/:id', {'project_id': '@pid', 'id': "@id"});
+            this.parent.newInvoice = new Invoice();
+            this.parent.invoices = Invoice.query({project_id: pid}, function(invoices){
+              it.parent.invoices = orderByFilter(invoices, ['created_at']);
+            });
+            $rootScope.$on('updateInvoiceList', function(){
+              this.parent.invoices = Invoice.query({project_id: pid}, function(invoices){
+                it.parent.invoices = orderByFilter(invoices, ['created_at']);
+              });
+            })
+            this.parent.project = Project.get({id: pid});
+            this.parent.editInvoice = function(invoice, index, ev){
+              $mdDialog.show({
+                controller: function(){
+                  this.parent = $scope;
+                  this.parent.invoice = invoice;
+                },
+                controllerAs: 'ctrl',
+                templateUrl: 'angular/partials/invoice-edit.html',
+                parent: angular.element(document.querySelector('.view-panel.active')),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                onComplete: function(){
+                  document.querySelector('.view-panel.active').scrollTop = 0;
+                }
+              });
+            };
+            this.parent.cancelInvoiceEdit = function(e){
+              $mdDialog.cancel()
+            };
+            this.parent.duplicateInvoice = function(projectId, invoice, index, event){
+              var actionsParent = event.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.invoice-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+              apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoice.markup}, function(data){
+                $timeout.cancel(invoiceIndicator);
+                $scope.invoices.push(data);
+                progress.classList.add('hidden');
+                actions.classList.remove('hidden');
+                actions.querySelector('button.delete-btn').classList.add('success');
+                $timeout(function(){
+                  actions.querySelector('button.delete-btn').classList.remove('success');
+                }, 1000);
+              }, function(err){
+                $timeout.cancel(invoiceIndicator);
+                $log.error(err);
+                progress.classList.add('hidden');
+                actions.classList.remove('hidden');
+              });
+            };
+            this.parent.deleteInvoice = function(invoice, ev, index){
+              var that = this;
+              var actionsParent = ev.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.invoice-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+              var confirm = $mdDialog.confirm()
+                  .title('You are about to delete this invoice.')
+                  .content('This action cannot be undone. Are you sure you wish to proceed?')
+                  .ariaLabel('Confirm delete')
+                  .targetEvent(ev)
+                  .ok('Delete this invoice')
+                  .cancel('Cancel');
+              $mdDialog.show(confirm).then(function() {
+                apiSrv.request('DELETE', 'projects/'+invoice.project+'/statements/'+invoice.id, {},
+                  function(data){
+                    $timeout.cancel(invoiceIndicator);
+                    $scope.invoices.splice(index, 1);
+                    progress.classList.add('hidden');
+                    actions.classList.remove('hidden');
+                    actions.querySelector('button.delete-btn').classList.add('success');
+                    $timeout(function(){
+                      actions.querySelector('button.delete-btn').classList.remove('success');
+                    }, 1000);
+                  },
+                  function(err){
+                    $timeout.cancel(invoiceIndicator);
+                    $log.error(err);
+                    progress.classList.add('hidden');
+                    actions.classList.remove('hidden');
+                  }
+                );
+              }, function() {
+                $timeout.cancel(invoiceIndicator);
+                $log.info('cancelled delete');
+                progress.classList.add('hidden');
+                actions.classList.remove('hidden');
+              });
+            };
+            this.parent.insertInvoice = function(invoice, ev){
+              var that = this;
+              var actionsParent = ev.target.parentElement.parentElement.parentElement,
+                  progress = actionsParent.querySelector('.invoice-action-progress'),
+                  actions = actionsParent.querySelector('.md-actions');
+              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+              apiSrv.request('POST', 'projects/'+pid+'/statements/', invoice,
+                function(data){
+                  $timeout.cancel(invoiceIndicator);
+                  that.invoices.push(data);
+                  that.newInvoice = new Invoice();
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
+                  actions.querySelector('button.insert-btn').classList.add('success');
+                  $timeout(function(){
+                    actions.querySelector('button.insert-btn').classList.remove('success');
+                  }, 1000);
+                },
+                function(err){
+                  $timeout.cancel(invoiceIndicator);
+                  $log.error(err);
+                  progress.classList.add('hidden');
+                  actions.classList.remove('hidden');
+                }
+              );
+            };
+          },
+          controllerAs: 'ctrl',
+          templateUrl: 'angular/partials/invoice-list.html',
+          parent: angular.element(document.querySelector('.view-panel.active'))
+        }).finally(function(){
+          $rootScope.sheetOpen = false;
+          $state.go("app");
+        });
       };
 
       $scope.htmlSafe = $sce.trustAsHtml;
@@ -63371,34 +63518,54 @@ angular.module('invoices.directives', [])
     };
   }])
   .directive("insave", ['$rootScope', '$state', '$mdDialog', '$log', 'apiSrv', function($rootScope, $state, $mdDialog, $log, apiSrv){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($element).on('click', function(ev){
-            var projectId = $attrs.insave,
-                invoiceHtml = document.getElementById('invoice').outerHTML,
-                progress = document.querySelector("md-progress-linear");
-            progress.classList.remove("hidden");
-            apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
-              progress.classList.add("hidden");
-              $mdDialog.show(
-                $mdDialog.alert()
-                  .parent(angular.element(document.querySelector('.view-panel.active')))
-                  .clickOutsideToClose(true)
-                  .title('Invoice ready')
-                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme"><a href="'+invoice.url+'" target="_blank"><md-icon class="md-default-theme"><span class="fa fa-file-pdf-o"></span></md-icon> View PDF</a></button>')
-                  .ariaLabel('Invoice link')
-                  .ok('Dismiss')
-                  .targetEvent(ev)
-              ).finally(function(){
-                $rootScope.dialogOpen = false;
-                $state.go("app");
-              });
-            }, function(err){$log.error(err);});
-          });
-        }
-      };
-    }])
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('click', function(ev){
+          var projectId = $attrs.insave,
+              invoiceHtml = document.getElementById('invoice').outerHTML,
+              progress = document.querySelector("md-progress-linear");
+          progress.classList.remove("hidden");
+          apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
+            progress.classList.add("hidden");
+            $mdDialog.show(
+              $mdDialog.alert()
+                .parent(angular.element(document.querySelector('.view-panel.active')))
+                .clickOutsideToClose(true)
+                .title('Invoice ready')
+                .content('<button class="invoice-btn md-icon-button md-button md-default-theme"><a href="'+invoice.url+'" target="_blank"><md-icon class="md-default-theme"><span class="fa fa-file-pdf-o"></span></md-icon> View PDF</a></button>')
+                .ariaLabel('Invoice link')
+                .ok('Dismiss')
+                .targetEvent(ev)
+            ).finally(function(){
+              $rootScope.dialogOpen = false;
+              $state.go("app");
+            });
+          }, function(err){$log.error(err);});
+        });
+      }
+    };
+  }])
+  .directive("inupdate", ['$rootScope', '$state', '$mdDialog', '$log', 'apiSrv', function($rootScope, $state, $mdDialog, $log, apiSrv){
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        angular.element($element).on('click', function(ev){
+          var invoiceId = $attrs.inupdate,
+              projectId = angular.element($element)[0].getAttribute("data-project"),
+              invoiceHtml = document.querySelector('.markup').innerHTML,
+              progress = document.querySelector("md-progress-linear");
+          progress.classList.remove("hidden");
+          apiSrv.request('PUT', 'projects/'+projectId+'/statements/'+invoiceId+'/', {markup: invoiceHtml}, function(invoice){
+            progress.classList.add("hidden");
+            document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
+            $rootScope.$emit('updateInvoiceList');
+            $mdDialog.cancel();
+          }, function(err){$log.error(err);});
+        });
+      }
+    };
+  }])
 ;
 angular.module('invoices.filters', [])
   .filter('msToTimeString', function(){
@@ -63568,6 +63735,9 @@ angular.module('invoices.states', [
     })
     .state('app.invoicePreview', {
       url: '/invoice/:id/:event'
+    })
+    .state('app.invoiceList', {
+      url: '/invoices/:id/:event'
     })
   ;
 }]);

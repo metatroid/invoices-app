@@ -1,0 +1,17 @@
+%md-dialog#invoicePreview
+  %md-toolbar
+    .md-toolbar-tools
+      %h2
+        %strong
+          {{ctrl.parent.project.project_name}}
+        invoice
+      %span{flex: "flex"}
+      %md-button.md-icon-button{ng-click: "ctrl.parent.cancelInvoiceEdit($event)", aria-label: "Cancel"}
+        %span.fa.fa-caret-down
+  %md-dialog-content.edit-invoice
+    %md-button.md-icon-button{inupdate: "{{ctrl.parent.invoice.id}}", data-project: "{{ctrl.parent.project.id}}"}
+      %md-icon
+        %span.fa.fa-save
+      update
+    %md-progress-linear.hidden{md-mode: "indeterminate"}
+    .markup{ng-bind-html: "ctrl.parent.htmlSafe(ctrl.parent.invoice.markup)"}

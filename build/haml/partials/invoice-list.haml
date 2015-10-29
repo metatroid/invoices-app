@@ -1,0 +1,21 @@
+%md-bottom-sheet
+  %md-content
+    %md-subheader.md-no-sticky
+      %strong
+        Project: 
+      {{ctrl.parent.project.project_name}}
+    %md-grid-list.invoice-list{md-cols-sm: "1", md-cols-md: "2", md-cols-gt-md: "6", md-row-height-gt-md: "1:1", md-row-height: "2:2", md-gutter: "12px", md-gutter-gt-sm: "8px"}
+      %md-grid-tile.invoice.gray{id: "invoice_{{invoice.id}}", ng-repeat: "invoice in ctrl.parent.invoices", md-rowspan: "2", md-colspan: "2", md-rowspan-sm: "2", md-colspan-sm: "1"}
+        .preview{ng-bind-html: "ctrl.parent.htmlSafe(invoice.markup)"}
+        %md-grid-tile-footer
+          .invoice-action-progress.hidden
+            %md-progress-circular{md-mode: "indeterminate", md-diameter: "20px"}
+          .md-actions.borderless{layout: "row"}
+            %md-button.md-icon-button.link-btn{aria-label: "link", title: "View in new tab", href: "{{invoice.url}}", target: "_blank"}
+              %span.fa.fa-link
+            %md-button.md-icon-button.edit-btn{aria-label: "edit", title: "Edit invoice", ng-click: "ctrl.parent.editInvoice(invoice, $index, $event)"}
+              %span.fa.fa-edit
+            %md-button.md-icon-button.copy-btn{aria-label: "duplicate", title: "Duplicate invoice", ng-click: "ctrl.parent.duplicateInvoice(ctrl.parent.project.id, invoice, $index, $event)"}
+              %span.fa.fa-copy
+            %md-button.md-icon-button.delete-btn{aria-label: "delete", title: "Delete invoice", ng-click: "ctrl.parent.deleteInvoice(invoice, $event, $index)"}
+              %span.fa.fa-remove

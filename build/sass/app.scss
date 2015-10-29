@@ -523,6 +523,47 @@ md-bottom-sheet{
   }
 }
 
+.invoice-list{
+  .invoice{
+    background-color: #efefef;
+    .preview{
+      width: 800px;
+      height: 1200px;
+      position: absolute;
+      z-index: 99;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.25);
+      margin-left: 0px;
+      margin-top: -32px;
+    }
+    md-grid-tile-footer{
+      z-index: 999;
+      background-color: #000;
+      figcaption{
+        width: 100%;
+        .invoice-action-progress{
+          float: left;
+          position: absolute;
+          top: -25px;
+        }
+        .md-actions{
+          float: right;
+          transition: transform .5s ease;
+          button,
+          a{
+            color: rgba(255,255,255,0.87);
+          }
+          &.hidden{
+            display: flex !important;
+            transform: translateY(-100%);
+          }
+        }
+      }
+    }
+  }
+}
+
 #invoicePreview{
   @media(min-width: 768px){
     width: 888px;
@@ -543,6 +584,11 @@ md-bottom-sheet{
       line-height: 22px;
       margin-right: 8px;
       width: auto;
+    }
+  }
+  &.edit-invoice{
+    button{
+      width: 77px;
     }
   }
   .hidden{
