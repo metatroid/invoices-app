@@ -19,7 +19,9 @@ angular.module('invoices.directives')
               document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
               $rootScope.$emit('updateInvoiceList');
               $mdDialog.cancel();
-            }, function(err){$log.error(err);});
+            }, function(err){
+              $log.error(err);
+            });
           });
         }
       };

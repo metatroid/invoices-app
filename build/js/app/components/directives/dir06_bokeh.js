@@ -57,7 +57,7 @@ angular.module('invoices.directives')
               this.rt += this.s.rt;
             };
 
-            this.draw = function() {
+            this.draw = function(){
               if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
                 this.s.rt = this.s.rt*-1;
               }
@@ -78,7 +78,7 @@ angular.module('invoices.directives')
               con.closePath();
             };
 
-            this.move = function() {
+            this.move = function(){
               this.x += (this.rt/this.hl)*this.dx;
               this.y += (this.rt/this.hl)*this.dy;
               if(this.x > width || this.x < 0){
@@ -89,8 +89,8 @@ angular.module('invoices.directives')
               } 
             };
 
-            this.getX = function() { return this.x; };
-            this.getY = function() { return this.y; };
+            this.getX = function(){return this.x;};
+            this.getY = function(){return this.y;};
           }
           window.onresize = function(e){
             width = container.clientWidth;

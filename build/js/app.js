@@ -825,99 +825,7 @@ angular.module('invoices.controllers')
     }
   ])
 ;
-angular.module('invoices.filters')
-  .filter('msToTimeString', 
-    function(){
-      return function(millseconds) {
-        var seconds = Math.floor(millseconds / 1000),
-            h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor( (seconds % h)/m ),
-            scnds = Math.floor( (seconds % m) ),
-            timeString = '';
-        if(scnds < 10) scnds = "0"+scnds;
-        if(hours < 10) hours = "0"+hours;
-        if(minutes < 10) minutes = "0"+minutes;
-        timeString = hours +":"+ minutes +":"+scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('secondsToTimeString', 
-    function(){
-      return function(seconds) {
-        var h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor( (seconds % h)/m ),
-            scnds = Math.floor( (seconds % m) ),
-            timeString = '';
-        if(scnds < 10) scnds = "0"+scnds;
-        if(hours < 10) hours = "0"+hours;
-        if(minutes < 10) minutes = "0"+minutes;
-        timeString = hours +":"+ minutes +":"+scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('telephone', 
-    function(){
-      return function(telephone){
-        if(!telephone){
-          return "";
-        }
-        var value = telephone.toString().trim().replace(/^\+/, '');
-        if(value.match(/[^0-9]/)){
-          return telephone;
-        }
-        var country, city, number;
-        switch(value.length){
-          case 10:
-            country = 1;
-            city = value.slice(0,3);
-            number = value.slice(3);
-            break;
-          case 11:
-            country = value[0];
-            city = value.slice(1,4);
-            number = value.slice(4);
-            break;
-          case 12:
-            country = value.slice(0,3);
-            city = value.slice(3,5);
-            number = value.slice(5);
-            break;
-          default:
-            return telephone;
-        }
-        if(country === 1){
-          country = "";
-        }
-        number = number.slice(0, 3) + '-' + number.slice(3);
-        return (country + " (" + city + ") " + number).trim();
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('timeDeltaToHours', 
-    function(){
-      return function(delta){
-        var pieces = delta.split(":"),
-            hours = pieces[0],
-            minutes = pieces[1],
-            seconds = pieces[2];
-        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
-      };
-    }
-  )
-;
-var smoothScroll = function (element, options) {
+var smoothScroll = function(element, options){
   options = options || {};
   var duration = 800,
       offset = 0;
@@ -926,18 +834,18 @@ var smoothScroll = function (element, options) {
     return n < 0.5 ? 8 * Math.pow(n, 4) : 1 - 8 * (--n) * Math.pow(n, 3);
   };
 
-  var getScrollLocation = function() {
+  var getScrollLocation = function(){
     return window.pageYOffset ? window.pageYOffset : document.documentElement.scrollTop;
   };
 
-  setTimeout( function() {
+  setTimeout(function(){
     var startLocation = getScrollLocation(),
         timeLapsed = 0,
         percentage, position;
 
-    var getEndLocation = function (element) {
+    var getEndLocation = function(element){
       var location = 0;
-      if (element.offsetParent) {
+      if(element.offsetParent){
         do {
           location += element.offsetTop;
           element = element.offsetParent;
@@ -950,19 +858,19 @@ var smoothScroll = function (element, options) {
     var endLocation = getEndLocation(element);
     var distance = endLocation - startLocation;
 
-    var stopAnimation = function () {
+    var stopAnimation = function(){
       var currentLocation = getScrollLocation();
-      if ( position == endLocation || currentLocation == endLocation || ( (window.innerHeight + currentLocation) >= document.body.scrollHeight ) ) {
+      if(position == endLocation || currentLocation == endLocation || ((window.innerHeight + currentLocation) >= document.body.scrollHeight)){
         clearInterval(runAnimation);
       }
     };
 
-    var animateScroll = function () {
+    var animateScroll = function(){
       timeLapsed += 16;
-      percentage = ( timeLapsed / duration );
-      percentage = ( percentage > 1 ) ? 1 : percentage;
-      position = startLocation + ( distance * easing(percentage) );
-      window.scrollTo( 0, position );
+      percentage = (timeLapsed / duration);
+      percentage = (percentage > 1) ? 1 : percentage;
+      position = startLocation + (distance * easing(percentage));
+      window.scrollTo(0, position);
       stopAnimation();
     };
 
@@ -975,8 +883,8 @@ var msToTimeString = function(ms){
       h = 3600,
       m = 60,
       hours = Math.floor(seconds/h),
-      minutes = Math.floor( (seconds % h)/m ),
-      scnds = Math.floor( (seconds % m) ),
+      minutes = Math.floor((seconds % h)/m),
+      scnds = Math.floor((seconds % m)),
       timeString = '';
   if(scnds < 10) scnds = "0"+scnds;
   if(hours < 10) hours = "0"+hours;
@@ -1067,13 +975,13 @@ angular.module('invoices.directives')
         link: function($scope, $element, $attrs){
           var targetElement;
           
-          $element.on('click', function(e) {
+          $element.on('click', function(e){
             e.preventDefault();
             this.blur();
             var targetId = $attrs.inscrollto;
 
             targetElement = document.getElementById(targetId);
-            if ( !targetElement ) return; 
+            if(!targetElement) return; 
 
             smoothScroll(targetElement, {});
 
@@ -1143,7 +1051,7 @@ angular.module('invoices.directives')
               this.rt += this.s.rt;
             };
 
-            this.draw = function() {
+            this.draw = function(){
               if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
                 this.s.rt = this.s.rt*-1;
               }
@@ -1164,7 +1072,7 @@ angular.module('invoices.directives')
               con.closePath();
             };
 
-            this.move = function() {
+            this.move = function(){
               this.x += (this.rt/this.hl)*this.dx;
               this.y += (this.rt/this.hl)*this.dy;
               if(this.x > width || this.x < 0){
@@ -1175,8 +1083,8 @@ angular.module('invoices.directives')
               } 
             };
 
-            this.getX = function() { return this.x; };
-            this.getY = function() { return this.y; };
+            this.getX = function(){return this.x;};
+            this.getY = function(){return this.y;};
           }
           window.onresize = function(e){
             width = container.clientWidth;
@@ -1300,7 +1208,15 @@ angular.module('invoices.directives')
                   .parent(angular.element(document.querySelector('.view-panel.active')))
                   .clickOutsideToClose(true)
                   .title('Invoice ready')
-                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme"><a href="'+invoice.url+'" target="_blank"><md-icon class="md-default-theme"><span class="fa fa-file-pdf-o"></span></md-icon> View PDF</a></button>')
+                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme">' +
+                            '<a href="'+invoice.url+'" target="_blank">' +
+                              '<md-icon class="md-default-theme">' +
+                                '<span class="fa fa-file-pdf-o"></span>' +
+                              '</md-icon> ' +
+                              'View PDF' +
+                            '</a>' +
+                           '</button>'
+                          )
                   .ariaLabel('Invoice link')
                   .ok('Dismiss')
                   .targetEvent(ev)
@@ -1308,7 +1224,9 @@ angular.module('invoices.directives')
                 $rootScope.dialogOpen = false;
                 $state.go("app");
               });
-            }, function(err){$log.error(err);});
+            }, function(err){
+              $log.error(err);
+            });
           });
         }
       };
@@ -1336,10 +1254,131 @@ angular.module('invoices.directives')
               document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
               $rootScope.$emit('updateInvoiceList');
               $mdDialog.cancel();
-            }, function(err){$log.error(err);});
+            }, function(err){
+              $log.error(err);
+            });
           });
         }
       };
+    }
+  ])
+;
+angular.module('invoices.filters')
+  .filter('msToTimeString', 
+    function(){
+      return function(millseconds){
+        var seconds = Math.floor(millseconds / 1000),
+            h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('secondsToTimeString', 
+    function(){
+      return function(seconds){
+        var h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('telephone', 
+    function(){
+      return function(telephone){
+        if(!telephone){
+          return "";
+        }
+        var value = telephone.toString().trim().replace(/^\+/, '');
+        if(value.match(/[^0-9]/)){
+          return telephone;
+        }
+        var country, city, number;
+        switch(value.length){
+          case 10:
+            country = 1;
+            city = value.slice(0,3);
+            number = value.slice(3);
+            break;
+          case 11:
+            country = value[0];
+            city = value.slice(1,4);
+            number = value.slice(4);
+            break;
+          case 12:
+            country = value.slice(0,3);
+            city = value.slice(3,5);
+            number = value.slice(5);
+            break;
+          default:
+            return telephone;
+        }
+        if(country === 1){
+          country = "";
+        }
+        number = number.slice(0, 3) + '-' + number.slice(3);
+        return (country + " (" + city + ") " + number).trim();
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('timeDeltaToHours', 
+    function(){
+      return function(delta){
+        var pieces = delta.split(":"),
+            hours = pieces[0],
+            minutes = pieces[1],
+            seconds = pieces[2];
+        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
+      };
+    }
+  )
+;
+angular.module('invoices.services')
+  .factory('apiSrv', ['$http', 
+    function($http){
+      var apiSrv = {};
+      apiSrv.request = function(method, url, args, successFn, errorFn){
+        return $http({
+          method: method,
+          url: '/api/' + url,
+          data: JSON.stringify(args)
+        }).success(successFn).error(errorFn);
+      };
+      return apiSrv;
     }
   ])
 ;
@@ -1426,23 +1465,6 @@ angular.module('invoices.states')
           url: '/invoices/:id/:event'
         })
       ;
-    }
-  ])
-;
-angular.module('invoices.services')
-  .factory('apiSrv', ['$http', 
-    function($http){
-      var apiSrv = {};
-
-      apiSrv.request = function(method, url, args, successFn, errorFn){
-        return $http({
-          method: method,
-          url: '/api/' + url,
-          data: JSON.stringify(args)
-        }).success(successFn).error(errorFn);
-      };
-
-      return apiSrv;
     }
   ])
 ;

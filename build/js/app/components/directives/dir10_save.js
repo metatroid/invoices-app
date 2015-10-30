@@ -20,7 +20,15 @@ angular.module('invoices.directives')
                   .parent(angular.element(document.querySelector('.view-panel.active')))
                   .clickOutsideToClose(true)
                   .title('Invoice ready')
-                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme"><a href="'+invoice.url+'" target="_blank"><md-icon class="md-default-theme"><span class="fa fa-file-pdf-o"></span></md-icon> View PDF</a></button>')
+                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme">' +
+                            '<a href="'+invoice.url+'" target="_blank">' +
+                              '<md-icon class="md-default-theme">' +
+                                '<span class="fa fa-file-pdf-o"></span>' +
+                              '</md-icon> ' +
+                              'View PDF' +
+                            '</a>' +
+                           '</button>'
+                          )
                   .ariaLabel('Invoice link')
                   .ok('Dismiss')
                   .targetEvent(ev)
@@ -28,7 +36,9 @@ angular.module('invoices.directives')
                 $rootScope.dialogOpen = false;
                 $state.go("app");
               });
-            }, function(err){$log.error(err);});
+            }, function(err){
+              $log.error(err);
+            });
           });
         }
       };
