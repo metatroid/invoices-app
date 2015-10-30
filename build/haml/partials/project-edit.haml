@@ -18,7 +18,11 @@
             %label
               Project URL
             %input{ng-model: "ctrl.parent.project.project_url"}
-          %md-datepicker{ng-model: "ctrl.parent.project.deadline", md-placeholder: "Project Deadline"}
+          -#%md-input-container
+            %label
+              Deadline
+            %input{ng-model: "ctrl.parent.project.deadline_date"}
+          %md-datepicker{ng-model: "ctrl.parent.project.deadline_date", md-placeholder: "Project Deadline"}
         %md-content{layout-padding: "layout-padding", layout: "row", layout-sm: "column"}
           %md-input-container.half
             %label

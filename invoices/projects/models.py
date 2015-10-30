@@ -30,7 +30,7 @@ class Project(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   
   def _invoice_balance(self):
-    intervals = self.intervals.all().filter(included=True)
+    intervals = self.intervals.all().filter(included=True, paid=False)
     seconds = 0
     for i in intervals:
       seconds = seconds + i.total.total_seconds()
@@ -39,7 +39,7 @@ class Project(models.Model):
   invoice_balance = property(_invoice_balance)
 
   def _invoice_hours(self):
-    intervals = self.intervals.all().filter(included=True)
+    intervals = self.intervals.all().filter(included=True, paid=False)
     seconds = 0
     for i in intervals:
       seconds = seconds + i.total.total_seconds()

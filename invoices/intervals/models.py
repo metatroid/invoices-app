@@ -15,6 +15,7 @@ class Interval(models.Model):
   work_day = models.DateTimeField(default=timezone.now, null=True, blank=True)
   included = models.BooleanField(default=True, blank=True)
   position = PositionField(collection="project", default=0)
+  paid = models.BooleanField(default=False, blank=True)
   created_at = models.DateTimeField(default=timezone.now)
   updated_at = models.DateTimeField(auto_now=True)
 

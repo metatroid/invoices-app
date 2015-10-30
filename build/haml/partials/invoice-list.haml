@@ -1,10 +1,10 @@
 %md-bottom-sheet
   %md-content
-    %md-subheader.md-no-sticky
-      %strong
-        Project: 
-      {{ctrl.parent.project.project_name}}
     %md-grid-list.invoice-list{md-cols-sm: "1", md-cols-md: "2", md-cols-gt-md: "6", md-row-height-gt-md: "1:1", md-row-height: "2:2", md-gutter: "12px", md-gutter-gt-sm: "8px"}
+      %md-subheader.md-no-sticky
+        %strong
+          Project: 
+        {{ctrl.parent.project.project_name}}
       %md-grid-tile.invoice.gray{id: "invoice_{{invoice.id}}", ng-repeat: "invoice in ctrl.parent.invoices", md-rowspan: "2", md-colspan: "2", md-rowspan-sm: "2", md-colspan-sm: "1"}
         .preview{ng-bind-html: "ctrl.parent.htmlSafe(invoice.markup)"}
         %md-grid-tile-footer

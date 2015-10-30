@@ -62454,26 +62454,26 @@ angular.module('invoices.controllers', [])
               $rootScope.$emit("showForm");
             }
             if($state.is("app.editProject")){
-              var id = $state.params.id,
-                  index = $state.params.index,
-                  ev = $state.params.event;
-              $rootScope.$emit("showEditor", {id: id, index: index, ev: ev});
+              var id1 = $state.params.id,
+                  index1 = $state.params.index,
+                  ev1 = $state.params.event;
+              $rootScope.$emit("showEditor", {id: id1, index: index1, ev: ev1});
             }
             if($state.is("app.intervalList")){
-              var id = $state.params.id,
-                  index = $state.params.index,
-                  ev = $state.params.event;
-              $rootScope.$emit("showIntervals", {id: id, index: index, ev: ev});
+              var id2 = $state.params.id,
+                  index2 = $state.params.index,
+                  ev2 = $state.params.event;
+              $rootScope.$emit("showIntervals", {id: id2, index: index2, ev: ev2});
             }
             if($state.is("app.invoicePreview")){
-              var id = $state.params.id,
-                  ev = $state.params.event;
-              $rootScope.$emit("showInvoice", {id: id, ev: ev});
+              var id3 = $state.params.id,
+                  ev3 = $state.params.event;
+              $rootScope.$emit("showInvoice", {id: id3, ev: ev3});
             }
             if($state.is("app.invoiceList")){
-              var id = $state.params.id,
-                  ev = $state.params.event;
-              $rootScope.$emit("showInvoices", {id: id, ev: ev});
+              var id4 = $state.params.id,
+                  ev4 = $state.params.event;
+              $rootScope.$emit("showInvoices", {id: id4, ev: ev4});
             }
             $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
               if(toState.name === "initial"){
@@ -62533,6 +62533,7 @@ angular.module('invoices.controllers', [])
         n = n + '';
         return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
       }
+      $scope.showPaid = false;
       $rootScope.dialogOpen = false;
       $rootScope.sheetOpen = false;
       var progressIndicator = document.querySelector('.application-progress-indicator');
@@ -62560,33 +62561,42 @@ angular.module('invoices.controllers', [])
           $scope.showNewProjectForm();
         }
         if(toState.name === "app.editProject"){
-          var id = toParams.id,
-              index = toParams.index,
-              e = toParams.event;
-          $scope.showProjectEditor(e, id, index);
+          var id1 = toParams.id,
+              index1 = toParams.index,
+              e1 = toParams.event;
+          $scope.showProjectEditor(e1, id1, index1);
         }
         if(toState.name === "app.intervalList"){
-          var id = toParams.id,
-              index = toParams.index,
-              e = toParams.event;
-          $scope.showIntervalList(e, id, index);
+          var id2 = toParams.id,
+              index2 = toParams.index,
+              e2 = toParams.event;
+          $scope.showIntervalList(e2, id2, index2);
         }
         if(toState.name === "app.invoicePreview"){
-          var id = toParams.id,
-              e = toParams.event;
-          $scope.openInvoiceDialog(id, e);
+          var id3 = toParams.id,
+              e3 = toParams.event;
+          $scope.openInvoiceDialog(id3, e3);
         }
         if(toState.name === "app.invoiceList"){
-          var id = toParams.id,
-              e = toParams.event;
-          $scope.openInvoiceList(id, e);
+          var id4 = toParams.id,
+              e4 = toParams.event;
+          $scope.openInvoiceList(id4, e4);
         }
         if(fromState.name === "app.newProject" || fromState.name === "app.editProject" || fromState.name === "app.invoicePreview" || fromState.name === "app.intervalList"){
-          if($rootScope.dialogOpen){
-            $scope.closeDialog();
+          if(toState.name === "app"){
+            if($rootScope.dialogOpen){
+              $scope.closeDialog();
+            }
+          } else {
+            $mdDialog.cancel();
           }
         }
         if(fromState.name === "app.intervalList" || fromState.name === "app.invoiceList"){
+          if(toState.name === "app"){
+            $rootScope.stateChange = false;
+          } else {
+            $rootScope.stateChange = true;
+          }
           if($rootScope.sheetOpen){
             $mdBottomSheet.hide();
           }
@@ -62703,7 +62713,9 @@ angular.module('invoices.controllers', [])
             controller: function(){
               this.parent = $scope;
               this.parent.project = project;
-              this.parent.project.deadline = $filter('date')(this.parent.project.deadline, 'yyyy-MM-dd'); // js date format workaround
+              if(this.parent.project.deadline){
+                this.parent.project.deadline_date = new Date(this.parent.project.deadline);
+              }
               this.parent.project_index = index;
             },
             controllerAs: 'ctrl',
@@ -62731,7 +62743,7 @@ angular.module('invoices.controllers', [])
             }
           });
         }
-        data.deadline = data.dead_date; // js date format workaround
+        data.deadline = data.deadline_date; // js date format workaround
         apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
           $scope.closeDialog();
           $scope.projects.splice(index, 1, project);
@@ -62860,6 +62872,8 @@ angular.module('invoices.controllers', [])
       $scope.showIntervalList = function(ev, pid, index){
         $scope.openProject = index;
         $rootScope.sheetOpen = true;
+        document.querySelector('.view-panel.active').scrollTop = 0;
+        document.querySelector('.view-panel.active').classList.add('no-scroll');
         $mdBottomSheet.show({
           controller: function(){
             var it = this;
@@ -62961,11 +62975,11 @@ angular.module('invoices.controllers', [])
               interval.end = end;
               interval.start = start;
               interval.work_day = interval.work_date;
+              interval.position = that.project.intervals.length;
               apiSrv.request('POST', 'projects/'+pid+'/intervals/', interval,
                 function(data){
                   $timeout.cancel(intervalIndicator);
                   data.work_date = new Date(data.work_day);
-                  data.position = -1;
                   that.intervals.push(data);
                   that.newInterval = new Interval();
                   Project.get({id: data.project}, function(project){
@@ -63014,7 +63028,10 @@ angular.module('invoices.controllers', [])
           parent: angular.element(document.querySelector('.view-panel.active'))
         }).finally(function(){
           $rootScope.sheetOpen = false;
-          $state.go("app");
+          if(!$rootScope.stateChange){
+            $state.go("app");
+          }
+          document.querySelector('.view-panel.active').classList.remove('no-scroll');
         });
       };
 
@@ -63022,6 +63039,7 @@ angular.module('invoices.controllers', [])
         $mdOpenMenu(ev);
       };
       $scope.openInvoiceDialog = function(projectId, ev){
+        document.querySelector('.view-panel.active').scrollTop = 0;
         apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
           $mdDialog.show({
             controller: function(){
@@ -63044,6 +63062,8 @@ angular.module('invoices.controllers', [])
       
       $scope.openInvoiceList = function(pid, ev){
         $rootScope.sheetOpen = true;
+        document.querySelector('.view-panel.active').scrollTop = 0;
+        document.querySelector('.view-panel.active').classList.add('no-scroll');
         $mdBottomSheet.show({
           controller: function(){
             var it = this;
@@ -63057,7 +63077,7 @@ angular.module('invoices.controllers', [])
               this.parent.invoices = Invoice.query({project_id: pid}, function(invoices){
                 it.parent.invoices = orderByFilter(invoices, ['created_at']);
               });
-            })
+            });
             this.parent.project = Project.get({id: pid});
             this.parent.editInvoice = function(invoice, index, ev){
               $mdDialog.show({
@@ -63076,7 +63096,7 @@ angular.module('invoices.controllers', [])
               });
             };
             this.parent.cancelInvoiceEdit = function(e){
-              $mdDialog.cancel()
+              $mdDialog.cancel();
             };
             this.parent.duplicateInvoice = function(projectId, invoice, index, event){
               var actionsParent = event.target.parentElement.parentElement.parentElement,
@@ -63170,7 +63190,10 @@ angular.module('invoices.controllers', [])
           parent: angular.element(document.querySelector('.view-panel.active'))
         }).finally(function(){
           $rootScope.sheetOpen = false;
-          $state.go("app");
+          if(!$rootScope.stateChange){
+            $state.go("app");
+          }
+          document.querySelector('.view-panel.active').classList.remove('no-scroll');
         });
       };
 

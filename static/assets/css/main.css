@@ -2237,6 +2237,13 @@ body {
   .inline-15 input {
     width: 100% !important; }
 
+.inline-20 {
+  width: 20%;
+  min-width: 20% !important;
+  display: inline-block; }
+  .inline-20 input {
+    width: 100% !important; }
+
 .inline-25 {
   width: 25%;
   min-width: 25% !important;
@@ -2251,11 +2258,32 @@ body {
   .inline-50 input {
     width: 100% !important; }
 
+.inline-60 {
+  width: 60%;
+  min-width: 60% !important;
+  display: inline-block; }
+  .inline-60 input {
+    width: 100% !important; }
+
+.inline-70 {
+  width: 70%;
+  min-width: 70% !important;
+  display: inline-block; }
+  .inline-70 input {
+    width: 100% !important; }
+
 .inline-75 {
   width: 75%;
   min-width: 75% !important;
   display: inline-block; }
   .inline-75 input {
+    width: 100% !important; }
+
+.inline-80 {
+  width: 80%;
+  min-width: 80% !important;
+  display: inline-block; }
+  .inline-80 input {
     width: 100% !important; }
 
 .inline-85 {

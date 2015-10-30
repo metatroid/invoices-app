@@ -44,6 +44,7 @@ class IntervalSerializer(serializers.ModelSerializer):
       'position',
       'work_day',
       'project',
+      'paid',
       'created_at',
       'updated_at'
     )

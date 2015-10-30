@@ -43,15 +43,10 @@
                         %md-icon{md-menu-align-target: true}
                           %span.fa.fa-magic
                         Generate invoice
-                    %md-menu-item
-                      %md-button
-                        %md-icon
-                          %span.fa.fa-download
-                        Direct download
                     %md-menu-item{ui-sref: "app.invoiceList({id: project.id, event: $event})"}
                       %md-button
                         %md-icon
-                          %span.fa.fa-files-o
+                          %span.fa.fa-th
                         Past invoices
 
                 %md-button.md-icon-button{aria-label: "intervals", ui-sref: "app.intervalList({id: project.id, index: $index, event: $event})"}
@@ -78,6 +73,10 @@
                 %strong
                   Balance: 
                 {{project.balance | currency}}
+              %li{ng-if: "project.deadline"}
+                %strong
+                  Deadline: 
+                {{project.deadline | date:'MM/dd/yyyy'}}
           .md-list-item-text.timer-wrapper{layout: "column"}
             .timer
               %md-button.counter{incounting: true, data-project: "{{project.id}}"}

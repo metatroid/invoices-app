@@ -58,11 +58,13 @@ def after_save_interval(sender, **kwargs):
         interval.total = intervalDuration
         interval.save()
       project = Project.objects.get(pk=interval.project.id)
+      project_position = project.position
       seconds = 0
-      for i in project.intervals.all():
+      for i in project.intervals.all().filter(paid=False):
         seconds = seconds + i.total.total_seconds()
       project.total_time = seconds
       project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
+      project.position = project_position
       project.save()
 
 @receiver(post_delete, sender=Interval)
@@ -70,11 +72,13 @@ def after_delete_interval(sender, **kwargs):
     interval = kwargs.get('instance')
     project = Project.objects.get(pk=interval.project.id)
     if(project):
+      project_position = project.position
       seconds = 0
-      for i in project.intervals.all():
+      for i in project.intervals.all().filter(paid=False):
         seconds = seconds + i.total.total_seconds()
       project.total_time = seconds
       project.balance = project.fixed_rate if project.fixed_rate > 0 else (project.hourly_rate * Decimal(project.total_time/3600))
+      project.position = project_position
       project.save()
 
 @receiver(pre_delete, sender=Project)

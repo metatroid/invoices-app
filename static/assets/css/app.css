@@ -7025,6 +7025,23 @@ md-tooltip {
 md-menu-item > .md-button md-icon {
   line-height: 24px; }
 
+md-backdrop.md-opaque {
+  opacity: 1;
+  background-color: rgba(33, 33, 33, 0.5); }
+  md-backdrop.md-opaque:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background-image: url(/static/assets/img/x.svg);
+    background-size: 100%;
+    cursor: pointer; }
+
 * {
   box-sizing: border-box; }
 
@@ -7233,6 +7250,8 @@ md-menu-item > .md-button md-icon {
     #application main.main-app .view-panel.active {
       -webkit-transform: translateX(0%);
               transform: translateX(0%); }
+    #application main.main-app .view-panel.no-scroll {
+      overflow: hidden !important; }
 
 #application #app {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.5) 100%);
@@ -7383,7 +7402,9 @@ md-menu-item > .md-button md-icon {
 
 md-bottom-sheet {
   top: 0;
-  height: calc(100% - 80px); }
+  height: calc(100% - 80px);
+  overflow: auto;
+  padding: 8px 0 88px 16px; }
 
 .interval-list .md-subheader-inner {
   padding-left: 0;
@@ -7394,50 +7415,33 @@ md-bottom-sheet {
       content: '';
       display: block;
       clear: both; }
-
-.interval-list .interval .md-ripple-container {
-  opacity: 0; }
+    .interval-list .md-subheader-inner .md-subheader-content .toggle-paid {
+      font-size: 10px;
+      position: relative;
+      top: -1px;
+      color: #666;
+      text-decoration: none;
+      left: 20px;
+      cursor: pointer; }
 
 .interval-list .interval .md-list-item-inner {
-  padding-right: 0; }
+  padding-right: 0;
+  padding-left: 0; }
 
 .interval-list .interval .interval-action-progress {
   height: 50px; }
   .interval-list .interval .interval-action-progress md-progress-circular {
     height: 20px; }
 
-.interval-list .sortable md-list-item {
-  padding-left: 25px;
-  position: relative; }
-  .interval-list .sortable md-list-item:before {
-    content: '\f0c9';
-    font-family: 'FontAwesome';
-    color: #333;
-    font-size: 8px;
-    text-align: center;
-    line-height: 16px;
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 15px;
-    height: 15px;
-    background-color: transparent;
-    cursor: move;
-    cursor: -webkit-grab;
-    cursor: grab; }
-  .interval-list .sortable md-list-item:active {
-    cursor: -webkit-grabbing;
-    cursor: grabbing; }
-    .interval-list .sortable md-list-item:active * {
-      cursor: -webkit-grabbing;
-      cursor: grabbing; }
-    .interval-list .sortable md-list-item:active:before {
-      cursor: -webkit-grabbing;
-      cursor: grabbing; }
-  .interval-list .sortable md-list-item.sv-helper {
-    -webkit-transform: translate(-145px, -140px);
-            transform: translate(-145px, -140px); }
+.interval-list .sortable md-list-item .flex:last-of-type md-input-container:nth-child(2) {
+  padding-left: 15px; }
+
+.interval-list .sortable md-list-item .flex:last-of-type md-input-container:nth-child(3) {
+  padding-left: 30px; }
+
+.interval-list .sortable md-list-item.sv-helper {
+  -webkit-transform: translate(-145px, -140px);
+          transform: translate(-145px, -140px); }
 
 .interval-list md-input-container label,
 .interval-list md-input-container .md-placeholder,
@@ -7462,6 +7466,19 @@ md-bottom-sheet {
     transition: color 0.5s ease; }
     .interval-list .md-actions .md-button.success {
       color: #0a0; }
+
+.invoice-list .md-subheader {
+  line-height: 1.2; }
+
+.invoice-list .md-subheader-inner {
+  padding-left: 0;
+  padding-right: 0; }
+  .invoice-list .md-subheader-inner .md-subheader-content {
+    border-bottom: 1px solid #999; }
+    .invoice-list .md-subheader-inner .md-subheader-content:after {
+      content: '';
+      display: block;
+      clear: both; }
 
 .invoice-list .invoice {
   background-color: #efefef; }
