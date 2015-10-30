@@ -62424,19 +62424,18 @@ angular.module('invoices')
       .dark();
   }
 ]);
-angular.module('invoices.controllers', [])
+angular.module('invoices.controllers', []);
+angular.module('invoices.directives', []);
+angular.module('invoices.filters', []);
+angular.module('invoices.services', []);
+angular.module('invoices.states', ['ui.router', 'uiRouterStyles']);
+angular.module('invoices.controllers')
   .controller('mainCtrl', ['$rootScope', 
                            '$scope', 
                            '$state', 
                            '$log', 
                            'apiSrv',
     function($rootScope, $scope, $state, $log, apiSrv){
-      // $rootScope.previousState;
-      // $rootScope.currentState;
-      // $rootScope.$on('$stateChangeSuccess', function(ev, to, toParams, from, fromParams) {
-      //     $rootScope.previousState = from.name;
-      //     $rootScope.currentState = to.name;
-      // });
       $scope.showAuthForm = false;
       $scope.toggleAuthForm = function(){
         $scope.showAuthForm = !$scope.showAuthForm;
@@ -62488,16 +62487,22 @@ angular.module('invoices.controllers', [])
       );
     }
   ])
+;
+angular.module('invoices.controllers')
   .controller('authCtrl', ['$scope', 
     function($scope){
       $scope.showAuthForm = true;
     }
   ])
+;
+angular.module('invoices.controllers')
   .controller('anonCtrl', ['$scope', 
     function($scope){
       $scope.domain = window.location.hostname.charAt(0).toUpperCase() + window.location.hostname.slice(1);
     }
   ])
+;
+angular.module('invoices.controllers')
   .controller('userCtrl', [
               '$scope', 
               '$state', 
@@ -62513,6 +62518,8 @@ angular.module('invoices.controllers', [])
       };
     }
   ])
+;
+angular.module('invoices.controllers')
   .controller('appCtrl', ['$rootScope', 
                           '$scope', 
                           '$state', 
@@ -62764,7 +62771,6 @@ angular.module('invoices.controllers', [])
       $scope.intervals = {};
       var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
       var startTimer = function(id){
-        $log.info("id:"+id);
         $scope.timeEvent = "startTimer";
         $scope.intervals[id] = typeof $scope.intervals[id] === "undefined" ? {} : $scope.intervals[id];
         $scope.intervals[id].timerRunning = true;
@@ -63280,8 +63286,7 @@ var msToTimeString = function(ms){
   timeString = hours +":"+ minutes +":"+scnds;
   return timeString;
 };
-
-angular.module('invoices.directives', [])
+angular.module('invoices.directives')
   .directive('infocus', ['$timeout', function($timeout){
     return {
       restrict: 'A',
@@ -63292,18 +63297,22 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+;
+angular.module('invoices.directives')
   .directive('inready', ['$timeout', function($timeout){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var elementClass = $attrs.inready,
-              el = angular.element($element);
-          angular.element(document).ready(function(){
-            $element.addClass(elementClass);
-          });
-        }
-      };
-    }])
+    return {
+      restrict: 'A',
+      link: function($scope, $element, $attrs){
+        var elementClass = $attrs.inready,
+            el = angular.element($element);
+        angular.element(document).ready(function(){
+          $element.addClass(elementClass);
+        });
+      }
+    };
+  }])
+;
+angular.module('invoices.directives')
   .directive('inscroll', ['$window', function($window){
     return {
       restrict: 'A',
@@ -63328,6 +63337,8 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+;
+angular.module('invoices.directives')
   .directive('inview', function(){
     return {
       restrict: 'A',
@@ -63341,6 +63352,8 @@ angular.module('invoices.directives', [])
       }
     };
   })
+;
+angular.module('invoices.directives')
   .directive('inscrollto', function(){
     return {
       restrict: 'A',
@@ -63362,105 +63375,109 @@ angular.module('invoices.directives', [])
       }
     };
   })
+;
+angular.module('invoices.directives')
   .directive('inbokeh', ['$interval', function($interval){
-      return {
-        restrict: 'A',
-        link: function($scope, $elements, $attrs){
-          var container = document.getElementById('strip'),
-              width = container.clientWidth,
-              height = 450,
-              canvas = document.getElementById('blur'),
-              con = canvas.getContext('2d'),
-              rint = 60,
-              g,
-              pxs = [];
-          canvas.width = width;
-          canvas.height = height;
-          for(var i=0;i<100;i++){
-            pxs[i] = new Circle();
-            pxs[i].reset();
-          }
-          $interval(draw, rint);
-          function draw(){
-            con.clearRect(0,0,width,height);
-            for(var i=0;i<pxs.length;i++){
-              pxs[i].fade();
-              pxs[i].move();
-              pxs[i].draw();
-            }
-          }
-          function Circle(){
-            this.s = {ttl:8000, xmax:3, ymax:2, rmax:200, rt:1, xdef:960, ydef:540, xdrift:2, ydrift:2, random:true, blink:true};
-            var crFill = [
-              ['rgba(10,56,67,0)', 'rgba(10,56,67,1)'],
-              ['rgba(11,67,99,0)', 'rgba(11,67,99,1)'],
-              ['rgba(8,46,49,0)', 'rgba(8,46,49,1)'],
-              ['rgba(7,64,60,0)', 'rgba(7,64,60,1)']
-            ];
-            var opacityFill = "."+Math.floor(Math.random()*5)+1;
-
-            this.reset = function(){
-              this.x = (this.s.random ? width*Math.random() : this.s.xdef);
-              this.y = (this.s.random ? height*Math.random() : this.s.ydef);
-              this.r = ((this.s.rmax-1)*Math.random()) + 1;
-              this.dx = (Math.random()*this.s.xmax) * (Math.random() < 0.5 ? -1 : 1);
-              this.dy = (Math.random()*this.s.ymax) * (Math.random() < 0.5 ? -1 : 1);
-              this.hl = (this.s.ttl/rint)*(this.r/this.s.rmax);
-              this.rt = Math.random()*this.hl;
-              this.s.rt = Math.random()+1;
-              this.stop = Math.random()*0.2+0.4;
-              this.s.xdrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
-              this.s.ydrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
-              this.opacityFill = opacityFill;
-              this.currentColor = Math.floor(Math.random()*crFill.length);
-            };
-
-            this.fade = function(){
-              this.rt += this.s.rt;
-            };
-
-            this.draw = function() {
-              if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
-                this.s.rt = this.s.rt*-1;
-              }
-              else if(this.rt >= this.hl){
-                this.reset();
-              }
-              con.beginPath();
-              con.arc(this.x,this.y,this.r,0,Math.PI*2,true);
-              con.globalAlpha = opacityFill;
-              var newo = 1-(this.rt/this.hl);
-              var cr = this.r*newo;
-              gradient = con.createRadialGradient(this.x,this.y,0,this.x,this.y,(cr <= 0 ? 1 : cr));
-              gradient.addColorStop(0.0, crFill[(this.currentColor)][1]);
-              gradient.addColorStop(0.7, crFill[(this.currentColor)][1]);
-              gradient.addColorStop(1.0, crFill[(this.currentColor)][0]);
-              con.fillStyle = gradient;
-              con.fill();
-              con.closePath();
-            };
-
-            this.move = function() {
-              this.x += (this.rt/this.hl)*this.dx;
-              this.y += (this.rt/this.hl)*this.dy;
-              if(this.x > width || this.x < 0){
-                this.dx *= -1;
-              } 
-              if(this.y > height || this.y < 0){
-                this.dy *= -1;
-              } 
-            };
-
-            this.getX = function() { return this.x; };
-            this.getY = function() { return this.y; };
-          }
-          window.onresize = function(e){
-            width = container.clientWidth;
-            canvas.width = width;
-          };
+    return {
+      restrict: 'A',
+      link: function($scope, $elements, $attrs){
+        var container = document.getElementById('strip'),
+            width = container.clientWidth,
+            height = 450,
+            canvas = document.getElementById('blur'),
+            con = canvas.getContext('2d'),
+            rint = 60,
+            g,
+            pxs = [];
+        canvas.width = width;
+        canvas.height = height;
+        for(var i=0;i<100;i++){
+          pxs[i] = new Circle();
+          pxs[i].reset();
         }
-      };
-    }])
+        $interval(draw, rint);
+        function draw(){
+          con.clearRect(0,0,width,height);
+          for(var i=0;i<pxs.length;i++){
+            pxs[i].fade();
+            pxs[i].move();
+            pxs[i].draw();
+          }
+        }
+        function Circle(){
+          this.s = {ttl:8000, xmax:3, ymax:2, rmax:200, rt:1, xdef:960, ydef:540, xdrift:2, ydrift:2, random:true, blink:true};
+          var crFill = [
+            ['rgba(10,56,67,0)', 'rgba(10,56,67,1)'],
+            ['rgba(11,67,99,0)', 'rgba(11,67,99,1)'],
+            ['rgba(8,46,49,0)', 'rgba(8,46,49,1)'],
+            ['rgba(7,64,60,0)', 'rgba(7,64,60,1)']
+          ];
+          var opacityFill = "."+Math.floor(Math.random()*5)+1;
+
+          this.reset = function(){
+            this.x = (this.s.random ? width*Math.random() : this.s.xdef);
+            this.y = (this.s.random ? height*Math.random() : this.s.ydef);
+            this.r = ((this.s.rmax-1)*Math.random()) + 1;
+            this.dx = (Math.random()*this.s.xmax) * (Math.random() < 0.5 ? -1 : 1);
+            this.dy = (Math.random()*this.s.ymax) * (Math.random() < 0.5 ? -1 : 1);
+            this.hl = (this.s.ttl/rint)*(this.r/this.s.rmax);
+            this.rt = Math.random()*this.hl;
+            this.s.rt = Math.random()+1;
+            this.stop = Math.random()*0.2+0.4;
+            this.s.xdrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
+            this.s.ydrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
+            this.opacityFill = opacityFill;
+            this.currentColor = Math.floor(Math.random()*crFill.length);
+          };
+
+          this.fade = function(){
+            this.rt += this.s.rt;
+          };
+
+          this.draw = function() {
+            if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
+              this.s.rt = this.s.rt*-1;
+            }
+            else if(this.rt >= this.hl){
+              this.reset();
+            }
+            con.beginPath();
+            con.arc(this.x,this.y,this.r,0,Math.PI*2,true);
+            con.globalAlpha = opacityFill;
+            var newo = 1-(this.rt/this.hl);
+            var cr = this.r*newo;
+            gradient = con.createRadialGradient(this.x,this.y,0,this.x,this.y,(cr <= 0 ? 1 : cr));
+            gradient.addColorStop(0.0, crFill[(this.currentColor)][1]);
+            gradient.addColorStop(0.7, crFill[(this.currentColor)][1]);
+            gradient.addColorStop(1.0, crFill[(this.currentColor)][0]);
+            con.fillStyle = gradient;
+            con.fill();
+            con.closePath();
+          };
+
+          this.move = function() {
+            this.x += (this.rt/this.hl)*this.dx;
+            this.y += (this.rt/this.hl)*this.dy;
+            if(this.x > width || this.x < 0){
+              this.dx *= -1;
+            } 
+            if(this.y > height || this.y < 0){
+              this.dy *= -1;
+            } 
+          };
+
+          this.getX = function() { return this.x; };
+          this.getY = function() { return this.y; };
+        }
+        window.onresize = function(e){
+          width = container.clientWidth;
+          canvas.width = width;
+        };
+      }
+    };
+  }])
+;
+angular.module('invoices.directives')
   .directive('infile', function(){
     return {
       scope: {
@@ -63497,6 +63514,8 @@ angular.module('invoices.directives', [])
       }
     };
   })
+;
+angular.module('invoices.directives')
   .directive('intimer', function(){
     return {
       restrict: 'A',
@@ -63510,6 +63529,8 @@ angular.module('invoices.directives', [])
       }
     };
   })
+;
+angular.module('invoices.directives')
   .directive('incounting', ['$interval', function($interval){
     return {
       restrict: 'A',
@@ -63540,6 +63561,8 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+;
+angular.module('invoices.directives')
   .directive("insave", ['$rootScope', '$state', '$mdDialog', '$log', 'apiSrv', function($rootScope, $state, $mdDialog, $log, apiSrv){
     return {
       restrict: 'A',
@@ -63569,6 +63592,8 @@ angular.module('invoices.directives', [])
       }
     };
   }])
+;
+angular.module('invoices.directives')
   .directive("inupdate", ['$rootScope', '$state', '$mdDialog', '$log', 'apiSrv', function($rootScope, $state, $mdDialog, $log, apiSrv){
     return {
       restrict: 'A',
@@ -63590,7 +63615,7 @@ angular.module('invoices.directives', [])
     };
   }])
 ;
-angular.module('invoices.filters', [])
+angular.module('invoices.filters')
   .filter('msToTimeString', function(){
     return function(millseconds) {
       var seconds = Math.floor(millseconds / 1000),
@@ -63607,6 +63632,8 @@ angular.module('invoices.filters', [])
       return timeString;
     };
   })
+;
+angular.module('invoices.filters')
   .filter('secondsToTimeString', function(){
     return function(seconds) {
       var h = 3600,
@@ -63622,6 +63649,8 @@ angular.module('invoices.filters', [])
       return timeString;
     };
   })
+;
+angular.module('invoices.filters')
   .filter('telephone', function(){
     return function(telephone){
       if(!telephone){
@@ -63658,6 +63687,8 @@ angular.module('invoices.filters', [])
       return (country + " (" + city + ") " + number).trim();
     };
   })
+;
+angular.module('invoices.filters')
   .filter('timeDeltaToHours', function(){
     return function(delta){
       var pieces = delta.split(":"),
@@ -63683,84 +63714,82 @@ angular.module('invoices.services')
     return apiSrv;
   }])
 ;
-angular.module('invoices.states', [
-               'ui.router',
-               'uiRouterStyles'
-])
-.run(['$rootScope', '$state', '$stateParams', function($rootScope, $state, $stateParams){
-  $rootScope.$state = $state;
-  $rootScope.$stateParams = $stateParams;
-}])
-.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider){
-  var templateDir = 'angular/partials',
-      cssDir = "static/assets/css";
+angular.module('invoices.states')
+  .run(['$rootScope', '$state', '$stateParams', function($rootScope, $state, $stateParams){
+    $rootScope.$state = $state;
+    $rootScope.$stateParams = $stateParams;
+  }])
+  .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider){
+    var templateDir = 'angular/partials',
+        cssDir = "static/assets/css";
 
-  $urlRouterProvider.otherwise('/');
+    $urlRouterProvider.otherwise('/');
 
-  $stateProvider
-    .state('initial', {
-      url: '/',
-      views: {
-        'main': {
-          templateUrl: templateDir + '/main.html'
+    $stateProvider
+      .state('initial', {
+        url: '/',
+        views: {
+          'main': {
+            templateUrl: templateDir + '/main.html'
+          },
+          'landing@initial': {
+            templateUrl: templateDir + '/landing.html',
+            controller: 'anonCtrl'
+          },
+          'auth@initial': {
+            templateUrl: templateDir + '/auth.html'
+          }
         },
-        'landing@initial': {
-          templateUrl: templateDir + '/landing.html',
-          controller: 'anonCtrl'
-        },
-        'auth@initial': {
-          templateUrl: templateDir + '/auth.html'
+        data: {
+          css: cssDir + '/landing.css'
         }
-      },
-      data: {
-        css: cssDir + '/landing.css'
-      }
-    })
-    .state('app', {
-      url: '/projects',
-      views: {
-        'main': {
-          templateUrl: templateDir + '/main.html'
+      })
+      .state('app', {
+        url: '/projects',
+        views: {
+          'main': {
+            templateUrl: templateDir + '/main.html'
+          },
+          'landing@app': {
+            templateUrl: templateDir + '/auth.html',
+            controller: 'authCtrl'
+          },
+          'app@app': {
+            templateUrl: templateDir + '/app-main.html',
+            controller: 'appCtrl'
+          },
+          'nav@app': {
+            templateUrl: templateDir + '/nav.html'
+          }
         },
-        'landing@app': {
-          templateUrl: templateDir + '/auth.html',
-          controller: 'authCtrl'
-        },
-        'app@app': {
-          templateUrl: templateDir + '/app-main.html',
-          controller: 'appCtrl'
-        },
-        'nav@app': {
-          templateUrl: templateDir + '/nav.html'
+        data: {
+          css: cssDir + '/app.css'
         }
-      },
-      data: {
-        css: cssDir + '/app.css'
-      }
-    })
-    .state('app.settings', {
-      url: '/settings',
-      views: {
-        'profile': {
-          templateUrl: templateDir + '/profile.html',
-          controller: 'userCtrl'
+      })
+      .state('app.settings', {
+        url: '/settings',
+        views: {
+          'profile': {
+            templateUrl: templateDir + '/profile.html',
+            controller: 'userCtrl'
+          }
         }
-      }
-    })
-    .state('app.newProject', {
-      url: '/new'
-    })
-    .state('app.editProject', {
-      url: '/edit/:id/:index/:event'
-    })
-    .state('app.intervalList', {
-      url: '/intervals/:id/:index/:event'
-    })
-    .state('app.invoicePreview', {
-      url: '/invoice/:id/:event'
-    })
-    .state('app.invoiceList', {
-      url: '/invoices/:id/:event'
-    })
-  ;
-}]);
+      })
+      .state('app.newProject', {
+        url: '/new'
+      })
+      .state('app.editProject', {
+        url: '/edit/:id/:index/:event'
+      })
+      .state('app.intervalList', {
+        url: '/intervals/:id/:index/:event'
+      })
+      .state('app.invoicePreview', {
+        url: '/invoice/:id/:event'
+      })
+      .state('app.invoiceList', {
+        url: '/invoices/:id/:event'
+      })
+    ;
+  }])
+;
