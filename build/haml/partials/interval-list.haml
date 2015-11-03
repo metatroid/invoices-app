@@ -39,8 +39,13 @@
                 %span.fa.fa-plus-circle
               %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(ctrl.parent.newInterval, $event)", title: "Clear Fields"}
                 %span.fa.fa-remove
-      .sortable{sv-root: "sv-root", sv-part: "ctrl.parent.intervals", sv-on-sort: "ctrl.parent.sortIntervals($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
-        %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals | filter:{paid:ctrl.parent.showPaid}", id: "interval_{{interval.id}}", sv-element: "sv-element", data-iid: "{{interval.id}}", data-position: "{{interval.position}}", data-project: "{{interval.project}}", data-index: "{{$index}}"}
+      .sortable
+        %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals | filter:{paid:ctrl.parent.showPaid}", id: "interval_{{interval.id}}", data-iid: "{{interval.id}}", data-position: "{{interval.position}}", data-project: "{{interval.project}}", data-index: "{{$index}}"}
+          .position-controls
+            %md-button.md-icon-button{aria-label: "move up", ng-click: "ctrl.parent.movePositionUp(interval)"}
+              %span.fa.fa-caret-up
+            %md-button.md-icon-button{aria-label: "move down", ng-click: "ctrl.parent.movePositionDown(interval)"}
+              %span.fa.fa-caret-down
           .auto{layout: "row"}
             .inline-flex{flex: "90"}
               %div{flex: "25"}

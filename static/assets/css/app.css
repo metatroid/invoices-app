@@ -7025,10 +7025,10 @@ md-tooltip {
 md-menu-item > .md-button md-icon {
   line-height: 24px; }
 
-md-backdrop.md-opaque {
+md-backdrop.md-bottom-sheet-backdrop.md-opaque {
   opacity: 1;
   background-color: rgba(33, 33, 33, 0.5); }
-  md-backdrop.md-opaque:before {
+  md-backdrop.md-bottom-sheet-backdrop.md-opaque:before {
     content: '';
     display: block;
     position: absolute;
@@ -7138,6 +7138,15 @@ md-backdrop.md-opaque {
   width: 125px;
   text-align: center;
   cursor: pointer; }
+  .form .file-upload-wrapper #removeLogo {
+    display: block;
+    position: absolute;
+    top: 27px;
+    right: 10px;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 0 0 1px #000;
+    text-decoration: none; }
   .form .file-upload-wrapper span {
     color: #fff;
     cursor: pointer;
@@ -7424,14 +7433,37 @@ md-bottom-sheet {
       left: 20px;
       cursor: pointer; }
 
-.interval-list .interval .md-list-item-inner {
-  padding-right: 0;
-  padding-left: 0; }
-
-.interval-list .interval .interval-action-progress {
-  height: 50px; }
-  .interval-list .interval .interval-action-progress md-progress-circular {
-    height: 20px; }
+.interval-list .interval {
+  position: relative; }
+  .interval-list .interval:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 25px;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    transition: opacity 0.5s ease; }
+  .interval-list .interval.highlight:before {
+    opacity: 1; }
+  .interval-list .interval .md-list-item-inner {
+    padding-right: 0;
+    padding-left: 0; }
+  .interval-list .interval .position-controls {
+    margin-top: -25px;
+    width: 30px;
+    margin-left: -5px; }
+    .interval-list .interval .position-controls button {
+      width: 15px;
+      height: 20px;
+      min-height: 10px;
+      line-height: 12px; }
+  .interval-list .interval .interval-action-progress {
+    height: 50px; }
+    .interval-list .interval .interval-action-progress md-progress-circular {
+      height: 20px; }
 
 .interval-list .sortable md-list-item .flex:last-of-type md-input-container:nth-child(2) {
   padding-left: 15px; }

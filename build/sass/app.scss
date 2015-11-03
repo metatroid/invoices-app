@@ -9,7 +9,7 @@ md-menu-item{
     }
   }
 }
-md-backdrop.md-opaque{
+md-backdrop.md-bottom-sheet-backdrop.md-opaque{
   opacity: 1;
   background-color: rgba(33,33,33,.50);
   &:before{
@@ -144,6 +144,16 @@ md-backdrop.md-opaque{
     width: 125px;
     text-align: center;
     cursor: pointer;
+    #removeLogo{
+      display: block;
+      position: absolute;
+      top: 27px;
+      right: 10px;
+      font-size: 10px;
+      color: #fff;
+      text-shadow: 0 0 1px #000;
+      text-decoration: none;
+    }
     span{
       color: #fff;
       cursor: pointer;
@@ -479,12 +489,41 @@ md-bottom-sheet{
     }
   }
   .interval{
+    position: relative;
+    &:before{
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      bottom: 25px;
+      left: 0;
+      right: 0;
+      background-color: rgba(0,0,0,0.05);
+      opacity: 0;
+      transition: opacity .5s ease;
+    }
+    &.highlight{
+      &:before{
+        opacity: 1;
+      }
+    }
     // .md-ripple-container{
     //   opacity: 0;
     // }
     .md-list-item-inner{
       padding-right: 0;
       padding-left: 0;
+    }
+    .position-controls{
+      margin-top: -25px;
+      width: 30px;
+      margin-left: -5px;
+      button{
+        width: 15px;
+        height: 20px;
+        min-height: 10px;
+        line-height: 12px;
+      }
     }
     .interval-action-progress{
       height: 50px;

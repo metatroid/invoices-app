@@ -65,3 +65,13 @@ var msToTimeString = function(ms){
   timeString = hours +":"+ minutes +":"+scnds;
   return timeString;
 };
+
+function urlToBase64(img){
+  var canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  dataURL = canvas.toDataURL("image/png");
+  return dataURL;
+}

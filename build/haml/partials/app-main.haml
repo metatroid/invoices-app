@@ -20,7 +20,7 @@
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
   %md-progress-linear.application-progress-indicator.hidden{md-mode: "indeterminate"}
-  #app.view-panel{ng-class: "{active: currentState !== 'app.settings'}"}
+  #app.view-panel.project-view{ng-class: "{active: currentState !== 'app.settings'}"}
     %md-content
       %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
         %md-list-item.project{id: "project_{{project.id}}", ng-repeat: "project in projects", sv-element: "sv-element", data-pid: "{{project.id}}", data-position: "{{project.position}}"}
@@ -98,7 +98,7 @@
                       save time interval
                     %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index, $event)"}
                       discard
-  #profile.view-panel{ng-class: "{active: currentState === 'app.settings'}"}
+  #profile.view-panel.settings-view{ng-class: "{active: currentState === 'app.settings'}"}
     %md-toolbar.md-default
       .md-toolbar-tools
         %h2.md-flex

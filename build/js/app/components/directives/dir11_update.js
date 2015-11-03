@@ -1,10 +1,10 @@
 angular.module('invoices.directives')
-  .directive("inupdate", ['$rootScope', 
-                          '$state', 
+  .directive("inupdate", ['$state', 
                           '$mdDialog', 
                           '$log', 
-                          'apiSrv', 
-    function($rootScope, $state, $mdDialog, $log, apiSrv){
+                          'apiSrv',
+                          'msgSrv',
+    function($state, $mdDialog, $log, apiSrv, msgSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -17,7 +17,7 @@ angular.module('invoices.directives')
             apiSrv.request('PUT', 'projects/'+projectId+'/statements/'+invoiceId+'/', {markup: invoiceHtml}, function(invoice){
               progress.classList.add("hidden");
               document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
-              $rootScope.$emit('updateInvoiceList');
+              msgSrv.emitMsg('updateInvoiceList');
               $mdDialog.cancel();
             }, function(err){
               $log.error(err);

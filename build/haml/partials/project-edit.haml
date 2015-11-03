@@ -49,7 +49,7 @@
         %md-content{layout-padding: "layout-padding"}
           %md-input-container
             .file-upload-wrapper
-              %input{type: "file", aria-label: "Project logo upload", id: "project_logo", infile: "ctrl.parent.project.project_logo"}
+              %input{type: "file", aria-label: "Project logo upload", id: "project_logo", infile: "ctrl.parent.project.project_logo", current-logo: "'{{ctrl.parent.project.project_logo}}'"}
               %label.md-no-float{for: "project_logo"}
                 %span.fa.fa-upload
                 %span.label

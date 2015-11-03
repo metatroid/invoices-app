@@ -35,13 +35,54 @@ angular.module('invoices.directives', []);
 angular.module('invoices.filters', []);
 angular.module('invoices.services', []);
 angular.module('invoices.states', ['ui.router', 'uiRouterStyles']);
+var formatErr = function(err){
+  var errString = JSON.stringify(err),
+      errArray = errString.split(','),
+      responseString = "";
+  for(var i=0;i<errArray.length;i++){
+    var clean = errArray[i].replace(/\[|\]|"|{|}/g,''),
+        item = clean.match(/.*(?=:)/)[0],
+        message = clean.match(/(:)(.*)/)[2];
+    responseString += "<li>"+item+": "+message+"</li>";
+  }
+  return responseString;
+};
+function pad(n, width, z){
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+function xhrfile() {
+  return supportFileAPI() && supportAjaxUploadProgressEvents();
+  function supportFileAPI() {
+      var input = document.createElement('input');
+      input.type = 'file';
+      return 'files' in input;
+  }
+  function supportAjaxUploadProgressEvents() {
+      var xhr = new XMLHttpRequest();
+      return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
+  }
+}
+function timeDeltaToSeconds(delta){
+  var pieces = delta.split(":"),
+      hours = pieces[0],
+      minutes = pieces[1],
+      seconds = pieces[2],
+      timeDiff = (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseFloat(seconds);
+  return timeDiff;
+}
+function itemProgressIndicator(showEl, hideEl){
+  showEl.classList.remove('hidden');
+  hideEl.classList.add('hidden');
+}
 angular.module('invoices.controllers')
-  .controller('mainCtrl', ['$rootScope', 
-                           '$scope', 
+  .controller('mainCtrl', ['$scope', 
                            '$state', 
                            '$log', 
                            'apiSrv',
-    function($rootScope, $scope, $state, $log, apiSrv){
+                           'msgSrv',
+    function($scope, $state, $log, apiSrv, msgSrv){
       $scope.showAuthForm = false;
       $scope.toggleAuthForm = function(){
         $scope.showAuthForm = !$scope.showAuthForm;
@@ -56,35 +97,38 @@ angular.module('invoices.controllers')
               $state.go('app');
             }
             if($state.is("app.newProject")){
-              $rootScope.$emit("showForm");
+              msgSrv.setState('showForm');
             }
             if($state.is("app.editProject")){
-              var id1 = $state.params.id,
-                  index1 = $state.params.index,
-                  ev1 = $state.params.event;
-              $rootScope.$emit("showEditor", {id: id1, index: index1, ev: ev1});
+              var editorSettings = {
+                id: $state.params.id,
+                index: $state.params.index,
+                event: $state.params.event
+              };
+              msgSrv.setState('showEditor', editorSettings);
             }
             if($state.is("app.intervalList")){
-              var id2 = $state.params.id,
-                  index2 = $state.params.index,
-                  ev2 = $state.params.event;
-              $rootScope.$emit("showIntervals", {id: id2, index: index2, ev: ev2});
+              var intervalSettings = {
+                id: $state.params.id,
+                index: $state.params.index,
+                ev: $state.params.event
+              };
+              msgSrv.setState('showIntervals', intervalSettings);
             }
             if($state.is("app.invoicePreview")){
-              var id3 = $state.params.id,
-                  ev3 = $state.params.event;
-              $rootScope.$emit("showInvoice", {id: id3, ev: ev3});
+              var previewSettings = {
+                id: $state.params.id,
+                ev: $state.params.event
+              };
+              msgSrv.setState('showInvoice', previewSettings);
             }
             if($state.is("app.invoiceList")){
-              var id4 = $state.params.id,
-                  ev4 = $state.params.event;
-              $rootScope.$emit("showInvoices", {id: id4, ev: ev4});
+              var invoiceSettings = {
+                id: $state.params.id,
+                ev: $state.params.event
+              };
+              msgSrv.setState('showInvoices', invoiceSettings);
             }
-            $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){ 
-              if(toState.name === "initial"){
-                $state.go('app');
-              }
-            });
           }
         }, 
         function(er){
@@ -126,93 +170,84 @@ angular.module('invoices.controllers')
   ])
 ;
 angular.module('invoices.controllers')
-  .controller('appCtrl', ['$rootScope', 
-                          '$scope', 
+  .controller('appCtrl', ['$scope', 
                           '$state', 
                           '$log', 
                           '$sce', 
                           'apiSrv',
+                          'msgSrv',
                           '$mdDialog',
                           '$mdBottomSheet', 
                           '$mdToast', 
                           'djResource', 
-                          '$timeout', 
                           '$filter',
-                          'datetime',
                           'orderByFilter',
-    function($rootScope, $scope, $state, $log, $sce, apiSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $timeout, $filter, datetime, orderByFilter){
-      function pad(n, width, z){
-        z = z || '0';
-        n = n + '';
-        return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-      }
+    function($scope, $state, $log, $sce, apiSrv, msgSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $filter, orderByFilter){
+      $scope.htmlSafe = $sce.trustAsHtml;
       $scope.showPaid = false;
-      $rootScope.dialogOpen = false;
-      $rootScope.sheetOpen = false;
+      var baseViewChange = false,
+          overlay = false;
       var progressIndicator = document.querySelector('.application-progress-indicator');
       $scope.openProject = 0;
       $scope.currentState = $state.current.name;
-      $rootScope.$on("showForm", function(){
-        $scope.showNewProjectForm();
-      });
-      $rootScope.$on("showEditor", function(event, args){
-        $scope.showProjectEditor(args.e, args.id, args.index);
-      });
-      $rootScope.$on("showIntervals", function(event, args){
-        $scope.showIntervalList(args.e, args.id, args.index);
-      });
-      $rootScope.$on("showInvoice", function(event, args){
-        $scope.openInvoiceDialog(args.id, args.e);
-      });
-      $rootScope.$on("showInvoices", function(event, args){
-        $scope.openInvoiceList(args.id, args.e);
+      $scope.$on('updateState', function(){
+        switch(msgSrv.state.fn){
+          case "showForm":
+            $scope.showNewProjectForm();
+            break;
+          case "showEditor":
+            $scope.showProjectEditor(msgSrv.state.args.event, msgSrv.state.args.id, msgSrv.state.args.index);
+            break;
+          case "showIntervals":
+            $scope.showIntervalList(msgSrv.state.args.event, msgSrv.state.args.id, msgSrv.state.args.index);
+            break;
+          case "showInvoice":
+            $scope.openInvoiceDialog(msgSrv.state.args.id, msgSrv.state.args.event);
+            break;
+          case "showInvoices":
+            $scope.openInvoiceList(msgSrv.state.args.id, msgSrv.state.args.event);
+            break;
+          default:
+            $log.info(msgSrv.state);
+            break;
+        }
       });
 
-      $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+      $scope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         $scope.currentState = toState.name;
-        if(toState.name === "app.newProject"){
-          $scope.showNewProjectForm();
-        }
-        if(toState.name === "app.editProject"){
-          var id1 = toParams.id,
-              index1 = toParams.index,
-              e1 = toParams.event;
-          $scope.showProjectEditor(e1, id1, index1);
-        }
-        if(toState.name === "app.intervalList"){
-          var id2 = toParams.id,
-              index2 = toParams.index,
-              e2 = toParams.event;
-          $scope.showIntervalList(e2, id2, index2);
-        }
-        if(toState.name === "app.invoicePreview"){
-          var id3 = toParams.id,
-              e3 = toParams.event;
-          $scope.openInvoiceDialog(id3, e3);
-        }
-        if(toState.name === "app.invoiceList"){
-          var id4 = toParams.id,
-              e4 = toParams.event;
-          $scope.openInvoiceList(id4, e4);
-        }
-        if(fromState.name === "app.newProject" || fromState.name === "app.editProject" || fromState.name === "app.invoicePreview" || fromState.name === "app.intervalList"){
-          if(toState.name === "app"){
-            if($rootScope.dialogOpen){
-              $scope.closeDialog();
-            }
-          } else {
+        baseViewChange = false;
+        var from = fromState.name;
+        var id = toParams.id,
+            index = toParams.index,
+            ev = toParams.event;
+        switch($scope.currentState){
+          case "app":
             $mdDialog.cancel();
-          }
-        }
-        if(fromState.name === "app.intervalList" || fromState.name === "app.invoiceList"){
-          if(toState.name === "app"){
-            $rootScope.stateChange = false;
-          } else {
-            $rootScope.stateChange = true;
-          }
-          if($rootScope.sheetOpen){
             $mdBottomSheet.hide();
-          }
+            break;
+          case "initial":
+            $state.go('app');
+            break;
+          case "app.settings":
+            baseViewChange = true;
+            break;
+          case "app.newProject":
+            if(!overlay){$scope.showNewProjectForm();}
+            break;
+          case "app.editProject":
+            if(!overlay){$scope.showProjectEditor(ev, id, index);}
+            break;
+          case "app.intervalList":
+            if(!overlay){$scope.showIntervalList(ev, id, index);}
+            break;
+          case "app.invoicePreview":
+            if(!overlay){$scope.openInvoiceDialog(id, ev);}
+            break;
+          case "app.invoiceList":
+            if(!overlay){$scope.openInvoiceList(id, ev);}
+            break;
+          default:
+            break;
         }
       });
       var Project = djResource('api/projects/:id', {'id': "@id"});
@@ -244,37 +279,31 @@ angular.module('invoices.controllers')
           },
           controllerAs: 'ctrl',
           templateUrl: 'angular/partials/project-new.html',
-          parent: angular.element(document.querySelector('.view-panel.active')),
+          parent: angular.element(document.querySelector('.view-panel.project-view')),
           targetEvent: ev,
           clickOutsideToClose: true,
           onComplete: function(){
             document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
             document.querySelectorAll("md-dialog-content input")[0].focus();
-            $rootScope.dialogOpen = true;
+            overlay = true;
+            document.querySelector('.view-panel.project-view').classList.add('no-scroll');
           }
+        }).finally(function(){
+          if(!baseViewChange){
+            $state.go("app");
+          }
+          overlay = false;
+          document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
         });
       };
       $scope.closeDialog = function() {
         $mdDialog.cancel();
-        $rootScope.dialogOpen = false;
-        $state.go("app");
+        overlay = false;
       };
       function closeToast(){
         $mdToast.hide();
       }
       
-      function xhrfile() {
-        return supportFileAPI() && supportAjaxUploadProgressEvents();
-        function supportFileAPI() {
-            var input = document.createElement('input');
-            input.type = 'file';
-            return 'files' in input;
-        }
-        function supportAjaxUploadProgressEvents() {
-            var xhr = new XMLHttpRequest();
-            return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
-        }
-      }
       $scope.createProject = function(data){
         var that = this;
         if(!xhrfile() && data.project_logo){
@@ -290,7 +319,7 @@ angular.module('invoices.controllers')
             }
           });
         }
-        $scope.newProject.deadline = data.deadline_date; // js date format workaround
+        $scope.newProject.deadline = data.deadline_date;
         apiSrv.request('POST', 'projects/', $scope.newProject, function(project){
           $scope.closeDialog();
           that.projects.push(project);
@@ -333,12 +362,19 @@ angular.module('invoices.controllers')
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/project-edit.html',
-            parent: angular.element(document.querySelector('.view-panel.active')),
+            parent: angular.element(document.querySelector('.view-panel.project-view')),
             targetEvent: ev,
             clickOutsideToClose: true,
             onComplete: function(){
-              $rootScope.dialogOpen = true;
+              overlay = true;
+              document.querySelector('.view-panel.project-view').classList.add('no-scroll');
             }
+          }).finally(function(){
+            if(!baseViewChange){
+              $state.go("app");
+            }
+            overlay = false;
+            document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
           });
         }, function(err){$log.error(err);});
       };
@@ -356,21 +392,13 @@ angular.module('invoices.controllers')
             }
           });
         }
-        data.deadline = data.deadline_date; // js date format workaround
+        data.deadline = data.deadline_date;
         apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
           $scope.closeDialog();
           $scope.projects.splice(index, 1, project);
         }, function(err){$log.error(err);});
       };
 
-      function timeDeltaToSeconds(delta){
-        var pieces = delta.split(":"),
-            hours = pieces[0],
-            minutes = pieces[1],
-            seconds = pieces[2],
-            timeDiff = (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseFloat(seconds);
-        return timeDiff;
-      }
       $scope.timeEvent = "startTimer";
       var timerRunning = false;
       $scope.timers = [];
@@ -383,7 +411,6 @@ angular.module('invoices.controllers')
         var timerEl = document.getElementById("project_"+id).querySelector(".timer");
         timerEl.classList.remove('saving');
         if($scope.timers.indexOf(id) === -1){
-          //create
           $scope.timers.push(id);
           apiSrv.request('POST', 'projects/'+id+'/intervals/', {start: (new Date())},
            function(data){
@@ -393,10 +420,7 @@ angular.module('invoices.controllers')
             $log.error(err);
            }
           );
-        } else {
-          //update
         }
-        
       };
       var stopTimer = function(id){
         $scope.timeEvent = "stopTimer";
@@ -477,173 +501,28 @@ angular.module('invoices.controllers')
           $log.info('cancelled delete');
         });
       };
-      function itemProgressIndicator(showEl, hideEl){
-        showEl.classList.remove('hidden');
-        hideEl.classList.add('hidden');
-      }
+      
       $scope.showIntervalList = function(ev, pid, index){
         $scope.openProject = index;
-        $rootScope.sheetOpen = true;
-        document.querySelector('.view-panel.active').scrollTop = 0;
-        document.querySelector('.view-panel.active').classList.add('no-scroll');
+        overlay = true;
+        document.querySelector('.view-panel.project-view').scrollTop = 0;
+        document.querySelector('.view-panel.project-view').classList.add('no-scroll');
+        msgSrv.setScope('appCtrl', $scope);
+        msgSrv.setVars({pid: pid,
+                        ev: ev,
+                        index: index
+        });
         $mdBottomSheet.show({
-          controller: function(){
-            var it = this;
-            this.parent = $scope;
-            var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
-            this.parent.newInterval = new Interval();
-            this.parent.intervals = Interval.query({project_id: pid}, function(intervals){
-              for(var i=0;i<intervals.length;i++){
-                intervals[i].work_date = new Date(intervals[i].work_day);
-              }
-              it.parent.intervals = orderByFilter(intervals, ['position', 'work_day']);
-            });
-            this.parent.project = Project.get({id: pid});
-            this.parent.updateInterval = function(interval, ev, index){
-              var that = this;
-              var actionsParent = ev.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.interval-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              var start = new Date(interval.start),
-                  diff = interval.total,
-                  timeDiff = timeDeltaToSeconds(diff),
-                  newEnd = new Date(start.getTime() + timeDiff*1000);
-              interval.end = newEnd;
-              interval.work_day = interval.work_date;
-              apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
-                function(data){
-                  $timeout.cancel(intervalIndicator);
-                  $scope.projects.splice($scope.openProject, 1, data);
-                  that.project = data;
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                  actions.querySelector('button.update-btn').classList.add('success');
-                  $timeout(function(){
-                    actions.querySelector('button.update-btn').classList.remove('success');
-                  }, 1000);
-                },
-                function(err){
-                  $timeout.cancel(intervalIndicator);
-                  $log.error(err);
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                }
-              );
-            };
-            this.parent.deleteInterval = function(interval, ev, index){
-              var that = this;
-              var actionsParent = ev.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.interval-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              var confirm = $mdDialog.confirm()
-                  .title('You are about to delete this time period.')
-                  .content('This action cannot be undone. Are you sure you wish to proceed?')
-                  .ariaLabel('Confirm delete')
-                  .targetEvent(ev)
-                  .ok('Delete this interval')
-                  .cancel('Cancel');
-              $mdDialog.show(confirm).then(function() {
-                apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
-                  function(data){
-                    $timeout.cancel(intervalIndicator);
-                    $scope.intervals.splice(index, 1);
-                    Project.get({id: interval.project}, function(project){
-                      $scope.projects.splice($scope.openProject, 1, project);
-                      that.project = project;
-                    });
-                    progress.classList.add('hidden');
-                    actions.classList.remove('hidden');
-                    actions.querySelector('button.delete-btn').classList.add('success');
-                    $timeout(function(){
-                      actions.querySelector('button.delete-btn').classList.remove('success');
-                    }, 1000);
-                  },
-                  function(err){
-                    $timeout.cancel(intervalIndicator);
-                    $log.error(err);
-                    progress.classList.add('hidden');
-                    actions.classList.remove('hidden');
-                  }
-                );
-              }, function() {
-                $timeout.cancel(intervalIndicator);
-                $log.info('cancelled delete');
-                progress.classList.add('hidden');
-                actions.classList.remove('hidden');
-              });
-            };
-            this.parent.insertInterval = function(interval, ev){
-              var that = this;
-              var actionsParent = ev.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.interval-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              var start = new Date(),
-                  diff = interval.total,
-                  timeDiff = timeDeltaToSeconds(diff),
-                  end = new Date(start.getTime() + timeDiff*1000);
-              interval.end = end;
-              interval.start = start;
-              interval.work_day = interval.work_date;
-              interval.position = that.project.intervals.length;
-              apiSrv.request('POST', 'projects/'+pid+'/intervals/', interval,
-                function(data){
-                  $timeout.cancel(intervalIndicator);
-                  data.work_date = new Date(data.work_day);
-                  that.intervals.push(data);
-                  that.newInterval = new Interval();
-                  Project.get({id: data.project}, function(project){
-                    $scope.projects.splice($scope.openProject, 1, project);
-                    that.project = project;
-                  });
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                  actions.querySelector('button.insert-btn').classList.add('success');
-                  $timeout(function(){
-                    actions.querySelector('button.insert-btn').classList.remove('success');
-                  }, 1000);
-                },
-                function(err){
-                  $timeout.cancel(intervalIndicator);
-                  $log.error(err);
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                }
-              );
-            };
-            this.parent.clearInterval = function(interval, ev){
-              this.newInterval.description = "";
-              this.newInterval.total = "";
-              this.newInterval.work_date = "";
-            };
-            this.parent.sortIntervals = function(item, partFrom, partTo, indexFrom, indexTo){
-              var that = this;
-              var project_id = item.project,
-                  data = {intervalList: partFrom};
-              apiSrv.request('POST', 'projects/'+project_id+'/interval_sort/', data,
-                function(data){
-                  for(var i=0;i<data.intervals.length;i++){
-                    data.intervals[i].work_date = new Date(data.intervals[i].work_day);
-                  }
-                  that.intervals = data.intervals;
-                },
-                function(err){
-                  $log.error(err);
-                }
-              );
-            };
-          },
+          controller: 'intervalListCtrl',
           controllerAs: 'ctrl',
           templateUrl: 'angular/partials/interval-list.html',
-          parent: angular.element(document.querySelector('.view-panel.active'))
+          parent: angular.element(document.querySelector('.view-panel.project-view'))
         }).finally(function(){
-          $rootScope.sheetOpen = false;
-          if(!$rootScope.stateChange){
+          if(!baseViewChange){
             $state.go("app");
           }
-          document.querySelector('.view-panel.active').classList.remove('no-scroll');
+          document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
+          overlay = false;
         });
       };
 
@@ -651,7 +530,7 @@ angular.module('invoices.controllers')
         $mdOpenMenu(ev);
       };
       $scope.openInvoiceDialog = function(projectId, ev){
-        document.querySelector('.view-panel.active').scrollTop = 0;
+        document.querySelector('.view-panel.project-view').scrollTop = 0;
         apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
           $mdDialog.show({
             controller: function(){
@@ -662,168 +541,445 @@ angular.module('invoices.controllers')
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/invoice-display.html',
-            parent: angular.element(document.querySelector('.view-panel.active')),
+            parent: angular.element(document.querySelector('.view-panel.project-view')),
             targetEvent: ev,
             clickOutsideToClose: true,
             onComplete: function(){
-              $rootScope.dialogOpen = true;
+              overlay = true;
+              document.querySelector('.view-panel.project-view').classList.add('no-scroll');
             }
+          }).finally(function(){
+            if(!baseViewChange){
+              $state.go("app");
+            }
+            overlay = false;
+            document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
           });
         }, function(err){$log.error(err);});
       };
       
       $scope.openInvoiceList = function(pid, ev){
-        $rootScope.sheetOpen = true;
-        document.querySelector('.view-panel.active').scrollTop = 0;
-        document.querySelector('.view-panel.active').classList.add('no-scroll');
+        overlay = true;
+        document.querySelector('.view-panel.project-view').scrollTop = 0;
+        document.querySelector('.view-panel.project-view').classList.add('no-scroll');
+        msgSrv.setScope('appCtrl', $scope);
+        msgSrv.setVars({pid: pid,
+                        ev: ev
+        });
         $mdBottomSheet.show({
-          controller: function(){
-            var it = this;
-            this.parent = $scope;
-            var Invoice = djResource('api/projects/:project_id/statements/:id', {'project_id': '@pid', 'id': "@id"});
-            this.parent.newInvoice = new Invoice();
-            this.parent.invoices = Invoice.query({project_id: pid}, function(invoices){
-              it.parent.invoices = orderByFilter(invoices, ['created_at']);
-            });
-            $rootScope.$on('updateInvoiceList', function(){
-              this.parent.invoices = Invoice.query({project_id: pid}, function(invoices){
-                it.parent.invoices = orderByFilter(invoices, ['created_at']);
-              });
-            });
-            this.parent.project = Project.get({id: pid});
-            this.parent.editInvoice = function(invoice, index, ev){
-              $mdDialog.show({
-                controller: function(){
-                  this.parent = $scope;
-                  this.parent.invoice = invoice;
-                },
-                controllerAs: 'ctrl',
-                templateUrl: 'angular/partials/invoice-edit.html',
-                parent: angular.element(document.querySelector('.view-panel.active')),
-                targetEvent: ev,
-                clickOutsideToClose: true,
-                onComplete: function(){
-                  document.querySelector('.view-panel.active').scrollTop = 0;
-                }
-              });
-            };
-            this.parent.cancelInvoiceEdit = function(e){
-              $mdDialog.cancel();
-            };
-            this.parent.duplicateInvoice = function(projectId, invoice, index, event){
-              var actionsParent = event.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.invoice-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoice.markup}, function(data){
-                $timeout.cancel(invoiceIndicator);
-                $scope.invoices.push(data);
-                progress.classList.add('hidden');
-                actions.classList.remove('hidden');
-                actions.querySelector('button.delete-btn').classList.add('success');
-                $timeout(function(){
-                  actions.querySelector('button.delete-btn').classList.remove('success');
-                }, 1000);
-              }, function(err){
-                $timeout.cancel(invoiceIndicator);
-                $log.error(err);
-                progress.classList.add('hidden');
-                actions.classList.remove('hidden');
-              });
-            };
-            this.parent.deleteInvoice = function(invoice, ev, index){
-              var that = this;
-              var actionsParent = ev.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.invoice-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              var confirm = $mdDialog.confirm()
-                  .title('You are about to delete this invoice.')
-                  .content('This action cannot be undone. Are you sure you wish to proceed?')
-                  .ariaLabel('Confirm delete')
-                  .targetEvent(ev)
-                  .ok('Delete this invoice')
-                  .cancel('Cancel');
-              $mdDialog.show(confirm).then(function() {
-                apiSrv.request('DELETE', 'projects/'+invoice.project+'/statements/'+invoice.id, {},
-                  function(data){
-                    $timeout.cancel(invoiceIndicator);
-                    $scope.invoices.splice(index, 1);
-                    progress.classList.add('hidden');
-                    actions.classList.remove('hidden');
-                    actions.querySelector('button.delete-btn').classList.add('success');
-                    $timeout(function(){
-                      actions.querySelector('button.delete-btn').classList.remove('success');
-                    }, 1000);
-                  },
-                  function(err){
-                    $timeout.cancel(invoiceIndicator);
-                    $log.error(err);
-                    progress.classList.add('hidden');
-                    actions.classList.remove('hidden');
-                  }
-                );
-              }, function() {
-                $timeout.cancel(invoiceIndicator);
-                $log.info('cancelled delete');
-                progress.classList.add('hidden');
-                actions.classList.remove('hidden');
-              });
-            };
-            this.parent.insertInvoice = function(invoice, ev){
-              var that = this;
-              var actionsParent = ev.target.parentElement.parentElement.parentElement,
-                  progress = actionsParent.querySelector('.invoice-action-progress'),
-                  actions = actionsParent.querySelector('.md-actions');
-              var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
-              apiSrv.request('POST', 'projects/'+pid+'/statements/', invoice,
-                function(data){
-                  $timeout.cancel(invoiceIndicator);
-                  that.invoices.push(data);
-                  that.newInvoice = new Invoice();
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                  actions.querySelector('button.insert-btn').classList.add('success');
-                  $timeout(function(){
-                    actions.querySelector('button.insert-btn').classList.remove('success');
-                  }, 1000);
-                },
-                function(err){
-                  $timeout.cancel(invoiceIndicator);
-                  $log.error(err);
-                  progress.classList.add('hidden');
-                  actions.classList.remove('hidden');
-                }
-              );
-            };
-          },
+          controller: 'invoiceListCtrl',
           controllerAs: 'ctrl',
           templateUrl: 'angular/partials/invoice-list.html',
-          parent: angular.element(document.querySelector('.view-panel.active'))
+          parent: angular.element(document.querySelector('.view-panel.project-view'))
         }).finally(function(){
-          $rootScope.sheetOpen = false;
-          if(!$rootScope.stateChange){
+          if(!baseViewChange){
             $state.go("app");
           }
-          document.querySelector('.view-panel.active').classList.remove('no-scroll');
+          document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
+          overlay = false;
         });
-      };
-
-      $scope.htmlSafe = $sce.trustAsHtml;
-      var formatErr = function(err){
-        var errString = JSON.stringify(err),
-            errArray = errString.split(','),
-            responseString = "";
-        for(var i=0;i<errArray.length;i++){
-          var clean = errArray[i].replace(/\[|\]|"|{|}/g,''),
-              item = clean.match(/.*(?=:)/)[0],
-              message = clean.match(/(:)(.*)/)[2];
-          responseString += "<li>"+item+": "+message+"</li>";
-        }
-        return responseString;
       };
     }
   ])
+;
+angular.module('invoices.controllers')
+  .controller('intervalListCtrl', ['$log', 
+                                   'apiSrv',
+                                   'msgSrv',
+                                   'djResource',
+                                   'orderByFilter',
+                                   '$timeout',
+                                   '$mdDialog',
+    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog){
+      var $scope = msgSrv.getScope('appCtrl');
+      var vars = msgSrv.getVars();
+      var Project = djResource('api/projects/:id', {'id': "@id"});
+      var it = this;
+      this.parent = $scope;
+      var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
+      this.parent.newInterval = new Interval();
+      this.parent.intervals = Interval.query({project_id: vars.pid}, function(intervals){
+        for(var i=0;i<intervals.length;i++){
+          intervals[i].work_date = new Date(intervals[i].work_day);
+        }
+        it.parent.intervals = orderByFilter(intervals, ['position', 'work_day']);
+      });
+      this.parent.project = Project.get({id: vars.pid});
+
+      this.parent.updatePosition = function(el, project_id){
+        var that = this,
+            orderObj = [];
+        for(var i=0;i<el.parentNode.children.length;i++){
+          var id = el.parentNode.children[i].id.replace('interval_', ''),
+              obj = {id: id};
+          orderObj.push(obj);
+        }
+        apiSrv.request('POST', 'projects/'+project_id+'/interval_sort/', {intervalList: orderObj},
+          function(data){
+            for(var i=0;i<data.intervals.length;i++){
+              data.intervals[i].work_date = new Date(data.intervals[i].work_day);
+            }
+            el.classList.remove('highlight');
+            $timeout(function(){
+              that.intervals = data.intervals;
+            }, 500);
+          },
+          function(err){
+            $log.error(err);
+          }
+        );
+      };
+      this.parent.movePositionUp = function(interval){
+        var el = document.getElementById("interval_"+interval.id),
+            project_id = interval.project;
+        if(el.previousElementSibling){
+          el.parentNode.insertBefore(el,el.previousElementSibling);
+          el.classList.add('highlight');
+          this.updatePosition(el, project_id);
+        }
+      };
+      this.parent.movePositionDown = function(interval){
+        var el = document.getElementById("interval_"+interval.id),
+            project_id = interval.project;
+        if(el.nextElementSibling){
+          el.parentNode.insertBefore(el.nextElementSibling, el);
+          el.classList.add('highlight');
+          this.updatePosition(el, project_id);
+        }
+      };
+      this.parent.updateInterval = function(interval, ev, index){
+        var that = this;
+        var actionsParent = ev.target.parentElement.parentElement.parentElement,
+            progress = actionsParent.querySelector('.interval-action-progress'),
+            actions = actionsParent.querySelector('.md-actions');
+        var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+        var start = new Date(interval.start),
+            diff = interval.total,
+            timeDiff = timeDeltaToSeconds(diff),
+            newEnd = new Date(start.getTime() + timeDiff*1000);
+        interval.end = newEnd;
+        interval.work_day = interval.work_date;
+        apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
+          function(data){
+            $timeout.cancel(intervalIndicator);
+            $scope.projects.splice($scope.openProject, 1, data);
+            that.project = data;
+            progress.classList.add('hidden');
+            actions.classList.remove('hidden');
+            actions.querySelector('button.update-btn').classList.add('success');
+            $timeout(function(){
+              actions.querySelector('button.update-btn').classList.remove('success');
+            }, 1000);
+          },
+          function(err){
+            $timeout.cancel(intervalIndicator);
+            $log.error(err);
+            progress.classList.add('hidden');
+            actions.classList.remove('hidden');
+          }
+        );
+      };
+      this.parent.deleteInterval = function(interval, ev, index){
+        var that = this;
+        var actionsParent = ev.target.parentElement.parentElement.parentElement,
+            progress = actionsParent.querySelector('.interval-action-progress'),
+            actions = actionsParent.querySelector('.md-actions');
+        var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+        var confirm = $mdDialog.confirm()
+            .title('You are about to delete this time period.')
+            .content('This action cannot be undone. Are you sure you wish to proceed?')
+            .ariaLabel('Confirm delete')
+            .targetEvent(ev)
+            .ok('Delete this interval')
+            .cancel('Cancel');
+        $mdDialog.show(confirm).then(function() {
+          apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
+            function(data){
+              $timeout.cancel(intervalIndicator);
+              $scope.intervals.splice(index, 1);
+              Project.get({id: interval.project}, function(project){
+                $scope.projects.splice($scope.openProject, 1, project);
+                that.project = project;
+              });
+              progress.classList.add('hidden');
+              actions.classList.remove('hidden');
+              actions.querySelector('button.delete-btn').classList.add('success');
+              $timeout(function(){
+                actions.querySelector('button.delete-btn').classList.remove('success');
+              }, 1000);
+            },
+            function(err){
+              $timeout.cancel(intervalIndicator);
+              $log.error(err);
+              progress.classList.add('hidden');
+              actions.classList.remove('hidden');
+            }
+          );
+        }, function() {
+          $timeout.cancel(intervalIndicator);
+          $log.info('cancelled delete');
+          progress.classList.add('hidden');
+          actions.classList.remove('hidden');
+        });
+      };
+      this.parent.insertInterval = function(interval, ev){
+        var that = this;
+        var actionsParent = ev.target.parentElement.parentElement.parentElement,
+            progress = actionsParent.querySelector('.interval-action-progress'),
+            actions = actionsParent.querySelector('.md-actions');
+        var intervalIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+        var start = new Date(),
+            diff = interval.total,
+            timeDiff = timeDeltaToSeconds(diff),
+            end = new Date(start.getTime() + timeDiff*1000);
+        interval.end = end;
+        interval.start = start;
+        interval.work_day = interval.work_date;
+        interval.position = that.project.intervals.length;
+        apiSrv.request('POST', 'projects/'+vars.pid+'/intervals/', interval,
+          function(data){
+            $timeout.cancel(intervalIndicator);
+            data.work_date = new Date(data.work_day);
+            that.intervals.push(data);
+            that.newInterval = new Interval();
+            Project.get({id: data.project}, function(project){
+              $scope.projects.splice($scope.openProject, 1, project);
+              that.project = project;
+            });
+            progress.classList.add('hidden');
+            actions.classList.remove('hidden');
+            actions.querySelector('button.insert-btn').classList.add('success');
+            $timeout(function(){
+              actions.querySelector('button.insert-btn').classList.remove('success');
+            }, 1000);
+          },
+          function(err){
+            $timeout.cancel(intervalIndicator);
+            $log.error(err);
+            progress.classList.add('hidden');
+            actions.classList.remove('hidden');
+          }
+        );
+      };
+      this.parent.clearInterval = function(interval, ev){
+        this.newInterval.description = "";
+        this.newInterval.total = "";
+        this.newInterval.work_date = "";
+      };
+    }
+  ])
+;
+angular.module('invoices.controllers')
+  .controller('invoiceListCtrl', ['$log', 
+                                   'apiSrv',
+                                   'msgSrv',
+                                   'djResource',
+                                   'orderByFilter',
+                                   '$timeout',
+                                   '$mdDialog',
+    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog){
+      var $scope = msgSrv.getScope('appCtrl');
+      var vars = msgSrv.getVars();
+      var Project = djResource('api/projects/:id', {'id': "@id"});
+      var it = this;
+      this.parent = $scope;
+      var Invoice = djResource('api/projects/:project_id/statements/:id', {'project_id': '@pid', 'id': "@id"});
+      
+      this.parent.newInvoice = new Invoice();
+      this.parent.invoices = Invoice.query({project_id: vars.pid}, function(invoices){
+        it.parent.invoices = orderByFilter(invoices, ['created_at']);
+      });
+      $scope.$on('updateInvoiceList', function(){
+        this.parent.invoices = Invoice.query({project_id: vars.pid}, function(invoices){
+          it.parent.invoices = orderByFilter(invoices, ['created_at']);
+        });
+      });
+      this.parent.project = Project.get({id: vars.pid});
+      this.parent.editInvoice = function(invoice, index, ev){
+        $mdDialog.show({
+          controller: function(){
+            this.parent = $scope;
+            this.parent.invoice = invoice;
+          },
+          controllerAs: 'ctrl',
+          templateUrl: 'angular/partials/invoice-edit.html',
+          parent: angular.element(document.querySelector('.view-panel.project-view')),
+          targetEvent: ev,
+          clickOutsideToClose: true,
+          onComplete: function(){
+            document.querySelector('.view-panel.project-view').scrollTop = 0;
+          }
+        });
+      };
+      this.parent.cancelInvoiceEdit = function(e){
+        $mdDialog.cancel();
+      };
+      this.parent.duplicateInvoice = function(projectId, invoice, index, event){
+        var actionsParent = event.target.parentElement.parentElement.parentElement,
+            progress = actionsParent.querySelector('.invoice-action-progress'),
+            actions = actionsParent.querySelector('.md-actions');
+        var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+        apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoice.markup}, function(data){
+          $timeout.cancel(invoiceIndicator);
+          $scope.invoices.push(data);
+          progress.classList.add('hidden');
+          actions.classList.remove('hidden');
+          actions.querySelector('button.delete-btn').classList.add('success');
+          $timeout(function(){
+            actions.querySelector('button.delete-btn').classList.remove('success');
+          }, 1000);
+        }, function(err){
+          $timeout.cancel(invoiceIndicator);
+          $log.error(err);
+          progress.classList.add('hidden');
+          actions.classList.remove('hidden');
+        });
+      };
+      this.parent.deleteInvoice = function(invoice, ev, index){
+        var that = this;
+        var actionsParent = ev.target.parentElement.parentElement.parentElement,
+            progress = actionsParent.querySelector('.invoice-action-progress'),
+            actions = actionsParent.querySelector('.md-actions');
+        var invoiceIndicator = $timeout(itemProgressIndicator, 500, true, progress, actions);
+        var confirm = $mdDialog.confirm()
+            .title('You are about to delete this invoice.')
+            .content('This action cannot be undone. Are you sure you wish to proceed?')
+            .ariaLabel('Confirm delete')
+            .targetEvent(ev)
+            .ok('Delete this invoice')
+            .cancel('Cancel');
+        $mdDialog.show(confirm).then(function() {
+          apiSrv.request('DELETE', 'projects/'+invoice.project+'/statements/'+invoice.id, {},
+            function(data){
+              $timeout.cancel(invoiceIndicator);
+              $scope.invoices.splice(index, 1);
+              progress.classList.add('hidden');
+              actions.classList.remove('hidden');
+              actions.querySelector('button.delete-btn').classList.add('success');
+              $timeout(function(){
+                actions.querySelector('button.delete-btn').classList.remove('success');
+              }, 1000);
+            },
+            function(err){
+              $timeout.cancel(invoiceIndicator);
+              $log.error(err);
+              progress.classList.add('hidden');
+              actions.classList.remove('hidden');
+            }
+          );
+        }, function() {
+          $timeout.cancel(invoiceIndicator);
+          $log.info('cancelled delete');
+          progress.classList.add('hidden');
+          actions.classList.remove('hidden');
+        });
+      };
+    }
+  ])
+;
+angular.module('invoices.filters')
+  .filter('msToTimeString', 
+    function(){
+      return function(millseconds){
+        var seconds = Math.floor(millseconds / 1000),
+            h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('secondsToTimeString', 
+    function(){
+      return function(seconds){
+        var h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('telephone', 
+    function(){
+      return function(telephone){
+        if(!telephone){
+          return "";
+        }
+        var value = telephone.toString().trim().replace(/^\+/, '');
+        if(value.match(/[^0-9]/)){
+          return telephone;
+        }
+        var country, city, number;
+        switch(value.length){
+          case 10:
+            country = 1;
+            city = value.slice(0,3);
+            number = value.slice(3);
+            break;
+          case 11:
+            country = value[0];
+            city = value.slice(1,4);
+            number = value.slice(4);
+            break;
+          case 12:
+            country = value.slice(0,3);
+            city = value.slice(3,5);
+            number = value.slice(5);
+            break;
+          default:
+            return telephone;
+        }
+        if(country === 1){
+          country = "";
+        }
+        number = number.slice(0, 3) + '-' + number.slice(3);
+        return (country + " (" + city + ") " + number).trim();
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('timeDeltaToHours', 
+    function(){
+      return function(delta){
+        var pieces = delta.split(":"),
+            hours = pieces[0],
+            minutes = pieces[1],
+            seconds = pieces[2];
+        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
+      };
+    }
+  )
 ;
 var smoothScroll = function(element, options){
   options = options || {};
@@ -892,6 +1048,16 @@ var msToTimeString = function(ms){
   timeString = hours +":"+ minutes +":"+scnds;
   return timeString;
 };
+
+function urlToBase64(img){
+  var canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  dataURL = canvas.toDataURL("image/png");
+  return dataURL;
+}
 angular.module('invoices.directives')
   .directive('infocus', ['$timeout', 
     function($timeout){
@@ -1104,6 +1270,37 @@ angular.module('invoices.directives')
         },
         restrict: 'A',
         link: function($scope, $element, $attrs){
+          var currentLogo = $scope.$eval($attrs.currentLogo);
+          var addRemoveLink = function(){
+            var removeLogo = document.createElement('a');
+            removeLogo.id = "removeLogo";
+            removeLogo.setAttribute('href', '#');
+            removeLogo.innerHTML = "<span class='fa fa-remove'></span>";
+            removeLogo.addEventListener('click', function(e){
+              e.preventDefault();
+              document.getElementById('logoPreview').remove();
+              document.getElementById('removeLogo').remove();
+              $scope.$apply(function(){
+                $scope.infile = null;
+              });
+            });
+            angular.element($element)[0].parentElement.appendChild(removeLogo);
+          };
+          if(currentLogo){
+            var img = new Image();
+            var preview = document.getElementById('logoPreview') || document.createElement('img');
+            preview.id = "logoPreview";
+            preview.setAttribute('src', currentLogo);
+            preview.style.width = "100px";
+            angular.element($element)[0].parentElement.appendChild(preview);
+            addRemoveLink();
+            img.onload = function(){
+              $scope.$apply(function(){
+                $scope.infile = urlToBase64(img);
+              });
+            };
+            img.src = currentLogo;
+          }
           angular.element($element).on('change', function(e){
             var reader = new FileReader(),
                 filename = '',
@@ -1112,11 +1309,13 @@ angular.module('invoices.directives')
             if(this.files && this.files[0]){
               reader.onload = function(ev){
                 data = ev.target.result;
+                console.log(data);
                 var preview = document.getElementById('logoPreview') || document.createElement('img');
                 preview.id = "logoPreview";
                 preview.setAttribute('src', reader.result);
                 preview.style.width = "100px";
                 input.parentElement.appendChild(preview);
+                addRemoveLink();
                 $scope.$apply(function(){
                   $scope.infile = data;
                 });
@@ -1187,12 +1386,11 @@ angular.module('invoices.directives')
   ])
 ;
 angular.module('invoices.directives')
-  .directive("insave", ['$rootScope', 
-                        '$state', 
+  .directive("insave", ['$state', 
                         '$mdDialog', 
                         '$log', 
                         'apiSrv', 
-    function($rootScope, $state, $mdDialog, $log, apiSrv){
+    function($state, $mdDialog, $log, apiSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -1221,7 +1419,6 @@ angular.module('invoices.directives')
                   .ok('Dismiss')
                   .targetEvent(ev)
               ).finally(function(){
-                $rootScope.dialogOpen = false;
                 $state.go("app");
               });
             }, function(err){
@@ -1234,12 +1431,12 @@ angular.module('invoices.directives')
   ])
 ;
 angular.module('invoices.directives')
-  .directive("inupdate", ['$rootScope', 
-                          '$state', 
+  .directive("inupdate", ['$state', 
                           '$mdDialog', 
                           '$log', 
-                          'apiSrv', 
-    function($rootScope, $state, $mdDialog, $log, apiSrv){
+                          'apiSrv',
+                          'msgSrv',
+    function($state, $mdDialog, $log, apiSrv, msgSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -1252,7 +1449,7 @@ angular.module('invoices.directives')
             apiSrv.request('PUT', 'projects/'+projectId+'/statements/'+invoiceId+'/', {markup: invoiceHtml}, function(invoice){
               progress.classList.add("hidden");
               document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
-              $rootScope.$emit('updateInvoiceList');
+              msgSrv.emitMsg('updateInvoiceList');
               $mdDialog.cancel();
             }, function(err){
               $log.error(err);
@@ -1262,110 +1459,6 @@ angular.module('invoices.directives')
       };
     }
   ])
-;
-angular.module('invoices.filters')
-  .filter('msToTimeString', 
-    function(){
-      return function(millseconds){
-        var seconds = Math.floor(millseconds / 1000),
-            h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor((seconds % h)/m),
-            scnds = Math.floor((seconds % m)),
-            timeString = '';
-        if(scnds < 10){
-          scnds = "0" + scnds;
-        }
-        if(hours < 10){
-          hours = "0" + hours;
-        }
-        if(minutes < 10){
-          minutes = "0" + minutes;
-        }
-        timeString = hours + ":" + minutes + ":" + scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('secondsToTimeString', 
-    function(){
-      return function(seconds){
-        var h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor((seconds % h)/m),
-            scnds = Math.floor((seconds % m)),
-            timeString = '';
-        if(scnds < 10){
-          scnds = "0" + scnds;
-        }
-        if(hours < 10){
-          hours = "0" + hours;
-        }
-        if(minutes < 10){
-          minutes = "0" + minutes;
-        }
-        timeString = hours + ":" + minutes + ":" + scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('telephone', 
-    function(){
-      return function(telephone){
-        if(!telephone){
-          return "";
-        }
-        var value = telephone.toString().trim().replace(/^\+/, '');
-        if(value.match(/[^0-9]/)){
-          return telephone;
-        }
-        var country, city, number;
-        switch(value.length){
-          case 10:
-            country = 1;
-            city = value.slice(0,3);
-            number = value.slice(3);
-            break;
-          case 11:
-            country = value[0];
-            city = value.slice(1,4);
-            number = value.slice(4);
-            break;
-          case 12:
-            country = value.slice(0,3);
-            city = value.slice(3,5);
-            number = value.slice(5);
-            break;
-          default:
-            return telephone;
-        }
-        if(country === 1){
-          country = "";
-        }
-        number = number.slice(0, 3) + '-' + number.slice(3);
-        return (country + " (" + city + ") " + number).trim();
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('timeDeltaToHours', 
-    function(){
-      return function(delta){
-        var pieces = delta.split(":"),
-            hours = pieces[0],
-            minutes = pieces[1],
-            seconds = pieces[2];
-        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
-      };
-    }
-  )
 ;
 angular.module('invoices.services')
   .factory('apiSrv', ['$http', 
@@ -1379,6 +1472,40 @@ angular.module('invoices.services')
         }).success(successFn).error(errorFn);
       };
       return apiSrv;
+    }
+  ])
+;
+angular.module('invoices.services')
+  .factory('msgSrv', ['$rootScope',
+    function($rootScope){
+      var msgSrv = {};
+      msgSrv.state = {};
+      msgSrv.appScope = [];
+      msgSrv.vars = {};
+      msgSrv.setVars = function(obj){
+        msgSrv.vars = obj;
+      };
+      msgSrv.getVars = function(){
+        return msgSrv.vars;
+      };
+      msgSrv.setState = function(stateLabel, data){
+        msgSrv.state = {
+          fn: stateLabel,
+          args: data
+        };
+        $rootScope.$broadcast('updateState');
+      };
+      msgSrv.setScope = function(key, value){
+        msgSrv.appScope[key] = value;
+      };
+      msgSrv.getScope = function(key){
+        return msgSrv.appScope[key];
+      };
+      msgSrv.emitMsg = function(message){
+        $rootScope.$broadcast(message);
+      };
+      
+      return msgSrv;
     }
   ])
 ;
