@@ -83,9 +83,13 @@
               rate
             .value.disabled
               {{ctrl.parent.project.hourly_rate | currency}}
-            .label.disabled
+            .label.disabled{ng-if: "ctrl.parent.project.fixed_rate == 0"}
               other
-            .value.disabled
+            .value.disabled{ng-if: "ctrl.parent.project.fixed_rate == 0"}
+            .label.disabled{ng-if: "ctrl.parent.project.fixed_rate > 0"}
+              fixed rate
+            .value.disabled{ng-if: "ctrl.parent.project.fixed_rate > 0"}
+              {{ctrl.parent.project.invoice_balance | currency}}
             .label
               total
             .value
