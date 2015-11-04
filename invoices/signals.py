@@ -70,8 +70,8 @@ def after_save_interval(sender, **kwargs):
 @receiver(post_delete, sender=Interval)
 def after_delete_interval(sender, **kwargs):
     interval = kwargs.get('instance')
-    project = Project.objects.get(pk=interval.project.id)
-    if(project):
+    if(Project.objects.all().filter(pk=interval.project.id).count() > 0):
+      project = Project.objects.get(pk=interval.project.id)
       project_position = project.position
       seconds = 0
       for i in project.intervals.all().filter(paid=False):
