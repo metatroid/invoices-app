@@ -65,6 +65,18 @@ angular.module('invoices.states')
             }
           }
         })
+        .state('app.calendar', {
+          url: '/calendar',
+          views: {
+            'calendar': {
+              templateUrl: templateDir + '/calendar.html',
+              controller: 'calCtrl'
+            }
+          },
+          data: {
+            css: cssDir + '/calendar.css'
+          }
+        })
         .state('app.newProject', {
           url: '/new'
         })

@@ -62392,6 +62392,5953 @@ angular.module("datetime").directive("datetime", ["datetime", "$log", "$document
 	}
 
 })(window, window.angular);
+//! moment.js
+//! version : 2.10.6
+//! authors : Tim Wood, Iskren Chernev, Moment.js contributors
+//! license : MIT
+//! momentjs.com
+
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    global.moment = factory()
+}(this, function () { 'use strict';
+
+    var hookCallback;
+
+    function utils_hooks__hooks () {
+        return hookCallback.apply(null, arguments);
+    }
+
+    // This is done to register the method called with moment()
+    // without creating circular dependencies.
+    function setHookCallback (callback) {
+        hookCallback = callback;
+    }
+
+    function isArray(input) {
+        return Object.prototype.toString.call(input) === '[object Array]';
+    }
+
+    function isDate(input) {
+        return input instanceof Date || Object.prototype.toString.call(input) === '[object Date]';
+    }
+
+    function map(arr, fn) {
+        var res = [], i;
+        for (i = 0; i < arr.length; ++i) {
+            res.push(fn(arr[i], i));
+        }
+        return res;
+    }
+
+    function hasOwnProp(a, b) {
+        return Object.prototype.hasOwnProperty.call(a, b);
+    }
+
+    function extend(a, b) {
+        for (var i in b) {
+            if (hasOwnProp(b, i)) {
+                a[i] = b[i];
+            }
+        }
+
+        if (hasOwnProp(b, 'toString')) {
+            a.toString = b.toString;
+        }
+
+        if (hasOwnProp(b, 'valueOf')) {
+            a.valueOf = b.valueOf;
+        }
+
+        return a;
+    }
+
+    function create_utc__createUTC (input, format, locale, strict) {
+        return createLocalOrUTC(input, format, locale, strict, true).utc();
+    }
+
+    function defaultParsingFlags() {
+        // We need to deep clone this object.
+        return {
+            empty           : false,
+            unusedTokens    : [],
+            unusedInput     : [],
+            overflow        : -2,
+            charsLeftOver   : 0,
+            nullInput       : false,
+            invalidMonth    : null,
+            invalidFormat   : false,
+            userInvalidated : false,
+            iso             : false
+        };
+    }
+
+    function getParsingFlags(m) {
+        if (m._pf == null) {
+            m._pf = defaultParsingFlags();
+        }
+        return m._pf;
+    }
+
+    function valid__isValid(m) {
+        if (m._isValid == null) {
+            var flags = getParsingFlags(m);
+            m._isValid = !isNaN(m._d.getTime()) &&
+                flags.overflow < 0 &&
+                !flags.empty &&
+                !flags.invalidMonth &&
+                !flags.invalidWeekday &&
+                !flags.nullInput &&
+                !flags.invalidFormat &&
+                !flags.userInvalidated;
+
+            if (m._strict) {
+                m._isValid = m._isValid &&
+                    flags.charsLeftOver === 0 &&
+                    flags.unusedTokens.length === 0 &&
+                    flags.bigHour === undefined;
+            }
+        }
+        return m._isValid;
+    }
+
+    function valid__createInvalid (flags) {
+        var m = create_utc__createUTC(NaN);
+        if (flags != null) {
+            extend(getParsingFlags(m), flags);
+        }
+        else {
+            getParsingFlags(m).userInvalidated = true;
+        }
+
+        return m;
+    }
+
+    var momentProperties = utils_hooks__hooks.momentProperties = [];
+
+    function copyConfig(to, from) {
+        var i, prop, val;
+
+        if (typeof from._isAMomentObject !== 'undefined') {
+            to._isAMomentObject = from._isAMomentObject;
+        }
+        if (typeof from._i !== 'undefined') {
+            to._i = from._i;
+        }
+        if (typeof from._f !== 'undefined') {
+            to._f = from._f;
+        }
+        if (typeof from._l !== 'undefined') {
+            to._l = from._l;
+        }
+        if (typeof from._strict !== 'undefined') {
+            to._strict = from._strict;
+        }
+        if (typeof from._tzm !== 'undefined') {
+            to._tzm = from._tzm;
+        }
+        if (typeof from._isUTC !== 'undefined') {
+            to._isUTC = from._isUTC;
+        }
+        if (typeof from._offset !== 'undefined') {
+            to._offset = from._offset;
+        }
+        if (typeof from._pf !== 'undefined') {
+            to._pf = getParsingFlags(from);
+        }
+        if (typeof from._locale !== 'undefined') {
+            to._locale = from._locale;
+        }
+
+        if (momentProperties.length > 0) {
+            for (i in momentProperties) {
+                prop = momentProperties[i];
+                val = from[prop];
+                if (typeof val !== 'undefined') {
+                    to[prop] = val;
+                }
+            }
+        }
+
+        return to;
+    }
+
+    var updateInProgress = false;
+
+    // Moment prototype object
+    function Moment(config) {
+        copyConfig(this, config);
+        this._d = new Date(config._d != null ? config._d.getTime() : NaN);
+        // Prevent infinite loop in case updateOffset creates new moment
+        // objects.
+        if (updateInProgress === false) {
+            updateInProgress = true;
+            utils_hooks__hooks.updateOffset(this);
+            updateInProgress = false;
+        }
+    }
+
+    function isMoment (obj) {
+        return obj instanceof Moment || (obj != null && obj._isAMomentObject != null);
+    }
+
+    function absFloor (number) {
+        if (number < 0) {
+            return Math.ceil(number);
+        } else {
+            return Math.floor(number);
+        }
+    }
+
+    function toInt(argumentForCoercion) {
+        var coercedNumber = +argumentForCoercion,
+            value = 0;
+
+        if (coercedNumber !== 0 && isFinite(coercedNumber)) {
+            value = absFloor(coercedNumber);
+        }
+
+        return value;
+    }
+
+    function compareArrays(array1, array2, dontConvert) {
+        var len = Math.min(array1.length, array2.length),
+            lengthDiff = Math.abs(array1.length - array2.length),
+            diffs = 0,
+            i;
+        for (i = 0; i < len; i++) {
+            if ((dontConvert && array1[i] !== array2[i]) ||
+                (!dontConvert && toInt(array1[i]) !== toInt(array2[i]))) {
+                diffs++;
+            }
+        }
+        return diffs + lengthDiff;
+    }
+
+    function Locale() {
+    }
+
+    var locales = {};
+    var globalLocale;
+
+    function normalizeLocale(key) {
+        return key ? key.toLowerCase().replace('_', '-') : key;
+    }
+
+    // pick the locale from the array
+    // try ['en-au', 'en-gb'] as 'en-au', 'en-gb', 'en', as in move through the list trying each
+    // substring from most specific to least, but move to the next array item if it's a more specific variant than the current root
+    function chooseLocale(names) {
+        var i = 0, j, next, locale, split;
+
+        while (i < names.length) {
+            split = normalizeLocale(names[i]).split('-');
+            j = split.length;
+            next = normalizeLocale(names[i + 1]);
+            next = next ? next.split('-') : null;
+            while (j > 0) {
+                locale = loadLocale(split.slice(0, j).join('-'));
+                if (locale) {
+                    return locale;
+                }
+                if (next && next.length >= j && compareArrays(split, next, true) >= j - 1) {
+                    //the next array item is better than a shallower substring of this one
+                    break;
+                }
+                j--;
+            }
+            i++;
+        }
+        return null;
+    }
+
+    function loadLocale(name) {
+        var oldLocale = null;
+        // TODO: Find a better way to register and load all the locales in Node
+        if (!locales[name] && typeof module !== 'undefined' &&
+                module && module.exports) {
+            try {
+                oldLocale = globalLocale._abbr;
+                require('./locale/' + name);
+                // because defineLocale currently also sets the global locale, we
+                // want to undo that for lazy loaded locales
+                locale_locales__getSetGlobalLocale(oldLocale);
+            } catch (e) { }
+        }
+        return locales[name];
+    }
+
+    // This function will load locale and then set the global locale.  If
+    // no arguments are passed in, it will simply return the current global
+    // locale key.
+    function locale_locales__getSetGlobalLocale (key, values) {
+        var data;
+        if (key) {
+            if (typeof values === 'undefined') {
+                data = locale_locales__getLocale(key);
+            }
+            else {
+                data = defineLocale(key, values);
+            }
+
+            if (data) {
+                // moment.duration._locale = moment._locale = data;
+                globalLocale = data;
+            }
+        }
+
+        return globalLocale._abbr;
+    }
+
+    function defineLocale (name, values) {
+        if (values !== null) {
+            values.abbr = name;
+            locales[name] = locales[name] || new Locale();
+            locales[name].set(values);
+
+            // backwards compat for now: also set the locale
+            locale_locales__getSetGlobalLocale(name);
+
+            return locales[name];
+        } else {
+            // useful for testing
+            delete locales[name];
+            return null;
+        }
+    }
+
+    // returns locale data
+    function locale_locales__getLocale (key) {
+        var locale;
+
+        if (key && key._locale && key._locale._abbr) {
+            key = key._locale._abbr;
+        }
+
+        if (!key) {
+            return globalLocale;
+        }
+
+        if (!isArray(key)) {
+            //short-circuit everything else
+            locale = loadLocale(key);
+            if (locale) {
+                return locale;
+            }
+            key = [key];
+        }
+
+        return chooseLocale(key);
+    }
+
+    var aliases = {};
+
+    function addUnitAlias (unit, shorthand) {
+        var lowerCase = unit.toLowerCase();
+        aliases[lowerCase] = aliases[lowerCase + 's'] = aliases[shorthand] = unit;
+    }
+
+    function normalizeUnits(units) {
+        return typeof units === 'string' ? aliases[units] || aliases[units.toLowerCase()] : undefined;
+    }
+
+    function normalizeObjectUnits(inputObject) {
+        var normalizedInput = {},
+            normalizedProp,
+            prop;
+
+        for (prop in inputObject) {
+            if (hasOwnProp(inputObject, prop)) {
+                normalizedProp = normalizeUnits(prop);
+                if (normalizedProp) {
+                    normalizedInput[normalizedProp] = inputObject[prop];
+                }
+            }
+        }
+
+        return normalizedInput;
+    }
+
+    function makeGetSet (unit, keepTime) {
+        return function (value) {
+            if (value != null) {
+                get_set__set(this, unit, value);
+                utils_hooks__hooks.updateOffset(this, keepTime);
+                return this;
+            } else {
+                return get_set__get(this, unit);
+            }
+        };
+    }
+
+    function get_set__get (mom, unit) {
+        return mom._d['get' + (mom._isUTC ? 'UTC' : '') + unit]();
+    }
+
+    function get_set__set (mom, unit, value) {
+        return mom._d['set' + (mom._isUTC ? 'UTC' : '') + unit](value);
+    }
+
+    // MOMENTS
+
+    function getSet (units, value) {
+        var unit;
+        if (typeof units === 'object') {
+            for (unit in units) {
+                this.set(unit, units[unit]);
+            }
+        } else {
+            units = normalizeUnits(units);
+            if (typeof this[units] === 'function') {
+                return this[units](value);
+            }
+        }
+        return this;
+    }
+
+    function zeroFill(number, targetLength, forceSign) {
+        var absNumber = '' + Math.abs(number),
+            zerosToFill = targetLength - absNumber.length,
+            sign = number >= 0;
+        return (sign ? (forceSign ? '+' : '') : '-') +
+            Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
+    }
+
+    var formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
+
+    var localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g;
+
+    var formatFunctions = {};
+
+    var formatTokenFunctions = {};
+
+    // token:    'M'
+    // padded:   ['MM', 2]
+    // ordinal:  'Mo'
+    // callback: function () { this.month() + 1 }
+    function addFormatToken (token, padded, ordinal, callback) {
+        var func = callback;
+        if (typeof callback === 'string') {
+            func = function () {
+                return this[callback]();
+            };
+        }
+        if (token) {
+            formatTokenFunctions[token] = func;
+        }
+        if (padded) {
+            formatTokenFunctions[padded[0]] = function () {
+                return zeroFill(func.apply(this, arguments), padded[1], padded[2]);
+            };
+        }
+        if (ordinal) {
+            formatTokenFunctions[ordinal] = function () {
+                return this.localeData().ordinal(func.apply(this, arguments), token);
+            };
+        }
+    }
+
+    function removeFormattingTokens(input) {
+        if (input.match(/\[[\s\S]/)) {
+            return input.replace(/^\[|\]$/g, '');
+        }
+        return input.replace(/\\/g, '');
+    }
+
+    function makeFormatFunction(format) {
+        var array = format.match(formattingTokens), i, length;
+
+        for (i = 0, length = array.length; i < length; i++) {
+            if (formatTokenFunctions[array[i]]) {
+                array[i] = formatTokenFunctions[array[i]];
+            } else {
+                array[i] = removeFormattingTokens(array[i]);
+            }
+        }
+
+        return function (mom) {
+            var output = '';
+            for (i = 0; i < length; i++) {
+                output += array[i] instanceof Function ? array[i].call(mom, format) : array[i];
+            }
+            return output;
+        };
+    }
+
+    // format date using native date object
+    function formatMoment(m, format) {
+        if (!m.isValid()) {
+            return m.localeData().invalidDate();
+        }
+
+        format = expandFormat(format, m.localeData());
+        formatFunctions[format] = formatFunctions[format] || makeFormatFunction(format);
+
+        return formatFunctions[format](m);
+    }
+
+    function expandFormat(format, locale) {
+        var i = 5;
+
+        function replaceLongDateFormatTokens(input) {
+            return locale.longDateFormat(input) || input;
+        }
+
+        localFormattingTokens.lastIndex = 0;
+        while (i >= 0 && localFormattingTokens.test(format)) {
+            format = format.replace(localFormattingTokens, replaceLongDateFormatTokens);
+            localFormattingTokens.lastIndex = 0;
+            i -= 1;
+        }
+
+        return format;
+    }
+
+    var match1         = /\d/;            //       0 - 9
+    var match2         = /\d\d/;          //      00 - 99
+    var match3         = /\d{3}/;         //     000 - 999
+    var match4         = /\d{4}/;         //    0000 - 9999
+    var match6         = /[+-]?\d{6}/;    // -999999 - 999999
+    var match1to2      = /\d\d?/;         //       0 - 99
+    var match1to3      = /\d{1,3}/;       //       0 - 999
+    var match1to4      = /\d{1,4}/;       //       0 - 9999
+    var match1to6      = /[+-]?\d{1,6}/;  // -999999 - 999999
+
+    var matchUnsigned  = /\d+/;           //       0 - inf
+    var matchSigned    = /[+-]?\d+/;      //    -inf - inf
+
+    var matchOffset    = /Z|[+-]\d\d:?\d\d/gi; // +00:00 -00:00 +0000 -0000 or Z
+
+    var matchTimestamp = /[+-]?\d+(\.\d{1,3})?/; // 123456789 123456789.123
+
+    // any word (or two) characters or numbers including two/three word month in arabic.
+    var matchWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+
+    var regexes = {};
+
+    function isFunction (sth) {
+        // https://github.com/moment/moment/issues/2325
+        return typeof sth === 'function' &&
+            Object.prototype.toString.call(sth) === '[object Function]';
+    }
+
+
+    function addRegexToken (token, regex, strictRegex) {
+        regexes[token] = isFunction(regex) ? regex : function (isStrict) {
+            return (isStrict && strictRegex) ? strictRegex : regex;
+        };
+    }
+
+    function getParseRegexForToken (token, config) {
+        if (!hasOwnProp(regexes, token)) {
+            return new RegExp(unescapeFormat(token));
+        }
+
+        return regexes[token](config._strict, config._locale);
+    }
+
+    // Code from http://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
+    function unescapeFormat(s) {
+        return s.replace('\\', '').replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g, function (matched, p1, p2, p3, p4) {
+            return p1 || p2 || p3 || p4;
+        }).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
+    var tokens = {};
+
+    function addParseToken (token, callback) {
+        var i, func = callback;
+        if (typeof token === 'string') {
+            token = [token];
+        }
+        if (typeof callback === 'number') {
+            func = function (input, array) {
+                array[callback] = toInt(input);
+            };
+        }
+        for (i = 0; i < token.length; i++) {
+            tokens[token[i]] = func;
+        }
+    }
+
+    function addWeekParseToken (token, callback) {
+        addParseToken(token, function (input, array, config, token) {
+            config._w = config._w || {};
+            callback(input, config._w, config, token);
+        });
+    }
+
+    function addTimeToArrayFromToken(token, input, config) {
+        if (input != null && hasOwnProp(tokens, token)) {
+            tokens[token](input, config._a, config, token);
+        }
+    }
+
+    var YEAR = 0;
+    var MONTH = 1;
+    var DATE = 2;
+    var HOUR = 3;
+    var MINUTE = 4;
+    var SECOND = 5;
+    var MILLISECOND = 6;
+
+    function daysInMonth(year, month) {
+        return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    }
+
+    // FORMATTING
+
+    addFormatToken('M', ['MM', 2], 'Mo', function () {
+        return this.month() + 1;
+    });
+
+    addFormatToken('MMM', 0, 0, function (format) {
+        return this.localeData().monthsShort(this, format);
+    });
+
+    addFormatToken('MMMM', 0, 0, function (format) {
+        return this.localeData().months(this, format);
+    });
+
+    // ALIASES
+
+    addUnitAlias('month', 'M');
+
+    // PARSING
+
+    addRegexToken('M',    match1to2);
+    addRegexToken('MM',   match1to2, match2);
+    addRegexToken('MMM',  matchWord);
+    addRegexToken('MMMM', matchWord);
+
+    addParseToken(['M', 'MM'], function (input, array) {
+        array[MONTH] = toInt(input) - 1;
+    });
+
+    addParseToken(['MMM', 'MMMM'], function (input, array, config, token) {
+        var month = config._locale.monthsParse(input, token, config._strict);
+        // if we didn't find a month name, mark the date as invalid.
+        if (month != null) {
+            array[MONTH] = month;
+        } else {
+            getParsingFlags(config).invalidMonth = input;
+        }
+    });
+
+    // LOCALES
+
+    var defaultLocaleMonths = 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_');
+    function localeMonths (m) {
+        return this._months[m.month()];
+    }
+
+    var defaultLocaleMonthsShort = 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_');
+    function localeMonthsShort (m) {
+        return this._monthsShort[m.month()];
+    }
+
+    function localeMonthsParse (monthName, format, strict) {
+        var i, mom, regex;
+
+        if (!this._monthsParse) {
+            this._monthsParse = [];
+            this._longMonthsParse = [];
+            this._shortMonthsParse = [];
+        }
+
+        for (i = 0; i < 12; i++) {
+            // make the regex if we don't have it already
+            mom = create_utc__createUTC([2000, i]);
+            if (strict && !this._longMonthsParse[i]) {
+                this._longMonthsParse[i] = new RegExp('^' + this.months(mom, '').replace('.', '') + '$', 'i');
+                this._shortMonthsParse[i] = new RegExp('^' + this.monthsShort(mom, '').replace('.', '') + '$', 'i');
+            }
+            if (!strict && !this._monthsParse[i]) {
+                regex = '^' + this.months(mom, '') + '|^' + this.monthsShort(mom, '');
+                this._monthsParse[i] = new RegExp(regex.replace('.', ''), 'i');
+            }
+            // test the regex
+            if (strict && format === 'MMMM' && this._longMonthsParse[i].test(monthName)) {
+                return i;
+            } else if (strict && format === 'MMM' && this._shortMonthsParse[i].test(monthName)) {
+                return i;
+            } else if (!strict && this._monthsParse[i].test(monthName)) {
+                return i;
+            }
+        }
+    }
+
+    // MOMENTS
+
+    function setMonth (mom, value) {
+        var dayOfMonth;
+
+        // TODO: Move this out of here!
+        if (typeof value === 'string') {
+            value = mom.localeData().monthsParse(value);
+            // TODO: Another silent failure?
+            if (typeof value !== 'number') {
+                return mom;
+            }
+        }
+
+        dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value));
+        mom._d['set' + (mom._isUTC ? 'UTC' : '') + 'Month'](value, dayOfMonth);
+        return mom;
+    }
+
+    function getSetMonth (value) {
+        if (value != null) {
+            setMonth(this, value);
+            utils_hooks__hooks.updateOffset(this, true);
+            return this;
+        } else {
+            return get_set__get(this, 'Month');
+        }
+    }
+
+    function getDaysInMonth () {
+        return daysInMonth(this.year(), this.month());
+    }
+
+    function checkOverflow (m) {
+        var overflow;
+        var a = m._a;
+
+        if (a && getParsingFlags(m).overflow === -2) {
+            overflow =
+                a[MONTH]       < 0 || a[MONTH]       > 11  ? MONTH :
+                a[DATE]        < 1 || a[DATE]        > daysInMonth(a[YEAR], a[MONTH]) ? DATE :
+                a[HOUR]        < 0 || a[HOUR]        > 24 || (a[HOUR] === 24 && (a[MINUTE] !== 0 || a[SECOND] !== 0 || a[MILLISECOND] !== 0)) ? HOUR :
+                a[MINUTE]      < 0 || a[MINUTE]      > 59  ? MINUTE :
+                a[SECOND]      < 0 || a[SECOND]      > 59  ? SECOND :
+                a[MILLISECOND] < 0 || a[MILLISECOND] > 999 ? MILLISECOND :
+                -1;
+
+            if (getParsingFlags(m)._overflowDayOfYear && (overflow < YEAR || overflow > DATE)) {
+                overflow = DATE;
+            }
+
+            getParsingFlags(m).overflow = overflow;
+        }
+
+        return m;
+    }
+
+    function warn(msg) {
+        if (utils_hooks__hooks.suppressDeprecationWarnings === false && typeof console !== 'undefined' && console.warn) {
+            console.warn('Deprecation warning: ' + msg);
+        }
+    }
+
+    function deprecate(msg, fn) {
+        var firstTime = true;
+
+        return extend(function () {
+            if (firstTime) {
+                warn(msg + '\n' + (new Error()).stack);
+                firstTime = false;
+            }
+            return fn.apply(this, arguments);
+        }, fn);
+    }
+
+    var deprecations = {};
+
+    function deprecateSimple(name, msg) {
+        if (!deprecations[name]) {
+            warn(msg);
+            deprecations[name] = true;
+        }
+    }
+
+    utils_hooks__hooks.suppressDeprecationWarnings = false;
+
+    var from_string__isoRegex = /^\s*(?:[+-]\d{6}|\d{4})-(?:(\d\d-\d\d)|(W\d\d$)|(W\d\d-\d)|(\d\d\d))((T| )(\d\d(:\d\d(:\d\d(\.\d+)?)?)?)?([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+
+    var isoDates = [
+        ['YYYYYY-MM-DD', /[+-]\d{6}-\d{2}-\d{2}/],
+        ['YYYY-MM-DD', /\d{4}-\d{2}-\d{2}/],
+        ['GGGG-[W]WW-E', /\d{4}-W\d{2}-\d/],
+        ['GGGG-[W]WW', /\d{4}-W\d{2}/],
+        ['YYYY-DDD', /\d{4}-\d{3}/]
+    ];
+
+    // iso time formats and regexes
+    var isoTimes = [
+        ['HH:mm:ss.SSSS', /(T| )\d\d:\d\d:\d\d\.\d+/],
+        ['HH:mm:ss', /(T| )\d\d:\d\d:\d\d/],
+        ['HH:mm', /(T| )\d\d:\d\d/],
+        ['HH', /(T| )\d\d/]
+    ];
+
+    var aspNetJsonRegex = /^\/?Date\((\-?\d+)/i;
+
+    // date from iso format
+    function configFromISO(config) {
+        var i, l,
+            string = config._i,
+            match = from_string__isoRegex.exec(string);
+
+        if (match) {
+            getParsingFlags(config).iso = true;
+            for (i = 0, l = isoDates.length; i < l; i++) {
+                if (isoDates[i][1].exec(string)) {
+                    config._f = isoDates[i][0];
+                    break;
+                }
+            }
+            for (i = 0, l = isoTimes.length; i < l; i++) {
+                if (isoTimes[i][1].exec(string)) {
+                    // match[6] should be 'T' or space
+                    config._f += (match[6] || ' ') + isoTimes[i][0];
+                    break;
+                }
+            }
+            if (string.match(matchOffset)) {
+                config._f += 'Z';
+            }
+            configFromStringAndFormat(config);
+        } else {
+            config._isValid = false;
+        }
+    }
+
+    // date from iso format or fallback
+    function configFromString(config) {
+        var matched = aspNetJsonRegex.exec(config._i);
+
+        if (matched !== null) {
+            config._d = new Date(+matched[1]);
+            return;
+        }
+
+        configFromISO(config);
+        if (config._isValid === false) {
+            delete config._isValid;
+            utils_hooks__hooks.createFromInputFallback(config);
+        }
+    }
+
+    utils_hooks__hooks.createFromInputFallback = deprecate(
+        'moment construction falls back to js Date. This is ' +
+        'discouraged and will be removed in upcoming major ' +
+        'release. Please refer to ' +
+        'https://github.com/moment/moment/issues/1407 for more info.',
+        function (config) {
+            config._d = new Date(config._i + (config._useUTC ? ' UTC' : ''));
+        }
+    );
+
+    function createDate (y, m, d, h, M, s, ms) {
+        //can't just apply() to create a date:
+        //http://stackoverflow.com/questions/181348/instantiating-a-javascript-object-by-calling-prototype-constructor-apply
+        var date = new Date(y, m, d, h, M, s, ms);
+
+        //the date constructor doesn't accept years < 1970
+        if (y < 1970) {
+            date.setFullYear(y);
+        }
+        return date;
+    }
+
+    function createUTCDate (y) {
+        var date = new Date(Date.UTC.apply(null, arguments));
+        if (y < 1970) {
+            date.setUTCFullYear(y);
+        }
+        return date;
+    }
+
+    addFormatToken(0, ['YY', 2], 0, function () {
+        return this.year() % 100;
+    });
+
+    addFormatToken(0, ['YYYY',   4],       0, 'year');
+    addFormatToken(0, ['YYYYY',  5],       0, 'year');
+    addFormatToken(0, ['YYYYYY', 6, true], 0, 'year');
+
+    // ALIASES
+
+    addUnitAlias('year', 'y');
+
+    // PARSING
+
+    addRegexToken('Y',      matchSigned);
+    addRegexToken('YY',     match1to2, match2);
+    addRegexToken('YYYY',   match1to4, match4);
+    addRegexToken('YYYYY',  match1to6, match6);
+    addRegexToken('YYYYYY', match1to6, match6);
+
+    addParseToken(['YYYYY', 'YYYYYY'], YEAR);
+    addParseToken('YYYY', function (input, array) {
+        array[YEAR] = input.length === 2 ? utils_hooks__hooks.parseTwoDigitYear(input) : toInt(input);
+    });
+    addParseToken('YY', function (input, array) {
+        array[YEAR] = utils_hooks__hooks.parseTwoDigitYear(input);
+    });
+
+    // HELPERS
+
+    function daysInYear(year) {
+        return isLeapYear(year) ? 366 : 365;
+    }
+
+    function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    }
+
+    // HOOKS
+
+    utils_hooks__hooks.parseTwoDigitYear = function (input) {
+        return toInt(input) + (toInt(input) > 68 ? 1900 : 2000);
+    };
+
+    // MOMENTS
+
+    var getSetYear = makeGetSet('FullYear', false);
+
+    function getIsLeapYear () {
+        return isLeapYear(this.year());
+    }
+
+    addFormatToken('w', ['ww', 2], 'wo', 'week');
+    addFormatToken('W', ['WW', 2], 'Wo', 'isoWeek');
+
+    // ALIASES
+
+    addUnitAlias('week', 'w');
+    addUnitAlias('isoWeek', 'W');
+
+    // PARSING
+
+    addRegexToken('w',  match1to2);
+    addRegexToken('ww', match1to2, match2);
+    addRegexToken('W',  match1to2);
+    addRegexToken('WW', match1to2, match2);
+
+    addWeekParseToken(['w', 'ww', 'W', 'WW'], function (input, week, config, token) {
+        week[token.substr(0, 1)] = toInt(input);
+    });
+
+    // HELPERS
+
+    // firstDayOfWeek       0 = sun, 6 = sat
+    //                      the day of the week that starts the week
+    //                      (usually sunday or monday)
+    // firstDayOfWeekOfYear 0 = sun, 6 = sat
+    //                      the first week is the week that contains the first
+    //                      of this day of the week
+    //                      (eg. ISO weeks use thursday (4))
+    function weekOfYear(mom, firstDayOfWeek, firstDayOfWeekOfYear) {
+        var end = firstDayOfWeekOfYear - firstDayOfWeek,
+            daysToDayOfWeek = firstDayOfWeekOfYear - mom.day(),
+            adjustedMoment;
+
+
+        if (daysToDayOfWeek > end) {
+            daysToDayOfWeek -= 7;
+        }
+
+        if (daysToDayOfWeek < end - 7) {
+            daysToDayOfWeek += 7;
+        }
+
+        adjustedMoment = local__createLocal(mom).add(daysToDayOfWeek, 'd');
+        return {
+            week: Math.ceil(adjustedMoment.dayOfYear() / 7),
+            year: adjustedMoment.year()
+        };
+    }
+
+    // LOCALES
+
+    function localeWeek (mom) {
+        return weekOfYear(mom, this._week.dow, this._week.doy).week;
+    }
+
+    var defaultLocaleWeek = {
+        dow : 0, // Sunday is the first day of the week.
+        doy : 6  // The week that contains Jan 1st is the first week of the year.
+    };
+
+    function localeFirstDayOfWeek () {
+        return this._week.dow;
+    }
+
+    function localeFirstDayOfYear () {
+        return this._week.doy;
+    }
+
+    // MOMENTS
+
+    function getSetWeek (input) {
+        var week = this.localeData().week(this);
+        return input == null ? week : this.add((input - week) * 7, 'd');
+    }
+
+    function getSetISOWeek (input) {
+        var week = weekOfYear(this, 1, 4).week;
+        return input == null ? week : this.add((input - week) * 7, 'd');
+    }
+
+    addFormatToken('DDD', ['DDDD', 3], 'DDDo', 'dayOfYear');
+
+    // ALIASES
+
+    addUnitAlias('dayOfYear', 'DDD');
+
+    // PARSING
+
+    addRegexToken('DDD',  match1to3);
+    addRegexToken('DDDD', match3);
+    addParseToken(['DDD', 'DDDD'], function (input, array, config) {
+        config._dayOfYear = toInt(input);
+    });
+
+    // HELPERS
+
+    //http://en.wikipedia.org/wiki/ISO_week_date#Calculating_a_date_given_the_year.2C_week_number_and_weekday
+    function dayOfYearFromWeeks(year, week, weekday, firstDayOfWeekOfYear, firstDayOfWeek) {
+        var week1Jan = 6 + firstDayOfWeek - firstDayOfWeekOfYear, janX = createUTCDate(year, 0, 1 + week1Jan), d = janX.getUTCDay(), dayOfYear;
+        if (d < firstDayOfWeek) {
+            d += 7;
+        }
+
+        weekday = weekday != null ? 1 * weekday : firstDayOfWeek;
+
+        dayOfYear = 1 + week1Jan + 7 * (week - 1) - d + weekday;
+
+        return {
+            year: dayOfYear > 0 ? year : year - 1,
+            dayOfYear: dayOfYear > 0 ?  dayOfYear : daysInYear(year - 1) + dayOfYear
+        };
+    }
+
+    // MOMENTS
+
+    function getSetDayOfYear (input) {
+        var dayOfYear = Math.round((this.clone().startOf('day') - this.clone().startOf('year')) / 864e5) + 1;
+        return input == null ? dayOfYear : this.add((input - dayOfYear), 'd');
+    }
+
+    // Pick the first defined of two or three arguments.
+    function defaults(a, b, c) {
+        if (a != null) {
+            return a;
+        }
+        if (b != null) {
+            return b;
+        }
+        return c;
+    }
+
+    function currentDateArray(config) {
+        var now = new Date();
+        if (config._useUTC) {
+            return [now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()];
+        }
+        return [now.getFullYear(), now.getMonth(), now.getDate()];
+    }
+
+    // convert an array to a date.
+    // the array should mirror the parameters below
+    // note: all values past the year are optional and will default to the lowest possible value.
+    // [year, month, day , hour, minute, second, millisecond]
+    function configFromArray (config) {
+        var i, date, input = [], currentDate, yearToUse;
+
+        if (config._d) {
+            return;
+        }
+
+        currentDate = currentDateArray(config);
+
+        //compute day of the year from weeks and weekdays
+        if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
+            dayOfYearFromWeekInfo(config);
+        }
+
+        //if the day of the year is set, figure out what it is
+        if (config._dayOfYear) {
+            yearToUse = defaults(config._a[YEAR], currentDate[YEAR]);
+
+            if (config._dayOfYear > daysInYear(yearToUse)) {
+                getParsingFlags(config)._overflowDayOfYear = true;
+            }
+
+            date = createUTCDate(yearToUse, 0, config._dayOfYear);
+            config._a[MONTH] = date.getUTCMonth();
+            config._a[DATE] = date.getUTCDate();
+        }
+
+        // Default to current date.
+        // * if no year, month, day of month are given, default to today
+        // * if day of month is given, default month and year
+        // * if month is given, default only year
+        // * if year is given, don't default anything
+        for (i = 0; i < 3 && config._a[i] == null; ++i) {
+            config._a[i] = input[i] = currentDate[i];
+        }
+
+        // Zero out whatever was not defaulted, including time
+        for (; i < 7; i++) {
+            config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
+        }
+
+        // Check for 24:00:00.000
+        if (config._a[HOUR] === 24 &&
+                config._a[MINUTE] === 0 &&
+                config._a[SECOND] === 0 &&
+                config._a[MILLISECOND] === 0) {
+            config._nextDay = true;
+            config._a[HOUR] = 0;
+        }
+
+        config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
+        // Apply timezone offset from input. The actual utcOffset can be changed
+        // with parseZone.
+        if (config._tzm != null) {
+            config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+        }
+
+        if (config._nextDay) {
+            config._a[HOUR] = 24;
+        }
+    }
+
+    function dayOfYearFromWeekInfo(config) {
+        var w, weekYear, week, weekday, dow, doy, temp;
+
+        w = config._w;
+        if (w.GG != null || w.W != null || w.E != null) {
+            dow = 1;
+            doy = 4;
+
+            // TODO: We need to take the current isoWeekYear, but that depends on
+            // how we interpret now (local, utc, fixed offset). So create
+            // a now version of current config (take local/utc/offset flags, and
+            // create now).
+            weekYear = defaults(w.GG, config._a[YEAR], weekOfYear(local__createLocal(), 1, 4).year);
+            week = defaults(w.W, 1);
+            weekday = defaults(w.E, 1);
+        } else {
+            dow = config._locale._week.dow;
+            doy = config._locale._week.doy;
+
+            weekYear = defaults(w.gg, config._a[YEAR], weekOfYear(local__createLocal(), dow, doy).year);
+            week = defaults(w.w, 1);
+
+            if (w.d != null) {
+                // weekday -- low day numbers are considered next week
+                weekday = w.d;
+                if (weekday < dow) {
+                    ++week;
+                }
+            } else if (w.e != null) {
+                // local weekday -- counting starts from begining of week
+                weekday = w.e + dow;
+            } else {
+                // default to begining of week
+                weekday = dow;
+            }
+        }
+        temp = dayOfYearFromWeeks(weekYear, week, weekday, doy, dow);
+
+        config._a[YEAR] = temp.year;
+        config._dayOfYear = temp.dayOfYear;
+    }
+
+    utils_hooks__hooks.ISO_8601 = function () {};
+
+    // date from string and format string
+    function configFromStringAndFormat(config) {
+        // TODO: Move this to another part of the creation flow to prevent circular deps
+        if (config._f === utils_hooks__hooks.ISO_8601) {
+            configFromISO(config);
+            return;
+        }
+
+        config._a = [];
+        getParsingFlags(config).empty = true;
+
+        // This array is used to make a Date, either with `new Date` or `Date.UTC`
+        var string = '' + config._i,
+            i, parsedInput, tokens, token, skipped,
+            stringLength = string.length,
+            totalParsedInputLength = 0;
+
+        tokens = expandFormat(config._f, config._locale).match(formattingTokens) || [];
+
+        for (i = 0; i < tokens.length; i++) {
+            token = tokens[i];
+            parsedInput = (string.match(getParseRegexForToken(token, config)) || [])[0];
+            if (parsedInput) {
+                skipped = string.substr(0, string.indexOf(parsedInput));
+                if (skipped.length > 0) {
+                    getParsingFlags(config).unusedInput.push(skipped);
+                }
+                string = string.slice(string.indexOf(parsedInput) + parsedInput.length);
+                totalParsedInputLength += parsedInput.length;
+            }
+            // don't parse if it's not a known token
+            if (formatTokenFunctions[token]) {
+                if (parsedInput) {
+                    getParsingFlags(config).empty = false;
+                }
+                else {
+                    getParsingFlags(config).unusedTokens.push(token);
+                }
+                addTimeToArrayFromToken(token, parsedInput, config);
+            }
+            else if (config._strict && !parsedInput) {
+                getParsingFlags(config).unusedTokens.push(token);
+            }
+        }
+
+        // add remaining unparsed input length to the string
+        getParsingFlags(config).charsLeftOver = stringLength - totalParsedInputLength;
+        if (string.length > 0) {
+            getParsingFlags(config).unusedInput.push(string);
+        }
+
+        // clear _12h flag if hour is <= 12
+        if (getParsingFlags(config).bigHour === true &&
+                config._a[HOUR] <= 12 &&
+                config._a[HOUR] > 0) {
+            getParsingFlags(config).bigHour = undefined;
+        }
+        // handle meridiem
+        config._a[HOUR] = meridiemFixWrap(config._locale, config._a[HOUR], config._meridiem);
+
+        configFromArray(config);
+        checkOverflow(config);
+    }
+
+
+    function meridiemFixWrap (locale, hour, meridiem) {
+        var isPm;
+
+        if (meridiem == null) {
+            // nothing to do
+            return hour;
+        }
+        if (locale.meridiemHour != null) {
+            return locale.meridiemHour(hour, meridiem);
+        } else if (locale.isPM != null) {
+            // Fallback
+            isPm = locale.isPM(meridiem);
+            if (isPm && hour < 12) {
+                hour += 12;
+            }
+            if (!isPm && hour === 12) {
+                hour = 0;
+            }
+            return hour;
+        } else {
+            // this is not supposed to happen
+            return hour;
+        }
+    }
+
+    function configFromStringAndArray(config) {
+        var tempConfig,
+            bestMoment,
+
+            scoreToBeat,
+            i,
+            currentScore;
+
+        if (config._f.length === 0) {
+            getParsingFlags(config).invalidFormat = true;
+            config._d = new Date(NaN);
+            return;
+        }
+
+        for (i = 0; i < config._f.length; i++) {
+            currentScore = 0;
+            tempConfig = copyConfig({}, config);
+            if (config._useUTC != null) {
+                tempConfig._useUTC = config._useUTC;
+            }
+            tempConfig._f = config._f[i];
+            configFromStringAndFormat(tempConfig);
+
+            if (!valid__isValid(tempConfig)) {
+                continue;
+            }
+
+            // if there is any input that was not parsed add a penalty for that format
+            currentScore += getParsingFlags(tempConfig).charsLeftOver;
+
+            //or tokens
+            currentScore += getParsingFlags(tempConfig).unusedTokens.length * 10;
+
+            getParsingFlags(tempConfig).score = currentScore;
+
+            if (scoreToBeat == null || currentScore < scoreToBeat) {
+                scoreToBeat = currentScore;
+                bestMoment = tempConfig;
+            }
+        }
+
+        extend(config, bestMoment || tempConfig);
+    }
+
+    function configFromObject(config) {
+        if (config._d) {
+            return;
+        }
+
+        var i = normalizeObjectUnits(config._i);
+        config._a = [i.year, i.month, i.day || i.date, i.hour, i.minute, i.second, i.millisecond];
+
+        configFromArray(config);
+    }
+
+    function createFromConfig (config) {
+        var res = new Moment(checkOverflow(prepareConfig(config)));
+        if (res._nextDay) {
+            // Adding is smart enough around DST
+            res.add(1, 'd');
+            res._nextDay = undefined;
+        }
+
+        return res;
+    }
+
+    function prepareConfig (config) {
+        var input = config._i,
+            format = config._f;
+
+        config._locale = config._locale || locale_locales__getLocale(config._l);
+
+        if (input === null || (format === undefined && input === '')) {
+            return valid__createInvalid({nullInput: true});
+        }
+
+        if (typeof input === 'string') {
+            config._i = input = config._locale.preparse(input);
+        }
+
+        if (isMoment(input)) {
+            return new Moment(checkOverflow(input));
+        } else if (isArray(format)) {
+            configFromStringAndArray(config);
+        } else if (format) {
+            configFromStringAndFormat(config);
+        } else if (isDate(input)) {
+            config._d = input;
+        } else {
+            configFromInput(config);
+        }
+
+        return config;
+    }
+
+    function configFromInput(config) {
+        var input = config._i;
+        if (input === undefined) {
+            config._d = new Date();
+        } else if (isDate(input)) {
+            config._d = new Date(+input);
+        } else if (typeof input === 'string') {
+            configFromString(config);
+        } else if (isArray(input)) {
+            config._a = map(input.slice(0), function (obj) {
+                return parseInt(obj, 10);
+            });
+            configFromArray(config);
+        } else if (typeof(input) === 'object') {
+            configFromObject(config);
+        } else if (typeof(input) === 'number') {
+            // from milliseconds
+            config._d = new Date(input);
+        } else {
+            utils_hooks__hooks.createFromInputFallback(config);
+        }
+    }
+
+    function createLocalOrUTC (input, format, locale, strict, isUTC) {
+        var c = {};
+
+        if (typeof(locale) === 'boolean') {
+            strict = locale;
+            locale = undefined;
+        }
+        // object construction must be done this way.
+        // https://github.com/moment/moment/issues/1423
+        c._isAMomentObject = true;
+        c._useUTC = c._isUTC = isUTC;
+        c._l = locale;
+        c._i = input;
+        c._f = format;
+        c._strict = strict;
+
+        return createFromConfig(c);
+    }
+
+    function local__createLocal (input, format, locale, strict) {
+        return createLocalOrUTC(input, format, locale, strict, false);
+    }
+
+    var prototypeMin = deprecate(
+         'moment().min is deprecated, use moment.min instead. https://github.com/moment/moment/issues/1548',
+         function () {
+             var other = local__createLocal.apply(null, arguments);
+             return other < this ? this : other;
+         }
+     );
+
+    var prototypeMax = deprecate(
+        'moment().max is deprecated, use moment.max instead. https://github.com/moment/moment/issues/1548',
+        function () {
+            var other = local__createLocal.apply(null, arguments);
+            return other > this ? this : other;
+        }
+    );
+
+    // Pick a moment m from moments so that m[fn](other) is true for all
+    // other. This relies on the function fn to be transitive.
+    //
+    // moments should either be an array of moment objects or an array, whose
+    // first element is an array of moment objects.
+    function pickBy(fn, moments) {
+        var res, i;
+        if (moments.length === 1 && isArray(moments[0])) {
+            moments = moments[0];
+        }
+        if (!moments.length) {
+            return local__createLocal();
+        }
+        res = moments[0];
+        for (i = 1; i < moments.length; ++i) {
+            if (!moments[i].isValid() || moments[i][fn](res)) {
+                res = moments[i];
+            }
+        }
+        return res;
+    }
+
+    // TODO: Use [].sort instead?
+    function min () {
+        var args = [].slice.call(arguments, 0);
+
+        return pickBy('isBefore', args);
+    }
+
+    function max () {
+        var args = [].slice.call(arguments, 0);
+
+        return pickBy('isAfter', args);
+    }
+
+    function Duration (duration) {
+        var normalizedInput = normalizeObjectUnits(duration),
+            years = normalizedInput.year || 0,
+            quarters = normalizedInput.quarter || 0,
+            months = normalizedInput.month || 0,
+            weeks = normalizedInput.week || 0,
+            days = normalizedInput.day || 0,
+            hours = normalizedInput.hour || 0,
+            minutes = normalizedInput.minute || 0,
+            seconds = normalizedInput.second || 0,
+            milliseconds = normalizedInput.millisecond || 0;
+
+        // representation for dateAddRemove
+        this._milliseconds = +milliseconds +
+            seconds * 1e3 + // 1000
+            minutes * 6e4 + // 1000 * 60
+            hours * 36e5; // 1000 * 60 * 60
+        // Because of dateAddRemove treats 24 hours as different from a
+        // day when working around DST, we need to store them separately
+        this._days = +days +
+            weeks * 7;
+        // It is impossible translate months into days without knowing
+        // which months you are are talking about, so we have to store
+        // it separately.
+        this._months = +months +
+            quarters * 3 +
+            years * 12;
+
+        this._data = {};
+
+        this._locale = locale_locales__getLocale();
+
+        this._bubble();
+    }
+
+    function isDuration (obj) {
+        return obj instanceof Duration;
+    }
+
+    function offset (token, separator) {
+        addFormatToken(token, 0, 0, function () {
+            var offset = this.utcOffset();
+            var sign = '+';
+            if (offset < 0) {
+                offset = -offset;
+                sign = '-';
+            }
+            return sign + zeroFill(~~(offset / 60), 2) + separator + zeroFill(~~(offset) % 60, 2);
+        });
+    }
+
+    offset('Z', ':');
+    offset('ZZ', '');
+
+    // PARSING
+
+    addRegexToken('Z',  matchOffset);
+    addRegexToken('ZZ', matchOffset);
+    addParseToken(['Z', 'ZZ'], function (input, array, config) {
+        config._useUTC = true;
+        config._tzm = offsetFromString(input);
+    });
+
+    // HELPERS
+
+    // timezone chunker
+    // '+10:00' > ['10',  '00']
+    // '-1530'  > ['-15', '30']
+    var chunkOffset = /([\+\-]|\d\d)/gi;
+
+    function offsetFromString(string) {
+        var matches = ((string || '').match(matchOffset) || []);
+        var chunk   = matches[matches.length - 1] || [];
+        var parts   = (chunk + '').match(chunkOffset) || ['-', 0, 0];
+        var minutes = +(parts[1] * 60) + toInt(parts[2]);
+
+        return parts[0] === '+' ? minutes : -minutes;
+    }
+
+    // Return a moment from input, that is local/utc/zone equivalent to model.
+    function cloneWithOffset(input, model) {
+        var res, diff;
+        if (model._isUTC) {
+            res = model.clone();
+            diff = (isMoment(input) || isDate(input) ? +input : +local__createLocal(input)) - (+res);
+            // Use low-level api, because this fn is low-level api.
+            res._d.setTime(+res._d + diff);
+            utils_hooks__hooks.updateOffset(res, false);
+            return res;
+        } else {
+            return local__createLocal(input).local();
+        }
+    }
+
+    function getDateOffset (m) {
+        // On Firefox.24 Date#getTimezoneOffset returns a floating point.
+        // https://github.com/moment/moment/pull/1871
+        return -Math.round(m._d.getTimezoneOffset() / 15) * 15;
+    }
+
+    // HOOKS
+
+    // This function will be called whenever a moment is mutated.
+    // It is intended to keep the offset in sync with the timezone.
+    utils_hooks__hooks.updateOffset = function () {};
+
+    // MOMENTS
+
+    // keepLocalTime = true means only change the timezone, without
+    // affecting the local hour. So 5:31:26 +0300 --[utcOffset(2, true)]-->
+    // 5:31:26 +0200 It is possible that 5:31:26 doesn't exist with offset
+    // +0200, so we adjust the time as needed, to be valid.
+    //
+    // Keeping the time actually adds/subtracts (one hour)
+    // from the actual represented time. That is why we call updateOffset
+    // a second time. In case it wants us to change the offset again
+    // _changeInProgress == true case, then we have to adjust, because
+    // there is no such time in the given timezone.
+    function getSetOffset (input, keepLocalTime) {
+        var offset = this._offset || 0,
+            localAdjust;
+        if (input != null) {
+            if (typeof input === 'string') {
+                input = offsetFromString(input);
+            }
+            if (Math.abs(input) < 16) {
+                input = input * 60;
+            }
+            if (!this._isUTC && keepLocalTime) {
+                localAdjust = getDateOffset(this);
+            }
+            this._offset = input;
+            this._isUTC = true;
+            if (localAdjust != null) {
+                this.add(localAdjust, 'm');
+            }
+            if (offset !== input) {
+                if (!keepLocalTime || this._changeInProgress) {
+                    add_subtract__addSubtract(this, create__createDuration(input - offset, 'm'), 1, false);
+                } else if (!this._changeInProgress) {
+                    this._changeInProgress = true;
+                    utils_hooks__hooks.updateOffset(this, true);
+                    this._changeInProgress = null;
+                }
+            }
+            return this;
+        } else {
+            return this._isUTC ? offset : getDateOffset(this);
+        }
+    }
+
+    function getSetZone (input, keepLocalTime) {
+        if (input != null) {
+            if (typeof input !== 'string') {
+                input = -input;
+            }
+
+            this.utcOffset(input, keepLocalTime);
+
+            return this;
+        } else {
+            return -this.utcOffset();
+        }
+    }
+
+    function setOffsetToUTC (keepLocalTime) {
+        return this.utcOffset(0, keepLocalTime);
+    }
+
+    function setOffsetToLocal (keepLocalTime) {
+        if (this._isUTC) {
+            this.utcOffset(0, keepLocalTime);
+            this._isUTC = false;
+
+            if (keepLocalTime) {
+                this.subtract(getDateOffset(this), 'm');
+            }
+        }
+        return this;
+    }
+
+    function setOffsetToParsedOffset () {
+        if (this._tzm) {
+            this.utcOffset(this._tzm);
+        } else if (typeof this._i === 'string') {
+            this.utcOffset(offsetFromString(this._i));
+        }
+        return this;
+    }
+
+    function hasAlignedHourOffset (input) {
+        input = input ? local__createLocal(input).utcOffset() : 0;
+
+        return (this.utcOffset() - input) % 60 === 0;
+    }
+
+    function isDaylightSavingTime () {
+        return (
+            this.utcOffset() > this.clone().month(0).utcOffset() ||
+            this.utcOffset() > this.clone().month(5).utcOffset()
+        );
+    }
+
+    function isDaylightSavingTimeShifted () {
+        if (typeof this._isDSTShifted !== 'undefined') {
+            return this._isDSTShifted;
+        }
+
+        var c = {};
+
+        copyConfig(c, this);
+        c = prepareConfig(c);
+
+        if (c._a) {
+            var other = c._isUTC ? create_utc__createUTC(c._a) : local__createLocal(c._a);
+            this._isDSTShifted = this.isValid() &&
+                compareArrays(c._a, other.toArray()) > 0;
+        } else {
+            this._isDSTShifted = false;
+        }
+
+        return this._isDSTShifted;
+    }
+
+    function isLocal () {
+        return !this._isUTC;
+    }
+
+    function isUtcOffset () {
+        return this._isUTC;
+    }
+
+    function isUtc () {
+        return this._isUTC && this._offset === 0;
+    }
+
+    var aspNetRegex = /(\-)?(?:(\d*)\.)?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/;
+
+    // from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
+    // somewhat more in line with 4.4.3.2 2004 spec, but allows decimal anywhere
+    var create__isoRegex = /^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/;
+
+    function create__createDuration (input, key) {
+        var duration = input,
+            // matching against regexp is expensive, do it on demand
+            match = null,
+            sign,
+            ret,
+            diffRes;
+
+        if (isDuration(input)) {
+            duration = {
+                ms : input._milliseconds,
+                d  : input._days,
+                M  : input._months
+            };
+        } else if (typeof input === 'number') {
+            duration = {};
+            if (key) {
+                duration[key] = input;
+            } else {
+                duration.milliseconds = input;
+            }
+        } else if (!!(match = aspNetRegex.exec(input))) {
+            sign = (match[1] === '-') ? -1 : 1;
+            duration = {
+                y  : 0,
+                d  : toInt(match[DATE])        * sign,
+                h  : toInt(match[HOUR])        * sign,
+                m  : toInt(match[MINUTE])      * sign,
+                s  : toInt(match[SECOND])      * sign,
+                ms : toInt(match[MILLISECOND]) * sign
+            };
+        } else if (!!(match = create__isoRegex.exec(input))) {
+            sign = (match[1] === '-') ? -1 : 1;
+            duration = {
+                y : parseIso(match[2], sign),
+                M : parseIso(match[3], sign),
+                d : parseIso(match[4], sign),
+                h : parseIso(match[5], sign),
+                m : parseIso(match[6], sign),
+                s : parseIso(match[7], sign),
+                w : parseIso(match[8], sign)
+            };
+        } else if (duration == null) {// checks for null or undefined
+            duration = {};
+        } else if (typeof duration === 'object' && ('from' in duration || 'to' in duration)) {
+            diffRes = momentsDifference(local__createLocal(duration.from), local__createLocal(duration.to));
+
+            duration = {};
+            duration.ms = diffRes.milliseconds;
+            duration.M = diffRes.months;
+        }
+
+        ret = new Duration(duration);
+
+        if (isDuration(input) && hasOwnProp(input, '_locale')) {
+            ret._locale = input._locale;
+        }
+
+        return ret;
+    }
+
+    create__createDuration.fn = Duration.prototype;
+
+    function parseIso (inp, sign) {
+        // We'd normally use ~~inp for this, but unfortunately it also
+        // converts floats to ints.
+        // inp may be undefined, so careful calling replace on it.
+        var res = inp && parseFloat(inp.replace(',', '.'));
+        // apply sign while we're at it
+        return (isNaN(res) ? 0 : res) * sign;
+    }
+
+    function positiveMomentsDifference(base, other) {
+        var res = {milliseconds: 0, months: 0};
+
+        res.months = other.month() - base.month() +
+            (other.year() - base.year()) * 12;
+        if (base.clone().add(res.months, 'M').isAfter(other)) {
+            --res.months;
+        }
+
+        res.milliseconds = +other - +(base.clone().add(res.months, 'M'));
+
+        return res;
+    }
+
+    function momentsDifference(base, other) {
+        var res;
+        other = cloneWithOffset(other, base);
+        if (base.isBefore(other)) {
+            res = positiveMomentsDifference(base, other);
+        } else {
+            res = positiveMomentsDifference(other, base);
+            res.milliseconds = -res.milliseconds;
+            res.months = -res.months;
+        }
+
+        return res;
+    }
+
+    function createAdder(direction, name) {
+        return function (val, period) {
+            var dur, tmp;
+            //invert the arguments, but complain about it
+            if (period !== null && !isNaN(+period)) {
+                deprecateSimple(name, 'moment().' + name  + '(period, number) is deprecated. Please use moment().' + name + '(number, period).');
+                tmp = val; val = period; period = tmp;
+            }
+
+            val = typeof val === 'string' ? +val : val;
+            dur = create__createDuration(val, period);
+            add_subtract__addSubtract(this, dur, direction);
+            return this;
+        };
+    }
+
+    function add_subtract__addSubtract (mom, duration, isAdding, updateOffset) {
+        var milliseconds = duration._milliseconds,
+            days = duration._days,
+            months = duration._months;
+        updateOffset = updateOffset == null ? true : updateOffset;
+
+        if (milliseconds) {
+            mom._d.setTime(+mom._d + milliseconds * isAdding);
+        }
+        if (days) {
+            get_set__set(mom, 'Date', get_set__get(mom, 'Date') + days * isAdding);
+        }
+        if (months) {
+            setMonth(mom, get_set__get(mom, 'Month') + months * isAdding);
+        }
+        if (updateOffset) {
+            utils_hooks__hooks.updateOffset(mom, days || months);
+        }
+    }
+
+    var add_subtract__add      = createAdder(1, 'add');
+    var add_subtract__subtract = createAdder(-1, 'subtract');
+
+    function moment_calendar__calendar (time, formats) {
+        // We want to compare the start of today, vs this.
+        // Getting start-of-today depends on whether we're local/utc/offset or not.
+        var now = time || local__createLocal(),
+            sod = cloneWithOffset(now, this).startOf('day'),
+            diff = this.diff(sod, 'days', true),
+            format = diff < -6 ? 'sameElse' :
+                diff < -1 ? 'lastWeek' :
+                diff < 0 ? 'lastDay' :
+                diff < 1 ? 'sameDay' :
+                diff < 2 ? 'nextDay' :
+                diff < 7 ? 'nextWeek' : 'sameElse';
+        return this.format(formats && formats[format] || this.localeData().calendar(format, this, local__createLocal(now)));
+    }
+
+    function clone () {
+        return new Moment(this);
+    }
+
+    function isAfter (input, units) {
+        var inputMs;
+        units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
+        if (units === 'millisecond') {
+            input = isMoment(input) ? input : local__createLocal(input);
+            return +this > +input;
+        } else {
+            inputMs = isMoment(input) ? +input : +local__createLocal(input);
+            return inputMs < +this.clone().startOf(units);
+        }
+    }
+
+    function isBefore (input, units) {
+        var inputMs;
+        units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
+        if (units === 'millisecond') {
+            input = isMoment(input) ? input : local__createLocal(input);
+            return +this < +input;
+        } else {
+            inputMs = isMoment(input) ? +input : +local__createLocal(input);
+            return +this.clone().endOf(units) < inputMs;
+        }
+    }
+
+    function isBetween (from, to, units) {
+        return this.isAfter(from, units) && this.isBefore(to, units);
+    }
+
+    function isSame (input, units) {
+        var inputMs;
+        units = normalizeUnits(units || 'millisecond');
+        if (units === 'millisecond') {
+            input = isMoment(input) ? input : local__createLocal(input);
+            return +this === +input;
+        } else {
+            inputMs = +local__createLocal(input);
+            return +(this.clone().startOf(units)) <= inputMs && inputMs <= +(this.clone().endOf(units));
+        }
+    }
+
+    function diff (input, units, asFloat) {
+        var that = cloneWithOffset(input, this),
+            zoneDelta = (that.utcOffset() - this.utcOffset()) * 6e4,
+            delta, output;
+
+        units = normalizeUnits(units);
+
+        if (units === 'year' || units === 'month' || units === 'quarter') {
+            output = monthDiff(this, that);
+            if (units === 'quarter') {
+                output = output / 3;
+            } else if (units === 'year') {
+                output = output / 12;
+            }
+        } else {
+            delta = this - that;
+            output = units === 'second' ? delta / 1e3 : // 1000
+                units === 'minute' ? delta / 6e4 : // 1000 * 60
+                units === 'hour' ? delta / 36e5 : // 1000 * 60 * 60
+                units === 'day' ? (delta - zoneDelta) / 864e5 : // 1000 * 60 * 60 * 24, negate dst
+                units === 'week' ? (delta - zoneDelta) / 6048e5 : // 1000 * 60 * 60 * 24 * 7, negate dst
+                delta;
+        }
+        return asFloat ? output : absFloor(output);
+    }
+
+    function monthDiff (a, b) {
+        // difference in months
+        var wholeMonthDiff = ((b.year() - a.year()) * 12) + (b.month() - a.month()),
+            // b is in (anchor - 1 month, anchor + 1 month)
+            anchor = a.clone().add(wholeMonthDiff, 'months'),
+            anchor2, adjust;
+
+        if (b - anchor < 0) {
+            anchor2 = a.clone().add(wholeMonthDiff - 1, 'months');
+            // linear across the month
+            adjust = (b - anchor) / (anchor - anchor2);
+        } else {
+            anchor2 = a.clone().add(wholeMonthDiff + 1, 'months');
+            // linear across the month
+            adjust = (b - anchor) / (anchor2 - anchor);
+        }
+
+        return -(wholeMonthDiff + adjust);
+    }
+
+    utils_hooks__hooks.defaultFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+
+    function toString () {
+        return this.clone().locale('en').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ');
+    }
+
+    function moment_format__toISOString () {
+        var m = this.clone().utc();
+        if (0 < m.year() && m.year() <= 9999) {
+            if ('function' === typeof Date.prototype.toISOString) {
+                // native implementation is ~50x faster, use it when we can
+                return this.toDate().toISOString();
+            } else {
+                return formatMoment(m, 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+            }
+        } else {
+            return formatMoment(m, 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        }
+    }
+
+    function format (inputString) {
+        var output = formatMoment(this, inputString || utils_hooks__hooks.defaultFormat);
+        return this.localeData().postformat(output);
+    }
+
+    function from (time, withoutSuffix) {
+        if (!this.isValid()) {
+            return this.localeData().invalidDate();
+        }
+        return create__createDuration({to: this, from: time}).locale(this.locale()).humanize(!withoutSuffix);
+    }
+
+    function fromNow (withoutSuffix) {
+        return this.from(local__createLocal(), withoutSuffix);
+    }
+
+    function to (time, withoutSuffix) {
+        if (!this.isValid()) {
+            return this.localeData().invalidDate();
+        }
+        return create__createDuration({from: this, to: time}).locale(this.locale()).humanize(!withoutSuffix);
+    }
+
+    function toNow (withoutSuffix) {
+        return this.to(local__createLocal(), withoutSuffix);
+    }
+
+    function locale (key) {
+        var newLocaleData;
+
+        if (key === undefined) {
+            return this._locale._abbr;
+        } else {
+            newLocaleData = locale_locales__getLocale(key);
+            if (newLocaleData != null) {
+                this._locale = newLocaleData;
+            }
+            return this;
+        }
+    }
+
+    var lang = deprecate(
+        'moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.',
+        function (key) {
+            if (key === undefined) {
+                return this.localeData();
+            } else {
+                return this.locale(key);
+            }
+        }
+    );
+
+    function localeData () {
+        return this._locale;
+    }
+
+    function startOf (units) {
+        units = normalizeUnits(units);
+        // the following switch intentionally omits break keywords
+        // to utilize falling through the cases.
+        switch (units) {
+        case 'year':
+            this.month(0);
+            /* falls through */
+        case 'quarter':
+        case 'month':
+            this.date(1);
+            /* falls through */
+        case 'week':
+        case 'isoWeek':
+        case 'day':
+            this.hours(0);
+            /* falls through */
+        case 'hour':
+            this.minutes(0);
+            /* falls through */
+        case 'minute':
+            this.seconds(0);
+            /* falls through */
+        case 'second':
+            this.milliseconds(0);
+        }
+
+        // weeks are a special case
+        if (units === 'week') {
+            this.weekday(0);
+        }
+        if (units === 'isoWeek') {
+            this.isoWeekday(1);
+        }
+
+        // quarters are also special
+        if (units === 'quarter') {
+            this.month(Math.floor(this.month() / 3) * 3);
+        }
+
+        return this;
+    }
+
+    function endOf (units) {
+        units = normalizeUnits(units);
+        if (units === undefined || units === 'millisecond') {
+            return this;
+        }
+        return this.startOf(units).add(1, (units === 'isoWeek' ? 'week' : units)).subtract(1, 'ms');
+    }
+
+    function to_type__valueOf () {
+        return +this._d - ((this._offset || 0) * 60000);
+    }
+
+    function unix () {
+        return Math.floor(+this / 1000);
+    }
+
+    function toDate () {
+        return this._offset ? new Date(+this) : this._d;
+    }
+
+    function toArray () {
+        var m = this;
+        return [m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond()];
+    }
+
+    function toObject () {
+        var m = this;
+        return {
+            years: m.year(),
+            months: m.month(),
+            date: m.date(),
+            hours: m.hours(),
+            minutes: m.minutes(),
+            seconds: m.seconds(),
+            milliseconds: m.milliseconds()
+        };
+    }
+
+    function moment_valid__isValid () {
+        return valid__isValid(this);
+    }
+
+    function parsingFlags () {
+        return extend({}, getParsingFlags(this));
+    }
+
+    function invalidAt () {
+        return getParsingFlags(this).overflow;
+    }
+
+    addFormatToken(0, ['gg', 2], 0, function () {
+        return this.weekYear() % 100;
+    });
+
+    addFormatToken(0, ['GG', 2], 0, function () {
+        return this.isoWeekYear() % 100;
+    });
+
+    function addWeekYearFormatToken (token, getter) {
+        addFormatToken(0, [token, token.length], 0, getter);
+    }
+
+    addWeekYearFormatToken('gggg',     'weekYear');
+    addWeekYearFormatToken('ggggg',    'weekYear');
+    addWeekYearFormatToken('GGGG',  'isoWeekYear');
+    addWeekYearFormatToken('GGGGG', 'isoWeekYear');
+
+    // ALIASES
+
+    addUnitAlias('weekYear', 'gg');
+    addUnitAlias('isoWeekYear', 'GG');
+
+    // PARSING
+
+    addRegexToken('G',      matchSigned);
+    addRegexToken('g',      matchSigned);
+    addRegexToken('GG',     match1to2, match2);
+    addRegexToken('gg',     match1to2, match2);
+    addRegexToken('GGGG',   match1to4, match4);
+    addRegexToken('gggg',   match1to4, match4);
+    addRegexToken('GGGGG',  match1to6, match6);
+    addRegexToken('ggggg',  match1to6, match6);
+
+    addWeekParseToken(['gggg', 'ggggg', 'GGGG', 'GGGGG'], function (input, week, config, token) {
+        week[token.substr(0, 2)] = toInt(input);
+    });
+
+    addWeekParseToken(['gg', 'GG'], function (input, week, config, token) {
+        week[token] = utils_hooks__hooks.parseTwoDigitYear(input);
+    });
+
+    // HELPERS
+
+    function weeksInYear(year, dow, doy) {
+        return weekOfYear(local__createLocal([year, 11, 31 + dow - doy]), dow, doy).week;
+    }
+
+    // MOMENTS
+
+    function getSetWeekYear (input) {
+        var year = weekOfYear(this, this.localeData()._week.dow, this.localeData()._week.doy).year;
+        return input == null ? year : this.add((input - year), 'y');
+    }
+
+    function getSetISOWeekYear (input) {
+        var year = weekOfYear(this, 1, 4).year;
+        return input == null ? year : this.add((input - year), 'y');
+    }
+
+    function getISOWeeksInYear () {
+        return weeksInYear(this.year(), 1, 4);
+    }
+
+    function getWeeksInYear () {
+        var weekInfo = this.localeData()._week;
+        return weeksInYear(this.year(), weekInfo.dow, weekInfo.doy);
+    }
+
+    addFormatToken('Q', 0, 0, 'quarter');
+
+    // ALIASES
+
+    addUnitAlias('quarter', 'Q');
+
+    // PARSING
+
+    addRegexToken('Q', match1);
+    addParseToken('Q', function (input, array) {
+        array[MONTH] = (toInt(input) - 1) * 3;
+    });
+
+    // MOMENTS
+
+    function getSetQuarter (input) {
+        return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
+    }
+
+    addFormatToken('D', ['DD', 2], 'Do', 'date');
+
+    // ALIASES
+
+    addUnitAlias('date', 'D');
+
+    // PARSING
+
+    addRegexToken('D',  match1to2);
+    addRegexToken('DD', match1to2, match2);
+    addRegexToken('Do', function (isStrict, locale) {
+        return isStrict ? locale._ordinalParse : locale._ordinalParseLenient;
+    });
+
+    addParseToken(['D', 'DD'], DATE);
+    addParseToken('Do', function (input, array) {
+        array[DATE] = toInt(input.match(match1to2)[0], 10);
+    });
+
+    // MOMENTS
+
+    var getSetDayOfMonth = makeGetSet('Date', true);
+
+    addFormatToken('d', 0, 'do', 'day');
+
+    addFormatToken('dd', 0, 0, function (format) {
+        return this.localeData().weekdaysMin(this, format);
+    });
+
+    addFormatToken('ddd', 0, 0, function (format) {
+        return this.localeData().weekdaysShort(this, format);
+    });
+
+    addFormatToken('dddd', 0, 0, function (format) {
+        return this.localeData().weekdays(this, format);
+    });
+
+    addFormatToken('e', 0, 0, 'weekday');
+    addFormatToken('E', 0, 0, 'isoWeekday');
+
+    // ALIASES
+
+    addUnitAlias('day', 'd');
+    addUnitAlias('weekday', 'e');
+    addUnitAlias('isoWeekday', 'E');
+
+    // PARSING
+
+    addRegexToken('d',    match1to2);
+    addRegexToken('e',    match1to2);
+    addRegexToken('E',    match1to2);
+    addRegexToken('dd',   matchWord);
+    addRegexToken('ddd',  matchWord);
+    addRegexToken('dddd', matchWord);
+
+    addWeekParseToken(['dd', 'ddd', 'dddd'], function (input, week, config) {
+        var weekday = config._locale.weekdaysParse(input);
+        // if we didn't get a weekday name, mark the date as invalid
+        if (weekday != null) {
+            week.d = weekday;
+        } else {
+            getParsingFlags(config).invalidWeekday = input;
+        }
+    });
+
+    addWeekParseToken(['d', 'e', 'E'], function (input, week, config, token) {
+        week[token] = toInt(input);
+    });
+
+    // HELPERS
+
+    function parseWeekday(input, locale) {
+        if (typeof input !== 'string') {
+            return input;
+        }
+
+        if (!isNaN(input)) {
+            return parseInt(input, 10);
+        }
+
+        input = locale.weekdaysParse(input);
+        if (typeof input === 'number') {
+            return input;
+        }
+
+        return null;
+    }
+
+    // LOCALES
+
+    var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
+    function localeWeekdays (m) {
+        return this._weekdays[m.day()];
+    }
+
+    var defaultLocaleWeekdaysShort = 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_');
+    function localeWeekdaysShort (m) {
+        return this._weekdaysShort[m.day()];
+    }
+
+    var defaultLocaleWeekdaysMin = 'Su_Mo_Tu_We_Th_Fr_Sa'.split('_');
+    function localeWeekdaysMin (m) {
+        return this._weekdaysMin[m.day()];
+    }
+
+    function localeWeekdaysParse (weekdayName) {
+        var i, mom, regex;
+
+        this._weekdaysParse = this._weekdaysParse || [];
+
+        for (i = 0; i < 7; i++) {
+            // make the regex if we don't have it already
+            if (!this._weekdaysParse[i]) {
+                mom = local__createLocal([2000, 1]).day(i);
+                regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
+                this._weekdaysParse[i] = new RegExp(regex.replace('.', ''), 'i');
+            }
+            // test the regex
+            if (this._weekdaysParse[i].test(weekdayName)) {
+                return i;
+            }
+        }
+    }
+
+    // MOMENTS
+
+    function getSetDayOfWeek (input) {
+        var day = this._isUTC ? this._d.getUTCDay() : this._d.getDay();
+        if (input != null) {
+            input = parseWeekday(input, this.localeData());
+            return this.add(input - day, 'd');
+        } else {
+            return day;
+        }
+    }
+
+    function getSetLocaleDayOfWeek (input) {
+        var weekday = (this.day() + 7 - this.localeData()._week.dow) % 7;
+        return input == null ? weekday : this.add(input - weekday, 'd');
+    }
+
+    function getSetISODayOfWeek (input) {
+        // behaves the same as moment#day except
+        // as a getter, returns 7 instead of 0 (1-7 range instead of 0-6)
+        // as a setter, sunday should belong to the previous week.
+        return input == null ? this.day() || 7 : this.day(this.day() % 7 ? input : input - 7);
+    }
+
+    addFormatToken('H', ['HH', 2], 0, 'hour');
+    addFormatToken('h', ['hh', 2], 0, function () {
+        return this.hours() % 12 || 12;
+    });
+
+    function meridiem (token, lowercase) {
+        addFormatToken(token, 0, 0, function () {
+            return this.localeData().meridiem(this.hours(), this.minutes(), lowercase);
+        });
+    }
+
+    meridiem('a', true);
+    meridiem('A', false);
+
+    // ALIASES
+
+    addUnitAlias('hour', 'h');
+
+    // PARSING
+
+    function matchMeridiem (isStrict, locale) {
+        return locale._meridiemParse;
+    }
+
+    addRegexToken('a',  matchMeridiem);
+    addRegexToken('A',  matchMeridiem);
+    addRegexToken('H',  match1to2);
+    addRegexToken('h',  match1to2);
+    addRegexToken('HH', match1to2, match2);
+    addRegexToken('hh', match1to2, match2);
+
+    addParseToken(['H', 'HH'], HOUR);
+    addParseToken(['a', 'A'], function (input, array, config) {
+        config._isPm = config._locale.isPM(input);
+        config._meridiem = input;
+    });
+    addParseToken(['h', 'hh'], function (input, array, config) {
+        array[HOUR] = toInt(input);
+        getParsingFlags(config).bigHour = true;
+    });
+
+    // LOCALES
+
+    function localeIsPM (input) {
+        // IE8 Quirks Mode & IE7 Standards Mode do not allow accessing strings like arrays
+        // Using charAt should be more compatible.
+        return ((input + '').toLowerCase().charAt(0) === 'p');
+    }
+
+    var defaultLocaleMeridiemParse = /[ap]\.?m?\.?/i;
+    function localeMeridiem (hours, minutes, isLower) {
+        if (hours > 11) {
+            return isLower ? 'pm' : 'PM';
+        } else {
+            return isLower ? 'am' : 'AM';
+        }
+    }
+
+
+    // MOMENTS
+
+    // Setting the hour should keep the time, because the user explicitly
+    // specified which hour he wants. So trying to maintain the same hour (in
+    // a new timezone) makes sense. Adding/subtracting hours does not follow
+    // this rule.
+    var getSetHour = makeGetSet('Hours', true);
+
+    addFormatToken('m', ['mm', 2], 0, 'minute');
+
+    // ALIASES
+
+    addUnitAlias('minute', 'm');
+
+    // PARSING
+
+    addRegexToken('m',  match1to2);
+    addRegexToken('mm', match1to2, match2);
+    addParseToken(['m', 'mm'], MINUTE);
+
+    // MOMENTS
+
+    var getSetMinute = makeGetSet('Minutes', false);
+
+    addFormatToken('s', ['ss', 2], 0, 'second');
+
+    // ALIASES
+
+    addUnitAlias('second', 's');
+
+    // PARSING
+
+    addRegexToken('s',  match1to2);
+    addRegexToken('ss', match1to2, match2);
+    addParseToken(['s', 'ss'], SECOND);
+
+    // MOMENTS
+
+    var getSetSecond = makeGetSet('Seconds', false);
+
+    addFormatToken('S', 0, 0, function () {
+        return ~~(this.millisecond() / 100);
+    });
+
+    addFormatToken(0, ['SS', 2], 0, function () {
+        return ~~(this.millisecond() / 10);
+    });
+
+    addFormatToken(0, ['SSS', 3], 0, 'millisecond');
+    addFormatToken(0, ['SSSS', 4], 0, function () {
+        return this.millisecond() * 10;
+    });
+    addFormatToken(0, ['SSSSS', 5], 0, function () {
+        return this.millisecond() * 100;
+    });
+    addFormatToken(0, ['SSSSSS', 6], 0, function () {
+        return this.millisecond() * 1000;
+    });
+    addFormatToken(0, ['SSSSSSS', 7], 0, function () {
+        return this.millisecond() * 10000;
+    });
+    addFormatToken(0, ['SSSSSSSS', 8], 0, function () {
+        return this.millisecond() * 100000;
+    });
+    addFormatToken(0, ['SSSSSSSSS', 9], 0, function () {
+        return this.millisecond() * 1000000;
+    });
+
+
+    // ALIASES
+
+    addUnitAlias('millisecond', 'ms');
+
+    // PARSING
+
+    addRegexToken('S',    match1to3, match1);
+    addRegexToken('SS',   match1to3, match2);
+    addRegexToken('SSS',  match1to3, match3);
+
+    var token;
+    for (token = 'SSSS'; token.length <= 9; token += 'S') {
+        addRegexToken(token, matchUnsigned);
+    }
+
+    function parseMs(input, array) {
+        array[MILLISECOND] = toInt(('0.' + input) * 1000);
+    }
+
+    for (token = 'S'; token.length <= 9; token += 'S') {
+        addParseToken(token, parseMs);
+    }
+    // MOMENTS
+
+    var getSetMillisecond = makeGetSet('Milliseconds', false);
+
+    addFormatToken('z',  0, 0, 'zoneAbbr');
+    addFormatToken('zz', 0, 0, 'zoneName');
+
+    // MOMENTS
+
+    function getZoneAbbr () {
+        return this._isUTC ? 'UTC' : '';
+    }
+
+    function getZoneName () {
+        return this._isUTC ? 'Coordinated Universal Time' : '';
+    }
+
+    var momentPrototype__proto = Moment.prototype;
+
+    momentPrototype__proto.add          = add_subtract__add;
+    momentPrototype__proto.calendar     = moment_calendar__calendar;
+    momentPrototype__proto.clone        = clone;
+    momentPrototype__proto.diff         = diff;
+    momentPrototype__proto.endOf        = endOf;
+    momentPrototype__proto.format       = format;
+    momentPrototype__proto.from         = from;
+    momentPrototype__proto.fromNow      = fromNow;
+    momentPrototype__proto.to           = to;
+    momentPrototype__proto.toNow        = toNow;
+    momentPrototype__proto.get          = getSet;
+    momentPrototype__proto.invalidAt    = invalidAt;
+    momentPrototype__proto.isAfter      = isAfter;
+    momentPrototype__proto.isBefore     = isBefore;
+    momentPrototype__proto.isBetween    = isBetween;
+    momentPrototype__proto.isSame       = isSame;
+    momentPrototype__proto.isValid      = moment_valid__isValid;
+    momentPrototype__proto.lang         = lang;
+    momentPrototype__proto.locale       = locale;
+    momentPrototype__proto.localeData   = localeData;
+    momentPrototype__proto.max          = prototypeMax;
+    momentPrototype__proto.min          = prototypeMin;
+    momentPrototype__proto.parsingFlags = parsingFlags;
+    momentPrototype__proto.set          = getSet;
+    momentPrototype__proto.startOf      = startOf;
+    momentPrototype__proto.subtract     = add_subtract__subtract;
+    momentPrototype__proto.toArray      = toArray;
+    momentPrototype__proto.toObject     = toObject;
+    momentPrototype__proto.toDate       = toDate;
+    momentPrototype__proto.toISOString  = moment_format__toISOString;
+    momentPrototype__proto.toJSON       = moment_format__toISOString;
+    momentPrototype__proto.toString     = toString;
+    momentPrototype__proto.unix         = unix;
+    momentPrototype__proto.valueOf      = to_type__valueOf;
+
+    // Year
+    momentPrototype__proto.year       = getSetYear;
+    momentPrototype__proto.isLeapYear = getIsLeapYear;
+
+    // Week Year
+    momentPrototype__proto.weekYear    = getSetWeekYear;
+    momentPrototype__proto.isoWeekYear = getSetISOWeekYear;
+
+    // Quarter
+    momentPrototype__proto.quarter = momentPrototype__proto.quarters = getSetQuarter;
+
+    // Month
+    momentPrototype__proto.month       = getSetMonth;
+    momentPrototype__proto.daysInMonth = getDaysInMonth;
+
+    // Week
+    momentPrototype__proto.week           = momentPrototype__proto.weeks        = getSetWeek;
+    momentPrototype__proto.isoWeek        = momentPrototype__proto.isoWeeks     = getSetISOWeek;
+    momentPrototype__proto.weeksInYear    = getWeeksInYear;
+    momentPrototype__proto.isoWeeksInYear = getISOWeeksInYear;
+
+    // Day
+    momentPrototype__proto.date       = getSetDayOfMonth;
+    momentPrototype__proto.day        = momentPrototype__proto.days             = getSetDayOfWeek;
+    momentPrototype__proto.weekday    = getSetLocaleDayOfWeek;
+    momentPrototype__proto.isoWeekday = getSetISODayOfWeek;
+    momentPrototype__proto.dayOfYear  = getSetDayOfYear;
+
+    // Hour
+    momentPrototype__proto.hour = momentPrototype__proto.hours = getSetHour;
+
+    // Minute
+    momentPrototype__proto.minute = momentPrototype__proto.minutes = getSetMinute;
+
+    // Second
+    momentPrototype__proto.second = momentPrototype__proto.seconds = getSetSecond;
+
+    // Millisecond
+    momentPrototype__proto.millisecond = momentPrototype__proto.milliseconds = getSetMillisecond;
+
+    // Offset
+    momentPrototype__proto.utcOffset            = getSetOffset;
+    momentPrototype__proto.utc                  = setOffsetToUTC;
+    momentPrototype__proto.local                = setOffsetToLocal;
+    momentPrototype__proto.parseZone            = setOffsetToParsedOffset;
+    momentPrototype__proto.hasAlignedHourOffset = hasAlignedHourOffset;
+    momentPrototype__proto.isDST                = isDaylightSavingTime;
+    momentPrototype__proto.isDSTShifted         = isDaylightSavingTimeShifted;
+    momentPrototype__proto.isLocal              = isLocal;
+    momentPrototype__proto.isUtcOffset          = isUtcOffset;
+    momentPrototype__proto.isUtc                = isUtc;
+    momentPrototype__proto.isUTC                = isUtc;
+
+    // Timezone
+    momentPrototype__proto.zoneAbbr = getZoneAbbr;
+    momentPrototype__proto.zoneName = getZoneName;
+
+    // Deprecations
+    momentPrototype__proto.dates  = deprecate('dates accessor is deprecated. Use date instead.', getSetDayOfMonth);
+    momentPrototype__proto.months = deprecate('months accessor is deprecated. Use month instead', getSetMonth);
+    momentPrototype__proto.years  = deprecate('years accessor is deprecated. Use year instead', getSetYear);
+    momentPrototype__proto.zone   = deprecate('moment().zone is deprecated, use moment().utcOffset instead. https://github.com/moment/moment/issues/1779', getSetZone);
+
+    var momentPrototype = momentPrototype__proto;
+
+    function moment__createUnix (input) {
+        return local__createLocal(input * 1000);
+    }
+
+    function moment__createInZone () {
+        return local__createLocal.apply(null, arguments).parseZone();
+    }
+
+    var defaultCalendar = {
+        sameDay : '[Today at] LT',
+        nextDay : '[Tomorrow at] LT',
+        nextWeek : 'dddd [at] LT',
+        lastDay : '[Yesterday at] LT',
+        lastWeek : '[Last] dddd [at] LT',
+        sameElse : 'L'
+    };
+
+    function locale_calendar__calendar (key, mom, now) {
+        var output = this._calendar[key];
+        return typeof output === 'function' ? output.call(mom, now) : output;
+    }
+
+    var defaultLongDateFormat = {
+        LTS  : 'h:mm:ss A',
+        LT   : 'h:mm A',
+        L    : 'MM/DD/YYYY',
+        LL   : 'MMMM D, YYYY',
+        LLL  : 'MMMM D, YYYY h:mm A',
+        LLLL : 'dddd, MMMM D, YYYY h:mm A'
+    };
+
+    function longDateFormat (key) {
+        var format = this._longDateFormat[key],
+            formatUpper = this._longDateFormat[key.toUpperCase()];
+
+        if (format || !formatUpper) {
+            return format;
+        }
+
+        this._longDateFormat[key] = formatUpper.replace(/MMMM|MM|DD|dddd/g, function (val) {
+            return val.slice(1);
+        });
+
+        return this._longDateFormat[key];
+    }
+
+    var defaultInvalidDate = 'Invalid date';
+
+    function invalidDate () {
+        return this._invalidDate;
+    }
+
+    var defaultOrdinal = '%d';
+    var defaultOrdinalParse = /\d{1,2}/;
+
+    function ordinal (number) {
+        return this._ordinal.replace('%d', number);
+    }
+
+    function preParsePostFormat (string) {
+        return string;
+    }
+
+    var defaultRelativeTime = {
+        future : 'in %s',
+        past   : '%s ago',
+        s  : 'a few seconds',
+        m  : 'a minute',
+        mm : '%d minutes',
+        h  : 'an hour',
+        hh : '%d hours',
+        d  : 'a day',
+        dd : '%d days',
+        M  : 'a month',
+        MM : '%d months',
+        y  : 'a year',
+        yy : '%d years'
+    };
+
+    function relative__relativeTime (number, withoutSuffix, string, isFuture) {
+        var output = this._relativeTime[string];
+        return (typeof output === 'function') ?
+            output(number, withoutSuffix, string, isFuture) :
+            output.replace(/%d/i, number);
+    }
+
+    function pastFuture (diff, output) {
+        var format = this._relativeTime[diff > 0 ? 'future' : 'past'];
+        return typeof format === 'function' ? format(output) : format.replace(/%s/i, output);
+    }
+
+    function locale_set__set (config) {
+        var prop, i;
+        for (i in config) {
+            prop = config[i];
+            if (typeof prop === 'function') {
+                this[i] = prop;
+            } else {
+                this['_' + i] = prop;
+            }
+        }
+        // Lenient ordinal parsing accepts just a number in addition to
+        // number + (possibly) stuff coming from _ordinalParseLenient.
+        this._ordinalParseLenient = new RegExp(this._ordinalParse.source + '|' + (/\d{1,2}/).source);
+    }
+
+    var prototype__proto = Locale.prototype;
+
+    prototype__proto._calendar       = defaultCalendar;
+    prototype__proto.calendar        = locale_calendar__calendar;
+    prototype__proto._longDateFormat = defaultLongDateFormat;
+    prototype__proto.longDateFormat  = longDateFormat;
+    prototype__proto._invalidDate    = defaultInvalidDate;
+    prototype__proto.invalidDate     = invalidDate;
+    prototype__proto._ordinal        = defaultOrdinal;
+    prototype__proto.ordinal         = ordinal;
+    prototype__proto._ordinalParse   = defaultOrdinalParse;
+    prototype__proto.preparse        = preParsePostFormat;
+    prototype__proto.postformat      = preParsePostFormat;
+    prototype__proto._relativeTime   = defaultRelativeTime;
+    prototype__proto.relativeTime    = relative__relativeTime;
+    prototype__proto.pastFuture      = pastFuture;
+    prototype__proto.set             = locale_set__set;
+
+    // Month
+    prototype__proto.months       =        localeMonths;
+    prototype__proto._months      = defaultLocaleMonths;
+    prototype__proto.monthsShort  =        localeMonthsShort;
+    prototype__proto._monthsShort = defaultLocaleMonthsShort;
+    prototype__proto.monthsParse  =        localeMonthsParse;
+
+    // Week
+    prototype__proto.week = localeWeek;
+    prototype__proto._week = defaultLocaleWeek;
+    prototype__proto.firstDayOfYear = localeFirstDayOfYear;
+    prototype__proto.firstDayOfWeek = localeFirstDayOfWeek;
+
+    // Day of Week
+    prototype__proto.weekdays       =        localeWeekdays;
+    prototype__proto._weekdays      = defaultLocaleWeekdays;
+    prototype__proto.weekdaysMin    =        localeWeekdaysMin;
+    prototype__proto._weekdaysMin   = defaultLocaleWeekdaysMin;
+    prototype__proto.weekdaysShort  =        localeWeekdaysShort;
+    prototype__proto._weekdaysShort = defaultLocaleWeekdaysShort;
+    prototype__proto.weekdaysParse  =        localeWeekdaysParse;
+
+    // Hours
+    prototype__proto.isPM = localeIsPM;
+    prototype__proto._meridiemParse = defaultLocaleMeridiemParse;
+    prototype__proto.meridiem = localeMeridiem;
+
+    function lists__get (format, index, field, setter) {
+        var locale = locale_locales__getLocale();
+        var utc = create_utc__createUTC().set(setter, index);
+        return locale[field](utc, format);
+    }
+
+    function list (format, index, field, count, setter) {
+        if (typeof format === 'number') {
+            index = format;
+            format = undefined;
+        }
+
+        format = format || '';
+
+        if (index != null) {
+            return lists__get(format, index, field, setter);
+        }
+
+        var i;
+        var out = [];
+        for (i = 0; i < count; i++) {
+            out[i] = lists__get(format, i, field, setter);
+        }
+        return out;
+    }
+
+    function lists__listMonths (format, index) {
+        return list(format, index, 'months', 12, 'month');
+    }
+
+    function lists__listMonthsShort (format, index) {
+        return list(format, index, 'monthsShort', 12, 'month');
+    }
+
+    function lists__listWeekdays (format, index) {
+        return list(format, index, 'weekdays', 7, 'day');
+    }
+
+    function lists__listWeekdaysShort (format, index) {
+        return list(format, index, 'weekdaysShort', 7, 'day');
+    }
+
+    function lists__listWeekdaysMin (format, index) {
+        return list(format, index, 'weekdaysMin', 7, 'day');
+    }
+
+    locale_locales__getSetGlobalLocale('en', {
+        ordinalParse: /\d{1,2}(th|st|nd|rd)/,
+        ordinal : function (number) {
+            var b = number % 10,
+                output = (toInt(number % 100 / 10) === 1) ? 'th' :
+                (b === 1) ? 'st' :
+                (b === 2) ? 'nd' :
+                (b === 3) ? 'rd' : 'th';
+            return number + output;
+        }
+    });
+
+    // Side effect imports
+    utils_hooks__hooks.lang = deprecate('moment.lang is deprecated. Use moment.locale instead.', locale_locales__getSetGlobalLocale);
+    utils_hooks__hooks.langData = deprecate('moment.langData is deprecated. Use moment.localeData instead.', locale_locales__getLocale);
+
+    var mathAbs = Math.abs;
+
+    function duration_abs__abs () {
+        var data           = this._data;
+
+        this._milliseconds = mathAbs(this._milliseconds);
+        this._days         = mathAbs(this._days);
+        this._months       = mathAbs(this._months);
+
+        data.milliseconds  = mathAbs(data.milliseconds);
+        data.seconds       = mathAbs(data.seconds);
+        data.minutes       = mathAbs(data.minutes);
+        data.hours         = mathAbs(data.hours);
+        data.months        = mathAbs(data.months);
+        data.years         = mathAbs(data.years);
+
+        return this;
+    }
+
+    function duration_add_subtract__addSubtract (duration, input, value, direction) {
+        var other = create__createDuration(input, value);
+
+        duration._milliseconds += direction * other._milliseconds;
+        duration._days         += direction * other._days;
+        duration._months       += direction * other._months;
+
+        return duration._bubble();
+    }
+
+    // supports only 2.0-style add(1, 's') or add(duration)
+    function duration_add_subtract__add (input, value) {
+        return duration_add_subtract__addSubtract(this, input, value, 1);
+    }
+
+    // supports only 2.0-style subtract(1, 's') or subtract(duration)
+    function duration_add_subtract__subtract (input, value) {
+        return duration_add_subtract__addSubtract(this, input, value, -1);
+    }
+
+    function absCeil (number) {
+        if (number < 0) {
+            return Math.floor(number);
+        } else {
+            return Math.ceil(number);
+        }
+    }
+
+    function bubble () {
+        var milliseconds = this._milliseconds;
+        var days         = this._days;
+        var months       = this._months;
+        var data         = this._data;
+        var seconds, minutes, hours, years, monthsFromDays;
+
+        // if we have a mix of positive and negative values, bubble down first
+        // check: https://github.com/moment/moment/issues/2166
+        if (!((milliseconds >= 0 && days >= 0 && months >= 0) ||
+                (milliseconds <= 0 && days <= 0 && months <= 0))) {
+            milliseconds += absCeil(monthsToDays(months) + days) * 864e5;
+            days = 0;
+            months = 0;
+        }
+
+        // The following code bubbles up values, see the tests for
+        // examples of what that means.
+        data.milliseconds = milliseconds % 1000;
+
+        seconds           = absFloor(milliseconds / 1000);
+        data.seconds      = seconds % 60;
+
+        minutes           = absFloor(seconds / 60);
+        data.minutes      = minutes % 60;
+
+        hours             = absFloor(minutes / 60);
+        data.hours        = hours % 24;
+
+        days += absFloor(hours / 24);
+
+        // convert days to months
+        monthsFromDays = absFloor(daysToMonths(days));
+        months += monthsFromDays;
+        days -= absCeil(monthsToDays(monthsFromDays));
+
+        // 12 months -> 1 year
+        years = absFloor(months / 12);
+        months %= 12;
+
+        data.days   = days;
+        data.months = months;
+        data.years  = years;
+
+        return this;
+    }
+
+    function daysToMonths (days) {
+        // 400 years have 146097 days (taking into account leap year rules)
+        // 400 years have 12 months === 4800
+        return days * 4800 / 146097;
+    }
+
+    function monthsToDays (months) {
+        // the reverse of daysToMonths
+        return months * 146097 / 4800;
+    }
+
+    function as (units) {
+        var days;
+        var months;
+        var milliseconds = this._milliseconds;
+
+        units = normalizeUnits(units);
+
+        if (units === 'month' || units === 'year') {
+            days   = this._days   + milliseconds / 864e5;
+            months = this._months + daysToMonths(days);
+            return units === 'month' ? months : months / 12;
+        } else {
+            // handle milliseconds separately because of floating point math errors (issue #1867)
+            days = this._days + Math.round(monthsToDays(this._months));
+            switch (units) {
+                case 'week'   : return days / 7     + milliseconds / 6048e5;
+                case 'day'    : return days         + milliseconds / 864e5;
+                case 'hour'   : return days * 24    + milliseconds / 36e5;
+                case 'minute' : return days * 1440  + milliseconds / 6e4;
+                case 'second' : return days * 86400 + milliseconds / 1000;
+                // Math.floor prevents floating point math errors here
+                case 'millisecond': return Math.floor(days * 864e5) + milliseconds;
+                default: throw new Error('Unknown unit ' + units);
+            }
+        }
+    }
+
+    // TODO: Use this.as('ms')?
+    function duration_as__valueOf () {
+        return (
+            this._milliseconds +
+            this._days * 864e5 +
+            (this._months % 12) * 2592e6 +
+            toInt(this._months / 12) * 31536e6
+        );
+    }
+
+    function makeAs (alias) {
+        return function () {
+            return this.as(alias);
+        };
+    }
+
+    var asMilliseconds = makeAs('ms');
+    var asSeconds      = makeAs('s');
+    var asMinutes      = makeAs('m');
+    var asHours        = makeAs('h');
+    var asDays         = makeAs('d');
+    var asWeeks        = makeAs('w');
+    var asMonths       = makeAs('M');
+    var asYears        = makeAs('y');
+
+    function duration_get__get (units) {
+        units = normalizeUnits(units);
+        return this[units + 's']();
+    }
+
+    function makeGetter(name) {
+        return function () {
+            return this._data[name];
+        };
+    }
+
+    var milliseconds = makeGetter('milliseconds');
+    var seconds      = makeGetter('seconds');
+    var minutes      = makeGetter('minutes');
+    var hours        = makeGetter('hours');
+    var days         = makeGetter('days');
+    var months       = makeGetter('months');
+    var years        = makeGetter('years');
+
+    function weeks () {
+        return absFloor(this.days() / 7);
+    }
+
+    var round = Math.round;
+    var thresholds = {
+        s: 45,  // seconds to minute
+        m: 45,  // minutes to hour
+        h: 22,  // hours to day
+        d: 26,  // days to month
+        M: 11   // months to year
+    };
+
+    // helper function for moment.fn.from, moment.fn.fromNow, and moment.duration.fn.humanize
+    function substituteTimeAgo(string, number, withoutSuffix, isFuture, locale) {
+        return locale.relativeTime(number || 1, !!withoutSuffix, string, isFuture);
+    }
+
+    function duration_humanize__relativeTime (posNegDuration, withoutSuffix, locale) {
+        var duration = create__createDuration(posNegDuration).abs();
+        var seconds  = round(duration.as('s'));
+        var minutes  = round(duration.as('m'));
+        var hours    = round(duration.as('h'));
+        var days     = round(duration.as('d'));
+        var months   = round(duration.as('M'));
+        var years    = round(duration.as('y'));
+
+        var a = seconds < thresholds.s && ['s', seconds]  ||
+                minutes === 1          && ['m']           ||
+                minutes < thresholds.m && ['mm', minutes] ||
+                hours   === 1          && ['h']           ||
+                hours   < thresholds.h && ['hh', hours]   ||
+                days    === 1          && ['d']           ||
+                days    < thresholds.d && ['dd', days]    ||
+                months  === 1          && ['M']           ||
+                months  < thresholds.M && ['MM', months]  ||
+                years   === 1          && ['y']           || ['yy', years];
+
+        a[2] = withoutSuffix;
+        a[3] = +posNegDuration > 0;
+        a[4] = locale;
+        return substituteTimeAgo.apply(null, a);
+    }
+
+    // This function allows you to set a threshold for relative time strings
+    function duration_humanize__getSetRelativeTimeThreshold (threshold, limit) {
+        if (thresholds[threshold] === undefined) {
+            return false;
+        }
+        if (limit === undefined) {
+            return thresholds[threshold];
+        }
+        thresholds[threshold] = limit;
+        return true;
+    }
+
+    function humanize (withSuffix) {
+        var locale = this.localeData();
+        var output = duration_humanize__relativeTime(this, !withSuffix, locale);
+
+        if (withSuffix) {
+            output = locale.pastFuture(+this, output);
+        }
+
+        return locale.postformat(output);
+    }
+
+    var iso_string__abs = Math.abs;
+
+    function iso_string__toISOString() {
+        // for ISO strings we do not use the normal bubbling rules:
+        //  * milliseconds bubble up until they become hours
+        //  * days do not bubble at all
+        //  * months bubble up until they become years
+        // This is because there is no context-free conversion between hours and days
+        // (think of clock changes)
+        // and also not between days and months (28-31 days per month)
+        var seconds = iso_string__abs(this._milliseconds) / 1000;
+        var days         = iso_string__abs(this._days);
+        var months       = iso_string__abs(this._months);
+        var minutes, hours, years;
+
+        // 3600 seconds -> 60 minutes -> 1 hour
+        minutes           = absFloor(seconds / 60);
+        hours             = absFloor(minutes / 60);
+        seconds %= 60;
+        minutes %= 60;
+
+        // 12 months -> 1 year
+        years  = absFloor(months / 12);
+        months %= 12;
+
+
+        // inspired by https://github.com/dordille/moment-isoduration/blob/master/moment.isoduration.js
+        var Y = years;
+        var M = months;
+        var D = days;
+        var h = hours;
+        var m = minutes;
+        var s = seconds;
+        var total = this.asSeconds();
+
+        if (!total) {
+            // this is the same as C#'s (Noda) and python (isodate)...
+            // but not other JS (goog.date)
+            return 'P0D';
+        }
+
+        return (total < 0 ? '-' : '') +
+            'P' +
+            (Y ? Y + 'Y' : '') +
+            (M ? M + 'M' : '') +
+            (D ? D + 'D' : '') +
+            ((h || m || s) ? 'T' : '') +
+            (h ? h + 'H' : '') +
+            (m ? m + 'M' : '') +
+            (s ? s + 'S' : '');
+    }
+
+    var duration_prototype__proto = Duration.prototype;
+
+    duration_prototype__proto.abs            = duration_abs__abs;
+    duration_prototype__proto.add            = duration_add_subtract__add;
+    duration_prototype__proto.subtract       = duration_add_subtract__subtract;
+    duration_prototype__proto.as             = as;
+    duration_prototype__proto.asMilliseconds = asMilliseconds;
+    duration_prototype__proto.asSeconds      = asSeconds;
+    duration_prototype__proto.asMinutes      = asMinutes;
+    duration_prototype__proto.asHours        = asHours;
+    duration_prototype__proto.asDays         = asDays;
+    duration_prototype__proto.asWeeks        = asWeeks;
+    duration_prototype__proto.asMonths       = asMonths;
+    duration_prototype__proto.asYears        = asYears;
+    duration_prototype__proto.valueOf        = duration_as__valueOf;
+    duration_prototype__proto._bubble        = bubble;
+    duration_prototype__proto.get            = duration_get__get;
+    duration_prototype__proto.milliseconds   = milliseconds;
+    duration_prototype__proto.seconds        = seconds;
+    duration_prototype__proto.minutes        = minutes;
+    duration_prototype__proto.hours          = hours;
+    duration_prototype__proto.days           = days;
+    duration_prototype__proto.weeks          = weeks;
+    duration_prototype__proto.months         = months;
+    duration_prototype__proto.years          = years;
+    duration_prototype__proto.humanize       = humanize;
+    duration_prototype__proto.toISOString    = iso_string__toISOString;
+    duration_prototype__proto.toString       = iso_string__toISOString;
+    duration_prototype__proto.toJSON         = iso_string__toISOString;
+    duration_prototype__proto.locale         = locale;
+    duration_prototype__proto.localeData     = localeData;
+
+    // Deprecations
+    duration_prototype__proto.toIsoString = deprecate('toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)', iso_string__toISOString);
+    duration_prototype__proto.lang = lang;
+
+    // Side effect imports
+
+    addFormatToken('X', 0, 0, 'unix');
+    addFormatToken('x', 0, 0, 'valueOf');
+
+    // PARSING
+
+    addRegexToken('x', matchSigned);
+    addRegexToken('X', matchTimestamp);
+    addParseToken('X', function (input, array, config) {
+        config._d = new Date(parseFloat(input, 10) * 1000);
+    });
+    addParseToken('x', function (input, array, config) {
+        config._d = new Date(toInt(input));
+    });
+
+    // Side effect imports
+
+
+    utils_hooks__hooks.version = '2.10.6';
+
+    setHookCallback(local__createLocal);
+
+    utils_hooks__hooks.fn                    = momentPrototype;
+    utils_hooks__hooks.min                   = min;
+    utils_hooks__hooks.max                   = max;
+    utils_hooks__hooks.utc                   = create_utc__createUTC;
+    utils_hooks__hooks.unix                  = moment__createUnix;
+    utils_hooks__hooks.months                = lists__listMonths;
+    utils_hooks__hooks.isDate                = isDate;
+    utils_hooks__hooks.locale                = locale_locales__getSetGlobalLocale;
+    utils_hooks__hooks.invalid               = valid__createInvalid;
+    utils_hooks__hooks.duration              = create__createDuration;
+    utils_hooks__hooks.isMoment              = isMoment;
+    utils_hooks__hooks.weekdays              = lists__listWeekdays;
+    utils_hooks__hooks.parseZone             = moment__createInZone;
+    utils_hooks__hooks.localeData            = locale_locales__getLocale;
+    utils_hooks__hooks.isDuration            = isDuration;
+    utils_hooks__hooks.monthsShort           = lists__listMonthsShort;
+    utils_hooks__hooks.weekdaysMin           = lists__listWeekdaysMin;
+    utils_hooks__hooks.defineLocale          = defineLocale;
+    utils_hooks__hooks.weekdaysShort         = lists__listWeekdaysShort;
+    utils_hooks__hooks.normalizeUnits        = normalizeUnits;
+    utils_hooks__hooks.relativeTimeThreshold = duration_humanize__getSetRelativeTimeThreshold;
+
+    var _moment = utils_hooks__hooks;
+
+    return _moment;
+
+}));
+/*
+ * angular-ui-bootstrap
+ * http://angular-ui.github.io/bootstrap/
+
+ * Version: 0.12.1 - 2015-02-20
+ * License: MIT
+ */
+angular.module("ui.bootstrap", ["ui.bootstrap.tpls","ui.bootstrap.tooltip","ui.bootstrap.position","ui.bootstrap.bindHtml","ui.bootstrap.collapse","ui.bootstrap.transition"]);
+angular.module("ui.bootstrap.tpls", ["template/tooltip/tooltip-html-unsafe-popup.html","template/tooltip/tooltip-popup.html"]);
+/**
+ * The following features are still outstanding: animation as a
+ * function, placement as a function, inside, support for more triggers than
+ * just mouse enter/leave, html tooltips, and selector delegation.
+ */
+angular.module( 'ui.bootstrap.tooltip', [ 'ui.bootstrap.position', 'ui.bootstrap.bindHtml' ] )
+
+/**
+ * The $tooltip service creates tooltip- and popover-like directives as well as
+ * houses global options for them.
+ */
+.provider( '$tooltip', function () {
+  // The default options tooltip and popover.
+  var defaultOptions = {
+    placement: 'top',
+    animation: true,
+    popupDelay: 0
+  };
+
+  // Default hide triggers for each show trigger
+  var triggerMap = {
+    'mouseenter': 'mouseleave',
+    'click': 'click',
+    'focus': 'blur'
+  };
+
+  // The options specified to the provider globally.
+  var globalOptions = {};
+
+  /**
+   * `options({})` allows global configuration of all tooltips in the
+   * application.
+   *
+   *   var app = angular.module( 'App', ['ui.bootstrap.tooltip'], function( $tooltipProvider ) {
+   *     // place tooltips left instead of top by default
+   *     $tooltipProvider.options( { placement: 'left' } );
+   *   });
+   */
+	this.options = function( value ) {
+		angular.extend( globalOptions, value );
+	};
+
+  /**
+   * This allows you to extend the set of trigger mappings available. E.g.:
+   *
+   *   $tooltipProvider.setTriggers( 'openTrigger': 'closeTrigger' );
+   */
+  this.setTriggers = function setTriggers ( triggers ) {
+    angular.extend( triggerMap, triggers );
+  };
+
+  /**
+   * This is a helper function for translating camel-case to snake-case.
+   */
+  function snake_case(name){
+    var regexp = /[A-Z]/g;
+    var separator = '-';
+    return name.replace(regexp, function(letter, pos) {
+      return (pos ? separator : '') + letter.toLowerCase();
+    });
+  }
+
+  /**
+   * Returns the actual instance of the $tooltip service.
+   * TODO support multiple triggers
+   */
+  this.$get = [ '$window', '$compile', '$timeout', '$document', '$position', '$interpolate', function ( $window, $compile, $timeout, $document, $position, $interpolate ) {
+    return function $tooltip ( type, prefix, defaultTriggerShow ) {
+      var options = angular.extend( {}, defaultOptions, globalOptions );
+
+      /**
+       * Returns an object of show and hide triggers.
+       *
+       * If a trigger is supplied,
+       * it is used to show the tooltip; otherwise, it will use the `trigger`
+       * option passed to the `$tooltipProvider.options` method; else it will
+       * default to the trigger supplied to this directive factory.
+       *
+       * The hide trigger is based on the show trigger. If the `trigger` option
+       * was passed to the `$tooltipProvider.options` method, it will use the
+       * mapped trigger from `triggerMap` or the passed trigger if the map is
+       * undefined; otherwise, it uses the `triggerMap` value of the show
+       * trigger; else it will just use the show trigger.
+       */
+      function getTriggers ( trigger ) {
+        var show = trigger || options.trigger || defaultTriggerShow;
+        var hide = triggerMap[show] || show;
+        return {
+          show: show,
+          hide: hide
+        };
+      }
+
+      var directiveName = snake_case( type );
+
+      var startSym = $interpolate.startSymbol();
+      var endSym = $interpolate.endSymbol();
+      var template =
+        '<div '+ directiveName +'-popup '+
+          'title="'+startSym+'title'+endSym+'" '+
+          'content="'+startSym+'content'+endSym+'" '+
+          'placement="'+startSym+'placement'+endSym+'" '+
+          'animation="animation" '+
+          'is-open="isOpen"'+
+          '>'+
+        '</div>';
+
+      return {
+        restrict: 'EA',
+        compile: function (tElem, tAttrs) {
+          var tooltipLinker = $compile( template );
+
+          return function link ( scope, element, attrs ) {
+            var tooltip;
+            var tooltipLinkedScope;
+            var transitionTimeout;
+            var popupTimeout;
+            var appendToBody = angular.isDefined( options.appendToBody ) ? options.appendToBody : false;
+            var triggers = getTriggers( undefined );
+            var hasEnableExp = angular.isDefined(attrs[prefix+'Enable']);
+            var ttScope = scope.$new(true);
+
+            var positionTooltip = function () {
+
+              var ttPosition = $position.positionElements(element, tooltip, ttScope.placement, appendToBody);
+              ttPosition.top += 'px';
+              ttPosition.left += 'px';
+
+              // Now set the calculated positioning.
+              tooltip.css( ttPosition );
+            };
+
+            // By default, the tooltip is not open.
+            // TODO add ability to start tooltip opened
+            ttScope.isOpen = false;
+
+            function toggleTooltipBind () {
+              if ( ! ttScope.isOpen ) {
+                showTooltipBind();
+              } else {
+                hideTooltipBind();
+              }
+            }
+
+            // Show the tooltip with delay if specified, otherwise show it immediately
+            function showTooltipBind() {
+              if(hasEnableExp && !scope.$eval(attrs[prefix+'Enable'])) {
+                return;
+              }
+
+              prepareTooltip();
+
+              if ( ttScope.popupDelay ) {
+                // Do nothing if the tooltip was already scheduled to pop-up.
+                // This happens if show is triggered multiple times before any hide is triggered.
+                if (!popupTimeout) {
+                  popupTimeout = $timeout( show, ttScope.popupDelay, false );
+                  popupTimeout.then(function(reposition){reposition();});
+                }
+              } else {
+                show()();
+              }
+            }
+
+            function hideTooltipBind () {
+              scope.$apply(function () {
+                hide();
+              });
+            }
+
+            // Show the tooltip popup element.
+            function show() {
+
+              popupTimeout = null;
+
+              // If there is a pending remove transition, we must cancel it, lest the
+              // tooltip be mysteriously removed.
+              if ( transitionTimeout ) {
+                $timeout.cancel( transitionTimeout );
+                transitionTimeout = null;
+              }
+
+              // Don't show empty tooltips.
+              if ( ! ttScope.content ) {
+                return angular.noop;
+              }
+
+              createTooltip();
+
+              // Set the initial positioning.
+              tooltip.css({ top: 0, left: 0, display: 'block' });
+              ttScope.$digest();
+
+              positionTooltip();
+
+              // And show the tooltip.
+              ttScope.isOpen = true;
+              ttScope.$digest(); // digest required as $apply is not called
+
+              // Return positioning function as promise callback for correct
+              // positioning after draw.
+              return positionTooltip;
+            }
+
+            // Hide the tooltip popup element.
+            function hide() {
+              // First things first: we don't show it anymore.
+              ttScope.isOpen = false;
+
+              //if tooltip is going to be shown after delay, we must cancel this
+              $timeout.cancel( popupTimeout );
+              popupTimeout = null;
+
+              // And now we remove it from the DOM. However, if we have animation, we
+              // need to wait for it to expire beforehand.
+              // FIXME: this is a placeholder for a port of the transitions library.
+              if ( ttScope.animation ) {
+                if (!transitionTimeout) {
+                  transitionTimeout = $timeout(removeTooltip, 500);
+                }
+              } else {
+                removeTooltip();
+              }
+            }
+
+            function createTooltip() {
+              // There can only be one tooltip element per directive shown at once.
+              if (tooltip) {
+                removeTooltip();
+              }
+              tooltipLinkedScope = ttScope.$new();
+              tooltip = tooltipLinker(tooltipLinkedScope, function (tooltip) {
+                if ( appendToBody ) {
+                  $document.find( 'body' ).append( tooltip );
+                } else {
+                  element.after( tooltip );
+                }
+              });
+            }
+
+            function removeTooltip() {
+              transitionTimeout = null;
+              if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+              }
+              if (tooltipLinkedScope) {
+                tooltipLinkedScope.$destroy();
+                tooltipLinkedScope = null;
+              }
+            }
+
+            function prepareTooltip() {
+              prepPlacement();
+              prepPopupDelay();
+            }
+
+            /**
+             * Observe the relevant attributes.
+             */
+            attrs.$observe( type, function ( val ) {
+              ttScope.content = val;
+
+              if (!val && ttScope.isOpen ) {
+                hide();
+              }
+            });
+
+            attrs.$observe( prefix+'Title', function ( val ) {
+              ttScope.title = val;
+            });
+
+            function prepPlacement() {
+              var val = attrs[ prefix + 'Placement' ];
+              ttScope.placement = angular.isDefined( val ) ? val : options.placement;
+            }
+
+            function prepPopupDelay() {
+              var val = attrs[ prefix + 'PopupDelay' ];
+              var delay = parseInt( val, 10 );
+              ttScope.popupDelay = ! isNaN(delay) ? delay : options.popupDelay;
+            }
+
+            var unregisterTriggers = function () {
+              element.unbind(triggers.show, showTooltipBind);
+              element.unbind(triggers.hide, hideTooltipBind);
+            };
+
+            function prepTriggers() {
+              var val = attrs[ prefix + 'Trigger' ];
+              unregisterTriggers();
+
+              triggers = getTriggers( val );
+
+              if ( triggers.show === triggers.hide ) {
+                element.bind( triggers.show, toggleTooltipBind );
+              } else {
+                element.bind( triggers.show, showTooltipBind );
+                element.bind( triggers.hide, hideTooltipBind );
+              }
+            }
+            prepTriggers();
+
+            var animation = scope.$eval(attrs[prefix + 'Animation']);
+            ttScope.animation = angular.isDefined(animation) ? !!animation : options.animation;
+
+            var appendToBodyVal = scope.$eval(attrs[prefix + 'AppendToBody']);
+            appendToBody = angular.isDefined(appendToBodyVal) ? appendToBodyVal : appendToBody;
+
+            // if a tooltip is attached to <body> we need to remove it on
+            // location change as its parent scope will probably not be destroyed
+            // by the change.
+            if ( appendToBody ) {
+              scope.$on('$locationChangeSuccess', function closeTooltipOnLocationChangeSuccess () {
+              if ( ttScope.isOpen ) {
+                hide();
+              }
+            });
+            }
+
+            // Make sure tooltip is destroyed and removed.
+            scope.$on('$destroy', function onDestroyTooltip() {
+              $timeout.cancel( transitionTimeout );
+              $timeout.cancel( popupTimeout );
+              unregisterTriggers();
+              removeTooltip();
+              ttScope = null;
+            });
+          };
+        }
+      };
+    };
+  }];
+})
+
+.directive( 'tooltipPopup', function () {
+  return {
+    restrict: 'EA',
+    replace: true,
+    scope: { content: '@', placement: '@', animation: '&', isOpen: '&' },
+    templateUrl: 'template/tooltip/tooltip-popup.html'
+  };
+})
+
+.directive( 'tooltip', [ '$tooltip', function ( $tooltip ) {
+  return $tooltip( 'tooltip', 'tooltip', 'mouseenter' );
+}])
+
+.directive( 'tooltipHtmlUnsafePopup', function () {
+  return {
+    restrict: 'EA',
+    replace: true,
+    scope: { content: '@', placement: '@', animation: '&', isOpen: '&' },
+    templateUrl: 'template/tooltip/tooltip-html-unsafe-popup.html'
+  };
+})
+
+.directive( 'tooltipHtmlUnsafe', [ '$tooltip', function ( $tooltip ) {
+  return $tooltip( 'tooltipHtmlUnsafe', 'tooltip', 'mouseenter' );
+}]);
+
+angular.module('ui.bootstrap.position', [])
+
+/**
+ * A set of utility methods that can be use to retrieve position of DOM elements.
+ * It is meant to be used where we need to absolute-position DOM elements in
+ * relation to other, existing elements (this is the case for tooltips, popovers,
+ * typeahead suggestions etc.).
+ */
+  .factory('$position', ['$document', '$window', function ($document, $window) {
+
+    function getStyle(el, cssprop) {
+      if (el.currentStyle) { //IE
+        return el.currentStyle[cssprop];
+      } else if ($window.getComputedStyle) {
+        return $window.getComputedStyle(el)[cssprop];
+      }
+      // finally try and get inline style
+      return el.style[cssprop];
+    }
+
+    /**
+     * Checks if a given element is statically positioned
+     * @param element - raw DOM element
+     */
+    function isStaticPositioned(element) {
+      return (getStyle(element, 'position') || 'static' ) === 'static';
+    }
+
+    /**
+     * returns the closest, non-statically positioned parentOffset of a given element
+     * @param element
+     */
+    var parentOffsetEl = function (element) {
+      var docDomEl = $document[0];
+      var offsetParent = element.offsetParent || docDomEl;
+      while (offsetParent && offsetParent !== docDomEl && isStaticPositioned(offsetParent) ) {
+        offsetParent = offsetParent.offsetParent;
+      }
+      return offsetParent || docDomEl;
+    };
+
+    return {
+      /**
+       * Provides read-only equivalent of jQuery's position function:
+       * http://api.jquery.com/position/
+       */
+      position: function (element) {
+        var elBCR = this.offset(element);
+        var offsetParentBCR = { top: 0, left: 0 };
+        var offsetParentEl = parentOffsetEl(element[0]);
+        if (offsetParentEl != $document[0]) {
+          offsetParentBCR = this.offset(angular.element(offsetParentEl));
+          offsetParentBCR.top += offsetParentEl.clientTop - offsetParentEl.scrollTop;
+          offsetParentBCR.left += offsetParentEl.clientLeft - offsetParentEl.scrollLeft;
+        }
+
+        var boundingClientRect = element[0].getBoundingClientRect();
+        return {
+          width: boundingClientRect.width || element.prop('offsetWidth'),
+          height: boundingClientRect.height || element.prop('offsetHeight'),
+          top: elBCR.top - offsetParentBCR.top,
+          left: elBCR.left - offsetParentBCR.left
+        };
+      },
+
+      /**
+       * Provides read-only equivalent of jQuery's offset function:
+       * http://api.jquery.com/offset/
+       */
+      offset: function (element) {
+        var boundingClientRect = element[0].getBoundingClientRect();
+        return {
+          width: boundingClientRect.width || element.prop('offsetWidth'),
+          height: boundingClientRect.height || element.prop('offsetHeight'),
+          top: boundingClientRect.top + ($window.pageYOffset || $document[0].documentElement.scrollTop),
+          left: boundingClientRect.left + ($window.pageXOffset || $document[0].documentElement.scrollLeft)
+        };
+      },
+
+      /**
+       * Provides coordinates for the targetEl in relation to hostEl
+       */
+      positionElements: function (hostEl, targetEl, positionStr, appendToBody) {
+
+        var positionStrParts = positionStr.split('-');
+        var pos0 = positionStrParts[0], pos1 = positionStrParts[1] || 'center';
+
+        var hostElPos,
+          targetElWidth,
+          targetElHeight,
+          targetElPos;
+
+        hostElPos = appendToBody ? this.offset(hostEl) : this.position(hostEl);
+
+        targetElWidth = targetEl.prop('offsetWidth');
+        targetElHeight = targetEl.prop('offsetHeight');
+
+        var shiftWidth = {
+          center: function () {
+            return hostElPos.left + hostElPos.width / 2 - targetElWidth / 2;
+          },
+          left: function () {
+            return hostElPos.left;
+          },
+          right: function () {
+            return hostElPos.left + hostElPos.width;
+          }
+        };
+
+        var shiftHeight = {
+          center: function () {
+            return hostElPos.top + hostElPos.height / 2 - targetElHeight / 2;
+          },
+          top: function () {
+            return hostElPos.top;
+          },
+          bottom: function () {
+            return hostElPos.top + hostElPos.height;
+          }
+        };
+
+        switch (pos0) {
+          case 'right':
+            targetElPos = {
+              top: shiftHeight[pos1](),
+              left: shiftWidth[pos0]()
+            };
+            break;
+          case 'left':
+            targetElPos = {
+              top: shiftHeight[pos1](),
+              left: hostElPos.left - targetElWidth
+            };
+            break;
+          case 'bottom':
+            targetElPos = {
+              top: shiftHeight[pos0](),
+              left: shiftWidth[pos1]()
+            };
+            break;
+          default:
+            targetElPos = {
+              top: hostElPos.top - targetElHeight,
+              left: shiftWidth[pos1]()
+            };
+            break;
+        }
+
+        return targetElPos;
+      }
+    };
+  }]);
+
+angular.module('ui.bootstrap.bindHtml', [])
+
+  .directive('bindHtmlUnsafe', function () {
+    return function (scope, element, attr) {
+      element.addClass('ng-binding').data('$binding', attr.bindHtmlUnsafe);
+      scope.$watch(attr.bindHtmlUnsafe, function bindHtmlUnsafeWatchAction(value) {
+        element.html(value || '');
+      });
+    };
+  });
+angular.module('ui.bootstrap.collapse', ['ui.bootstrap.transition'])
+
+  .directive('collapse', ['$transition', function ($transition) {
+
+    return {
+      link: function (scope, element, attrs) {
+
+        var initialAnimSkip = true;
+        var currentTransition;
+
+        function doTransition(change) {
+          var newTransition = $transition(element, change);
+          if (currentTransition) {
+            currentTransition.cancel();
+          }
+          currentTransition = newTransition;
+          newTransition.then(newTransitionDone, newTransitionDone);
+          return newTransition;
+
+          function newTransitionDone() {
+            // Make sure it's this transition, otherwise, leave it alone.
+            if (currentTransition === newTransition) {
+              currentTransition = undefined;
+            }
+          }
+        }
+
+        function expand() {
+          if (initialAnimSkip) {
+            initialAnimSkip = false;
+            expandDone();
+          } else {
+            element.removeClass('collapse').addClass('collapsing');
+            doTransition({ height: element[0].scrollHeight + 'px' }).then(expandDone);
+          }
+        }
+
+        function expandDone() {
+          element.removeClass('collapsing');
+          element.addClass('collapse in');
+          element.css({height: 'auto'});
+        }
+
+        function collapse() {
+          if (initialAnimSkip) {
+            initialAnimSkip = false;
+            collapseDone();
+            element.css({height: 0});
+          } else {
+            // CSS transitions don't work with height: auto, so we have to manually change the height to a specific value
+            element.css({ height: element[0].scrollHeight + 'px' });
+            //trigger reflow so a browser realizes that height was updated from auto to a specific value
+            var x = element[0].offsetWidth;
+
+            element.removeClass('collapse in').addClass('collapsing');
+
+            doTransition({ height: 0 }).then(collapseDone);
+          }
+        }
+
+        function collapseDone() {
+          element.removeClass('collapsing');
+          element.addClass('collapse');
+        }
+
+        scope.$watch(attrs.collapse, function (shouldCollapse) {
+          if (shouldCollapse) {
+            collapse();
+          } else {
+            expand();
+          }
+        });
+      }
+    };
+  }]);
+
+angular.module('ui.bootstrap.transition', [])
+
+/**
+ * $transition service provides a consistent interface to trigger CSS 3 transitions and to be informed when they complete.
+ * @param  {DOMElement} element  The DOMElement that will be animated.
+ * @param  {string|object|function} trigger  The thing that will cause the transition to start:
+ *   - As a string, it represents the css class to be added to the element.
+ *   - As an object, it represents a hash of style attributes to be applied to the element.
+ *   - As a function, it represents a function to be called that will cause the transition to occur.
+ * @return {Promise}  A promise that is resolved when the transition finishes.
+ */
+.factory('$transition', ['$q', '$timeout', '$rootScope', function($q, $timeout, $rootScope) {
+
+  var $transition = function(element, trigger, options) {
+    options = options || {};
+    var deferred = $q.defer();
+    var endEventName = $transition[options.animation ? 'animationEndEventName' : 'transitionEndEventName'];
+
+    var transitionEndHandler = function(event) {
+      $rootScope.$apply(function() {
+        element.unbind(endEventName, transitionEndHandler);
+        deferred.resolve(element);
+      });
+    };
+
+    if (endEventName) {
+      element.bind(endEventName, transitionEndHandler);
+    }
+
+    // Wrap in a timeout to allow the browser time to update the DOM before the transition is to occur
+    $timeout(function() {
+      if ( angular.isString(trigger) ) {
+        element.addClass(trigger);
+      } else if ( angular.isFunction(trigger) ) {
+        trigger(element);
+      } else if ( angular.isObject(trigger) ) {
+        element.css(trigger);
+      }
+      //If browser does not support transitions, instantly resolve
+      if ( !endEventName ) {
+        deferred.resolve(element);
+      }
+    });
+
+    // Add our custom cancel function to the promise that is returned
+    // We can call this if we are about to run a new transition, which we know will prevent this transition from ending,
+    // i.e. it will therefore never raise a transitionEnd event for that transition
+    deferred.promise.cancel = function() {
+      if ( endEventName ) {
+        element.unbind(endEventName, transitionEndHandler);
+      }
+      deferred.reject('Transition cancelled');
+    };
+
+    return deferred.promise;
+  };
+
+  // Work out the name of the transitionEnd event
+  var transElement = document.createElement('trans');
+  var transitionEndEventNames = {
+    'WebkitTransition': 'webkitTransitionEnd',
+    'MozTransition': 'transitionend',
+    'OTransition': 'oTransitionEnd',
+    'transition': 'transitionend'
+  };
+  var animationEndEventNames = {
+    'WebkitTransition': 'webkitAnimationEnd',
+    'MozTransition': 'animationend',
+    'OTransition': 'oAnimationEnd',
+    'transition': 'animationend'
+  };
+  function findEndEventName(endEventNames) {
+    for (var name in endEventNames){
+      if (transElement.style[name] !== undefined) {
+        return endEventNames[name];
+      }
+    }
+  }
+  $transition.transitionEndEventName = findEndEventName(transitionEndEventNames);
+  $transition.animationEndEventName = findEndEventName(animationEndEventNames);
+  return $transition;
+}]);
+
+angular.module("template/tooltip/tooltip-html-unsafe-popup.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("template/tooltip/tooltip-html-unsafe-popup.html",
+    "<div class=\"tooltip {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+    "  <div class=\"tooltip-arrow\"></div>\n" +
+    "  <div class=\"tooltip-inner\" bind-html-unsafe=\"content\"></div>\n" +
+    "</div>\n" +
+    "");
+}]);
+
+angular.module("template/tooltip/tooltip-popup.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("template/tooltip/tooltip-popup.html",
+    "<div class=\"tooltip {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+    "  <div class=\"tooltip-arrow\"></div>\n" +
+    "  <div class=\"tooltip-inner\" ng-bind=\"content\"></div>\n" +
+    "</div>\n" +
+    "");
+}]);
+
+/**
+ * angular-bootstrap-calendar - A pure AngularJS bootstrap themed responsive calendar that can display events and has views for year, month, week and day
+ * @version v0.15.5
+ * @link https://github.com/mattlewis92/angular-bootstrap-calendar
+ * @license MIT
+ */
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory(require("angular"), (function webpackLoadOptionalExternalModule() { try { return require("interact.js"); } catch(e) {} }()), require("moment"));
+	else if(typeof define === 'function' && define.amd)
+		define(["angular", "interact", "moment"], factory);
+	else if(typeof exports === 'object')
+		exports["angularBootstrapCalendarModuleName"] = factory(require("angular"), (function webpackLoadOptionalExternalModule() { try { return require("interact.js"); } catch(e) {} }()), require("moment"));
+	else
+		root["angularBootstrapCalendarModuleName"] = factory(root["angular"], root["interact"], root["moment"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_13__, __WEBPACK_EXTERNAL_MODULE_46__, __WEBPACK_EXTERNAL_MODULE_48__) {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	__webpack_require__(8);
+
+	module.exports = __webpack_require__(12);
+
+
+/***/ },
+/* 1 */,
+/* 2 */,
+/* 3 */,
+/* 4 */,
+/* 5 */,
+/* 6 */,
+/* 7 */,
+/* 8 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 9 */,
+/* 10 */,
+/* 11 */,
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	function requireAll(r) {
+	  r.keys().forEach(r);
+	}
+
+	module.exports = angular
+	  .module('mwl.calendar', [])
+	  .constant('calendarUseTemplates', (false) === false)
+	  .run(["$templateCache", "calendarUseTemplates", function($templateCache, calendarUseTemplates) {
+	    if (calendarUseTemplates) {
+	      $templateCache.put('calendarMonthCellEvents.html', __webpack_require__(14));
+	      $templateCache.put('calendarMonthCell.html', __webpack_require__(15));
+	    }
+	  }]).name;
+
+	requireAll(__webpack_require__(16));
+	requireAll(__webpack_require__(37));
+	requireAll(__webpack_require__(41));
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_13__;
+
+/***/ },
+/* 14 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"events-list\" ng-show=\"day.events.length > 0\">\n  <a\n    ng-repeat=\"event in day.events | orderBy:'startsAt' track by event.$id\"\n    href=\"javascript:;\"\n    ng-click=\"vm.onEventClick({calendarEvent: event})\"\n    class=\"pull-left event\"\n    ng-class=\"'event-' + event.type + ' ' + event.cssClass\"\n    ng-mouseenter=\"vm.highlightEvent(event, true)\"\n    ng-mouseleave=\"vm.highlightEvent(event, false)\"\n    tooltip-append-to-body=\"true\"\n    tooltip-html-unsafe=\"{{ (event.startsAt | calendarDate:'time':true) + (vm.calendarConfig.displayEventEndTimes && event.endsAt ? ' - ' + (event.endsAt | calendarDate:'time':true) : '') + ' - ' + event.title }}\"\n    mwl-draggable=\"event.draggable === true\"\n    drop-data=\"{event: event}\">\n  </a>\n</div>\n";
+
+/***/ },
+/* 15 */
+/***/ function(module, exports) {
+
+	module.exports = "<div\n  mwl-droppable\n  on-drop=\"vm.handleEventDrop(dropData.event, day.date)\"\n  class=\"cal-month-day {{ day.cssClass }}\"\n  ng-class=\"{\n            'cal-day-outmonth': !day.inMonth,\n            'cal-day-inmonth': day.inMonth,\n            'cal-day-weekend': day.isWeekend,\n            'cal-day-past': day.isPast,\n            'cal-day-today': day.isToday,\n            'cal-day-future': day.isFuture\n          }\">\n\n  <small\n    class=\"cal-events-num badge badge-important pull-left\"\n    ng-show=\"day.badgeTotal > 0\"\n    ng-bind=\"day.badgeTotal\">\n  </small>\n\n  <span\n    class=\"pull-right\"\n    data-cal-date\n    ng-click=\"vm.calendarCtrl.drillDown(day.date)\"\n    ng-bind=\"day.label\">\n  </span>\n\n  <div class=\"cal-day-tick\" ng-show=\"dayIndex === vm.openDayIndex && vm.view[vm.openDayIndex].events.length > 0\">\n    <i class=\"glyphicon glyphicon-chevron-up\"></i>\n    <i class=\"fa fa-chevron-up\"></i>\n  </div>\n\n  <ng-include src=\"vm.cellEventsTemplateUrl || 'calendarMonthCellEvents.html'\"></ng-include>\n\n  <div id=\"cal-week-box\" ng-if=\"$first && rowHovered\">\n    Week {{ day.date.week() }}\n  </div>\n\n</div>\n";
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var map = {
+		"./mwlCalendar.js": 17,
+		"./mwlCalendarDay.js": 19,
+		"./mwlCalendarHourList.js": 21,
+		"./mwlCalendarMonth.js": 23,
+		"./mwlCalendarSlideBox.js": 25,
+		"./mwlCalendarWeek.js": 27,
+		"./mwlCalendarYear.js": 29,
+		"./mwlCollapseFallback.js": 31,
+		"./mwlDateModifier.js": 32,
+		"./mwlDraggable.js": 33,
+		"./mwlDroppable.js": 34,
+		"./mwlElementDimensions.js": 35,
+		"./mwlResizable.js": 36
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 16;
+
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarCtrl', ["$scope", "$log", "$timeout", "$attrs", "$locale", "moment", "calendarTitle", function($scope, $log, $timeout, $attrs, $locale, moment, calendarTitle) {
+
+	    var vm = this;
+
+	    vm.events = vm.events || [];
+
+	    vm.changeView = function(view, newDay) {
+	      vm.view = view;
+	      vm.currentDay = newDay;
+	    };
+
+	    vm.drillDown = function(date) {
+
+	      var rawDate = moment(date).toDate();
+
+	      var nextView = {
+	        year: 'month',
+	        month: 'day',
+	        week: 'day'
+	      };
+
+	      if (vm.onDrillDownClick({calendarDate: rawDate, calendarNextView: nextView[vm.view]}) !== false) {
+	        vm.changeView(nextView[vm.view], rawDate);
+	      }
+
+	    };
+
+	    var previousDate = moment(vm.currentDay);
+	    var previousView = vm.view;
+
+	    function eventIsValid(event) {
+	      if (!event.startsAt) {
+	        $log.warn('Bootstrap calendar: ', 'Event is missing the startsAt field', event);
+	      }
+
+	      if (!angular.isDate(event.startsAt)) {
+	        $log.warn('Bootstrap calendar: ', 'Event startsAt should be a javascript date object', event);
+	      }
+
+	      if (angular.isDefined(event.endsAt)) {
+	        if (!angular.isDate(event.endsAt)) {
+	          $log.warn('Bootstrap calendar: ', 'Event endsAt should be a javascript date object', event);
+	        }
+	        if (moment(event.startsAt).isAfter(moment(event.endsAt))) {
+	          $log.warn('Bootstrap calendar: ', 'Event cannot start after it finishes', event);
+	        }
+	      }
+
+	      return true;
+	    }
+
+	    function refreshCalendar() {
+
+	      if (calendarTitle[vm.view] && angular.isDefined($attrs.viewTitle)) {
+	        vm.viewTitle = calendarTitle[vm.view](vm.currentDay);
+	      }
+
+	      vm.events = vm.events.filter(eventIsValid).map(function(event, index) {
+	        Object.defineProperty(event, '$id', {enumerable: false, configurable: true, value: index});
+	        return event;
+	      });
+
+	      //if on-timespan-click="calendarDay = calendarDate" is set then don't update the view as nothing needs to change
+	      var currentDate = moment(vm.currentDay);
+	      var shouldUpdate = true;
+	      if (
+	        previousDate.clone().startOf(vm.view).isSame(currentDate.clone().startOf(vm.view)) &&
+	        !previousDate.isSame(currentDate) &&
+	        vm.view === previousView
+	      ) {
+	        shouldUpdate = false;
+	      }
+	      previousDate = currentDate;
+	      previousView = vm.view;
+
+	      if (shouldUpdate) {
+	        // a $timeout is required as $broadcast is synchronous so if a new events array is set the calendar won't update
+	        $timeout(function() {
+	          $scope.$broadcast('calendar.refreshView');
+	        });
+	      }
+	    }
+
+	    var eventsWatched = false;
+
+	    //Refresh the calendar when any of these variables change.
+	    $scope.$watchGroup([
+	      'vm.currentDay',
+	      'vm.view',
+	      function() {
+	        return moment.locale() + $locale.id; //Auto update the calendar when the locale changes
+	      }
+	    ], function() {
+	      if (!eventsWatched) {
+	        eventsWatched = true;
+	        //need to deep watch events hence why it isn't included in the watch group
+	        $scope.$watch('vm.events', refreshCalendar, true); //this will call refreshCalendar when the watcher starts (i.e. now)
+	      } else {
+	        refreshCalendar();
+	      }
+	    });
+
+	  }])
+	  .directive('mwlCalendar', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      template: calendarUseTemplates ? __webpack_require__(18) : '',
+	      restrict: 'EA',
+	      scope: {
+	        events: '=',
+	        view: '=',
+	        viewTitle: '=?',
+	        currentDay: '=',
+	        editEventHtml: '=',
+	        deleteEventHtml: '=',
+	        autoOpen: '=',
+	        onEventClick: '&',
+	        onEventTimesChanged: '&',
+	        onEditEventClick: '&',
+	        onDeleteEventClick: '&',
+	        onTimespanClick: '&',
+	        onDrillDownClick: '&',
+	        cellModifier: '&',
+	        dayViewStart: '@',
+	        dayViewEnd: '@',
+	        dayViewSplit: '@',
+	        monthCellTemplateUrl: '@',
+	        monthCellEventsTemplateUrl: '@'
+	      },
+	      controller: 'MwlCalendarCtrl as vm',
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-context\" ng-switch=\"vm.view\">\n\n  <div class=\"alert alert-danger\" ng-switch-default>The value passed to the view attribute of the calendar is not set</div>\n\n  <div class=\"alert alert-danger\" ng-hide=\"vm.currentDay\">The value passed to current-day attribute of the calendar is not set</div>\n\n  <mwl-calendar-year\n    events=\"vm.events\"\n    current-day=\"vm.currentDay\"\n    on-event-click=\"vm.onEventClick\"\n    on-event-times-changed=\"vm.onEventTimesChanged\"\n    on-edit-event-click=\"vm.onEditEventClick\"\n    on-delete-event-click=\"vm.onDeleteEventClick\"\n    on-timespan-click=\"vm.onTimespanClick\"\n    edit-event-html=\"vm.editEventHtml\"\n    delete-event-html=\"vm.deleteEventHtml\"\n    auto-open=\"vm.autoOpen\"\n    cell-modifier=\"vm.cellModifier\"\n    ng-switch-when=\"year\"\n  ></mwl-calendar-year>\n\n  <mwl-calendar-month\n    events=\"vm.events\"\n    current-day=\"vm.currentDay\"\n    on-event-click=\"vm.onEventClick\"\n    on-event-times-changed=\"vm.onEventTimesChanged\"\n    on-edit-event-click=\"vm.onEditEventClick\"\n    on-delete-event-click=\"vm.onDeleteEventClick\"\n    on-timespan-click=\"vm.onTimespanClick\"\n    edit-event-html=\"vm.editEventHtml\"\n    delete-event-html=\"vm.deleteEventHtml\"\n    auto-open=\"vm.autoOpen\"\n    cell-modifier=\"vm.cellModifier\"\n    cell-template-url=\"{{ vm.monthCellTemplateUrl }}\"\n    cell-events-template-url=\"{{ vm.monthCellEventsTemplateUrl }}\"\n    ng-switch-when=\"month\"\n    ></mwl-calendar-month>\n\n  <mwl-calendar-week\n    events=\"vm.events\"\n    current-day=\"vm.currentDay\"\n    on-event-click=\"vm.onEventClick\"\n    on-event-times-changed=\"vm.onEventTimesChanged\"\n    day-view-start=\"vm.dayViewStart\"\n    day-view-end=\"vm.dayViewEnd\"\n    day-view-split=\"vm.dayViewSplit\"\n    ng-switch-when=\"week\"\n    ></mwl-calendar-week>\n\n  <mwl-calendar-day\n    events=\"vm.events\"\n    current-day=\"vm.currentDay\"\n    on-event-click=\"vm.onEventClick\"\n    on-event-times-changed=\"vm.onEventTimesChanged\"\n    on-timespan-click=\"vm.onTimespanClick\"\n    day-view-start=\"vm.dayViewStart\"\n    day-view-end=\"vm.dayViewEnd\"\n    day-view-split=\"vm.dayViewSplit\"\n    ng-switch-when=\"day\"\n    ></mwl-calendar-day>\n</div>\n";
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarDayCtrl', ["$scope", "$sce", "moment", "calendarHelper", "calendarConfig", function($scope, $sce, moment, calendarHelper, calendarConfig) {
+
+	    var vm = this;
+
+	    vm.calendarConfig = calendarConfig;
+	    vm.$sce = $sce;
+
+	    $scope.$on('calendar.refreshView', function() {
+	      vm.dayViewSplit = vm.dayViewSplit || 30;
+	      vm.dayViewHeight = calendarHelper.getDayViewHeight(
+	        vm.dayViewStart,
+	        vm.dayViewEnd,
+	        vm.dayViewSplit
+	      );
+
+	      vm.view = calendarHelper.getDayView(
+	        vm.events,
+	        vm.currentDay,
+	        vm.dayViewStart,
+	        vm.dayViewEnd,
+	        vm.dayViewSplit
+	      );
+
+	    });
+
+	    vm.eventDragComplete = function(event, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      var newStart = moment(event.startsAt).add(minutesDiff, 'minutes');
+	      var newEnd = moment(event.endsAt).add(minutesDiff, 'minutes');
+	      delete event.tempStartsAt;
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: newStart.toDate(),
+	        calendarNewEventEnd: event.endsAt ? newEnd.toDate() : null
+	      });
+	    };
+
+	    vm.eventDragged = function(event, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	    };
+
+	    vm.eventResizeComplete = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      var start = moment(event.startsAt);
+	      var end = moment(event.endsAt);
+	      if (edge === 'start') {
+	        start.add(minutesDiff, 'minutes');
+	      } else {
+	        end.add(minutesDiff, 'minutes');
+	      }
+	      delete event.tempStartsAt;
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: start.toDate(),
+	        calendarNewEventEnd: end.toDate()
+	      });
+	    };
+
+	    vm.eventResized = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      if (edge === 'start') {
+	        event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	      }
+	    };
+
+	  }])
+	  .directive('mwlCalendarDay', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      template: calendarUseTemplates ? __webpack_require__(20) : '',
+	      restrict: 'EA',
+	      require: '^mwlCalendar',
+	      scope: {
+	        events: '=',
+	        currentDay: '=',
+	        onEventClick: '=',
+	        onEventTimesChanged: '=',
+	        onTimespanClick: '=',
+	        dayViewStart: '=',
+	        dayViewEnd: '=',
+	        dayViewSplit: '='
+	      },
+	      controller: 'MwlCalendarDayCtrl as vm',
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 20 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-day-box\">\n  <div class=\"row-fluid clearfix cal-row-head\">\n    <div class=\"span1 col-xs-1 cal-cell\" ng-bind=\"vm.calendarConfig.i18nStrings.timeLabel\"></div>\n    <div class=\"span11 col-xs-11 cal-cell\" ng-bind=\"vm.calendarConfig.i18nStrings.eventsLabel\"></div>\n  </div>\n\n  <div class=\"cal-day-panel clearfix\" ng-style=\"{height: vm.dayViewHeight + 'px'}\">\n\n    <mwl-calendar-hour-list\n      day-view-start=\"vm.dayViewStart\"\n      day-view-end=\"vm.dayViewEnd\"\n      day-view-split=\"vm.dayViewSplit\"\n      on-timespan-click=\"vm.onTimespanClick\"\n      current-day=\"vm.currentDay\">\n    </mwl-calendar-hour-list>\n\n    <div\n      class=\"pull-left day-event day-highlight\"\n      ng-repeat=\"event in vm.view track by event.$id\"\n      ng-class=\"'dh-event-' + event.type + ' ' + event.cssClass\"\n      ng-style=\"{top: event.top + 'px', left: event.left + 60 + 'px', height: event.height + 'px'}\"\n      mwl-draggable=\"event.draggable === true\"\n      axis=\"'y'\"\n      snap-grid=\"{y: 30}\"\n      on-drag=\"vm.eventDragged(event, y)\"\n      on-drag-end=\"vm.eventDragComplete(event, y)\"\n      mwl-resizable=\"event.resizable === true && event.endsAt\"\n      resize-edges=\"{top: true, bottom: true}\"\n      on-resize=\"vm.eventResized(event, edge, y)\"\n      on-resize-end=\"vm.eventResizeComplete(event, edge, y)\">\n\n      <span class=\"cal-hours\">\n        <span ng-show=\"event.top == 0\"><span ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'day':true\"></span>, </span>\n        <span ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'time':true\"></span>\n      </span>\n      <a href=\"javascript:;\" class=\"event-item\" ng-click=\"vm.onEventClick({calendarEvent: event})\">\n        <span ng-bind-html=\"vm.$sce.trustAsHtml(event.title) | calendarTruncateEventTitle:20:event.height\"></span>\n      </a>\n\n    </div>\n\n  </div>\n\n</div>\n";
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarHourListCtrl', ["$scope", "moment", "calendarConfig", "calendarHelper", function($scope, moment, calendarConfig, calendarHelper) {
+	    var vm = this;
+	    var dayViewStart, dayViewEnd;
+
+	    function updateDays() {
+	      dayViewStart = moment(vm.dayViewStart || '00:00', 'HH:mm');
+	      dayViewEnd = moment(vm.dayViewEnd || '23:00', 'HH:mm');
+	      vm.dayViewSplit = parseInt(vm.dayViewSplit);
+	      vm.hours = [];
+	      var dayCounter = moment(vm.currentDay)
+	        .clone()
+	        .hours(dayViewStart.hours())
+	        .minutes(dayViewStart.minutes())
+	        .seconds(dayViewStart.seconds());
+	      for (var i = 0; i <= dayViewEnd.diff(dayViewStart, 'hours'); i++) {
+	        vm.hours.push({
+	          label: calendarHelper.formatDate(dayCounter, calendarConfig.dateFormats.hour),
+	          date: dayCounter.clone()
+	        });
+	        dayCounter.add(1, 'hour');
+	      }
+	    }
+
+	    var originalLocale = moment.locale();
+
+	    $scope.$on('calendar.refreshView', function() {
+
+	      if (originalLocale !== moment.locale()) {
+	        originalLocale = moment.locale();
+	        updateDays();
+	      }
+
+	    });
+
+	    $scope.$watchGroup([
+	      'vm.dayViewStart',
+	      'vm.dayViewEnd',
+	      'vm.dayViewSplit',
+	      'vm.currentDay'
+	    ], function() {
+	      updateDays();
+	    });
+
+	  }])
+	  .directive('mwlCalendarHourList', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      restrict: 'EA',
+	      template: calendarUseTemplates ? __webpack_require__(22) : '',
+	      controller: 'MwlCalendarHourListCtrl as vm',
+	      scope: {
+	        currentDay: '=',
+	        dayViewStart: '=',
+	        dayViewEnd: '=',
+	        dayViewSplit: '=',
+	        onTimespanClick: '='
+	      },
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-day-panel-hour\">\n\n  <div class=\"cal-day-hour\" ng-repeat=\"hour in vm.hours track by $index\">\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.toDate()})\">\n      <div class=\"span1 col-xs-1\"><strong ng-bind=\"hour.label\"></strong></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.clone().add(vm.dayViewSplit, 'minutes').toDate()})\">\n      <div class=\"span1 col-xs-1\"></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-show=\"vm.dayViewSplit < 30\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.clone().add(vm.dayViewSplit * 2, 'minutes').toDate()})\">\n      <div class=\"span1 col-xs-1\"></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-show=\"vm.dayViewSplit < 30\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.clone().add(vm.dayViewSplit * 3, 'minutes').toDate()})\">\n      <div class=\"span1 col-xs-1\"></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-show=\"vm.dayViewSplit < 15\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.clone().add(vm.dayViewSplit * 4, 'minutes').toDate()})\">\n      <div class=\"span1 col-xs-1\"></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n    <div\n      class=\"row-fluid cal-day-hour-part\"\n      ng-show=\"vm.dayViewSplit < 15\"\n      ng-click=\"vm.onTimespanClick({calendarDate: hour.date.clone().add(vm.dayViewSplit * 5, 'minutes').toDate()})\">\n      <div class=\"span1 col-xs-1\"></div>\n      <div class=\"span11 col-xs-11\"></div>\n    </div>\n\n  </div>\n\n</div>\n";
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarMonthCtrl', ["$scope", "moment", "calendarHelper", "calendarConfig", function($scope, moment, calendarHelper, calendarConfig) {
+
+	    var vm = this;
+	    vm.calendarConfig = calendarConfig;
+
+	    $scope.$on('calendar.refreshView', function() {
+
+	      vm.weekDays = calendarHelper.getWeekDayNames();
+
+	      vm.view = calendarHelper.getMonthView(vm.events, vm.currentDay, vm.cellModifier);
+	      var rows = Math.floor(vm.view.length / 7);
+	      vm.monthOffsets = [];
+	      for (var i = 0; i < rows; i++) {
+	        vm.monthOffsets.push(i * 7);
+	      }
+
+	      //Auto open the calendar to the current day if set
+	      if (vm.autoOpen) {
+	        vm.view.forEach(function(day) {
+	          if (day.inMonth && moment(vm.currentDay).startOf('day').isSame(day.date) && !vm.openDayIndex) {
+	            vm.dayClicked(day, true);
+	          }
+	        });
+	      }
+
+	    });
+
+	    vm.dayClicked = function(day, dayClickedFirstRun, $event) {
+
+	      if (!dayClickedFirstRun) {
+	        vm.onTimespanClick({
+	          calendarDate: day.date.toDate(),
+	          $event: $event
+	        });
+	        if ($event && $event.defaultPrevented) {
+	          return;
+	        }
+	      }
+
+	      vm.openRowIndex = null;
+	      var dayIndex = vm.view.indexOf(day);
+	      if (dayIndex === vm.openDayIndex) { //the day has been clicked and is already open
+	        vm.openDayIndex = null; //close the open day
+	      } else {
+	        vm.openDayIndex = dayIndex;
+	        vm.openRowIndex = Math.floor(dayIndex / 7);
+	      }
+
+	    };
+
+	    vm.highlightEvent = function(event, shouldAddClass) {
+
+	      vm.view.forEach(function(day) {
+	        delete day.highlightClass;
+	        if (shouldAddClass) {
+	          var dayContainsEvent = day.events.indexOf(event) > -1;
+	          if (dayContainsEvent) {
+	            day.highlightClass = 'day-highlight dh-event-' + event.type;
+	          }
+	        }
+	      });
+
+	    };
+
+	    vm.handleEventDrop = function(event, newDayDate) {
+
+	      var newStart = moment(event.startsAt)
+	        .date(moment(newDayDate).date())
+	        .month(moment(newDayDate).month());
+
+	      var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarDate: newDayDate,
+	        calendarNewEventStart: newStart.toDate(),
+	        calendarNewEventEnd: newEnd ? newEnd.toDate() : null
+	      });
+	    };
+
+	  }])
+	  .directive('mwlCalendarMonth', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      template: calendarUseTemplates ? __webpack_require__(24) : '',
+	      restrict: 'EA',
+	      require: '^mwlCalendar',
+	      scope: {
+	        events: '=',
+	        currentDay: '=',
+	        onEventClick: '=',
+	        onEditEventClick: '=',
+	        onDeleteEventClick: '=',
+	        onEventTimesChanged: '=',
+	        editEventHtml: '=',
+	        deleteEventHtml: '=',
+	        autoOpen: '=',
+	        onTimespanClick: '=',
+	        cellModifier: '=',
+	        cellTemplateUrl: '@',
+	        cellEventsTemplateUrl: '@'
+	      },
+	      controller: 'MwlCalendarMonthCtrl as vm',
+	      link: function(scope, element, attrs, calendarCtrl) {
+	        scope.vm.calendarCtrl = calendarCtrl;
+	      },
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-row-fluid cal-row-head\">\n\n  <div class=\"cal-cell1\" ng-repeat=\"day in vm.weekDays track by $index\" ng-bind=\"day\"></div>\n\n</div>\n<div class=\"cal-month-box\">\n\n  <div\n    ng-repeat=\"rowOffset in vm.monthOffsets track by rowOffset\"\n    ng-mouseenter=\"rowHovered = true\"\n    ng-mouseleave=\"rowHovered = false\">\n    <div class=\"cal-row-fluid cal-before-eventlist\">\n      <div\n        ng-repeat=\"day in vm.view | calendarLimitTo:7:rowOffset track by $index\"\n        ng-init=\"dayIndex = vm.view.indexOf(day)\"\n        class=\"cal-cell1 cal-cell {{ day.highlightClass }}\"\n        ng-click=\"vm.dayClicked(day, false, $event)\"\n        ng-class=\"{pointer: day.events.length > 0}\">\n        <ng-include src=\"vm.cellTemplateUrl || 'calendarMonthCell.html'\"></ng-include>\n      </div>\n    </div>\n\n    <mwl-calendar-slide-box\n      is-open=\"vm.openRowIndex === $index && vm.view[vm.openDayIndex].events.length > 0\"\n      events=\"vm.view[vm.openDayIndex].events\"\n      on-event-click=\"vm.onEventClick\"\n      edit-event-html=\"vm.editEventHtml\"\n      on-edit-event-click=\"vm.onEditEventClick\"\n      delete-event-html=\"vm.deleteEventHtml\"\n      on-delete-event-click=\"vm.onDeleteEventClick\">\n    </mwl-calendar-slide-box>\n\n  </div>\n\n</div>\n";
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarSlideBoxCtrl', ["$sce", "$scope", "$timeout", "calendarConfig", function($sce, $scope, $timeout, calendarConfig) {
+
+	    var vm = this;
+	    vm.$sce = $sce;
+	    vm.calendarConfig = calendarConfig;
+
+	    vm.isCollapsed = true;
+	    $scope.$watch('vm.isOpen', function(isOpen) {
+	      //events must be populated first to set the element height before animation will work
+	      $timeout(function() {
+	        vm.isCollapsed = !isOpen;
+	      });
+	    });
+
+	  }])
+	  .directive('mwlCalendarSlideBox', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      restrict: 'EA',
+	      template: calendarUseTemplates ? __webpack_require__(26) : '',
+	      replace: true,
+	      controller: 'MwlCalendarSlideBoxCtrl as vm',
+	      require: ['^?mwlCalendarMonth', '^?mwlCalendarYear'],
+	      link: function(scope, elm, attrs, ctrls) {
+	        scope.isMonthView = !!ctrls[0];
+	        scope.isYearView = !!ctrls[1];
+	      },
+	      scope: {
+	        isOpen: '=',
+	        events: '=',
+	        onEventClick: '=',
+	        editEventHtml: '=',
+	        onEditEventClick: '=',
+	        deleteEventHtml: '=',
+	        onDeleteEventClick: '='
+	      },
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-slide-box\" collapse=\"vm.isCollapsed\" mwl-collapse-fallback=\"vm.isCollapsed\">\n  <div class=\"cal-slide-content cal-event-list\">\n    <ul class=\"unstyled list-unstyled\">\n\n      <li\n        ng-repeat=\"event in vm.events | orderBy:'startsAt' track by event.$id\"\n        ng-class=\"event.cssClass\"\n        mwl-draggable=\"event.draggable === true\"\n        drop-data=\"{event: event}\">\n        <span class=\"pull-left event\" ng-class=\"'event-' + event.type\"></span>\n        &nbsp;\n        <a\n          href=\"javascript:;\"\n          class=\"event-item\"\n          ng-click=\"vm.onEventClick({calendarEvent: event})\">\n          <span ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"></span>\n          (<span ng-bind=\"event.startsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span><span ng-if=\"vm.calendarConfig.displayEventEndTimes && event.endsAt\"> - <span ng-bind=\"event.endsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span></span>)\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-edit\"\n          ng-if=\"vm.editEventHtml && event.editable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.editEventHtml)\"\n          ng-click=\"vm.onEditEventClick({calendarEvent: event})\">\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-delete\"\n          ng-if=\"vm.deleteEventHtml && event.deletable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.deleteEventHtml)\"\n          ng-click=\"vm.onDeleteEventClick({calendarEvent: event})\">\n        </a>\n      </li>\n\n    </ul>\n  </div>\n</div>\n";
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarWeekCtrl', ["$scope", "$sce", "moment", "calendarHelper", "calendarConfig", function($scope, $sce, moment, calendarHelper, calendarConfig) {
+
+	    var vm = this;
+
+	    vm.showTimes = calendarConfig.showTimesOnWeekView;
+	    vm.$sce = $sce;
+
+	    $scope.$on('calendar.refreshView', function() {
+	      vm.dayViewSplit = vm.dayViewSplit || 30;
+	      vm.dayViewHeight = calendarHelper.getDayViewHeight(
+	        vm.dayViewStart,
+	        vm.dayViewEnd,
+	        vm.dayViewSplit
+	      );
+	      if (vm.showTimes) {
+	        vm.view = calendarHelper.getWeekViewWithTimes(
+	          vm.events,
+	          vm.currentDay,
+	          vm.dayViewStart,
+	          vm.dayViewEnd,
+	          vm.dayViewSplit
+	        );
+	      } else {
+	        vm.view = calendarHelper.getWeekView(vm.events, vm.currentDay);
+	      }
+	    });
+
+	    vm.weekDragged = function(event, daysDiff, minuteChunksMoved) {
+
+	      var newStart = moment(event.startsAt).add(daysDiff, 'days');
+	      var newEnd = moment(event.endsAt).add(daysDiff, 'days');
+
+	      if (minuteChunksMoved) {
+	        var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	        newStart = newStart.add(minutesDiff, 'minutes');
+	        newEnd = newEnd.add(minutesDiff, 'minutes');
+	      }
+
+	      delete event.tempStartsAt;
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: newStart.toDate(),
+	        calendarNewEventEnd: event.endsAt ? newEnd.toDate() : null
+	      });
+	    };
+
+	    vm.weekResized = function(event, edge, daysDiff) {
+
+	      var start = moment(event.startsAt);
+	      var end = moment(event.endsAt);
+	      if (edge === 'start') {
+	        start.add(daysDiff, 'days');
+	      } else {
+	        end.add(daysDiff, 'days');
+	      }
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: start.toDate(),
+	        calendarNewEventEnd: end.toDate()
+	      });
+
+	    };
+
+	    vm.tempTimeChanged = function(event, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	    };
+
+	  }])
+	  .directive('mwlCalendarWeek', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      template: calendarUseTemplates ? __webpack_require__(28) : '',
+	      restrict: 'EA',
+	      require: '^mwlCalendar',
+	      scope: {
+	        events: '=',
+	        currentDay: '=',
+	        onEventClick: '=',
+	        onEventTimesChanged: '=',
+	        dayViewStart: '=',
+	        dayViewEnd: '=',
+	        dayViewSplit: '='
+	      },
+	      controller: 'MwlCalendarWeekCtrl as vm',
+	      link: function(scope, element, attrs, calendarCtrl) {
+	        scope.vm.calendarCtrl = calendarCtrl;
+	      },
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 28 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-week-box\" ng-class=\"{'cal-day-box': vm.showTimes}\">\n  <div class=\"cal-row-fluid cal-row-head\">\n\n    <div\n      class=\"cal-cell1\"\n      ng-repeat=\"day in vm.view.days track by $index\"\n      ng-class=\"{\n        'cal-day-weekend': day.isWeekend,\n        'cal-day-past': day.isPast,\n        'cal-day-today': day.isToday,\n        'cal-day-future': day.isFuture}\"\n      mwl-element-dimensions=\"vm.dayColumnDimensions\">\n\n      <span ng-bind=\"day.weekDayLabel\"></span>\n      <br>\n      <small>\n        <span\n          data-cal-date\n          ng-click=\"vm.calendarCtrl.drillDown(day.date)\"\n          class=\"pointer\"\n          ng-bind=\"day.dayLabel\">\n        </span>\n      </small>\n\n    </div>\n\n  </div>\n\n  <div class=\"cal-day-panel clearfix\" ng-style=\"{height: vm.showTimes ? (vm.dayViewHeight + 'px') : 'auto'}\">\n\n    <mwl-calendar-hour-list\n      day-view-start=\"vm.dayViewStart\"\n      day-view-end=\"vm.dayViewEnd\"\n      day-view-split=\"vm.dayViewSplit\"\n      current-day=\"vm.currentDay\"\n      ng-if=\"vm.showTimes\">\n    </mwl-calendar-hour-list>\n\n    <div class=\"row\">\n      <div class=\"col-xs-12\">\n        <div\n          class=\"cal-row-fluid \"\n          ng-repeat=\"event in vm.view.events track by event.$id\">\n          <div\n            ng-class=\"'cal-cell' + (vm.showTimes ? 1 : event.daySpan) + ' cal-offset' + event.dayOffset + ' day-highlight dh-event-' + event.type + ' ' + event.cssClass\"\n            ng-style=\"{top: vm.showTimes ? ((event.top + 2) + 'px') : 'auto', position: vm.showTimes ? 'absolute' : 'inherit'}\"\n            data-event-class\n            mwl-draggable=\"event.draggable === true\"\n            axis=\"vm.showTimes ? 'xy' : 'x'\"\n            snap-grid=\"vm.showTimes ? {x: vm.dayColumnDimensions.width, y: 30} : {x: vm.dayColumnDimensions.width}\"\n            on-drag=\"vm.tempTimeChanged(event, y)\"\n            on-drag-end=\"vm.weekDragged(event, x, y)\"\n            mwl-resizable=\"event.resizable === true && event.endsAt && !vm.showTimes\"\n            resize-edges=\"{left: true, right: true}\"\n            on-resize-end=\"vm.weekResized(event, edge, x)\">\n            <strong ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'time':true\" ng-show=\"vm.showTimes\"></strong>\n            <a\n              href=\"javascript:;\"\n              ng-click=\"vm.onEventClick({calendarEvent: event})\"\n              class=\"event-item\"\n              ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"\n              tooltip-html-unsafe=\"{{ event.title }}\"\n              tooltip-placement=\"left\"\n              tooltip-append-to-body=\"true\">\n            </a>\n          </div>\n        </div>\n      </div>\n\n    </div>\n\n  </div>\n</div>\n";
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCalendarYearCtrl', ["$scope", "moment", "calendarHelper", function($scope, moment, calendarHelper) {
+
+	    var vm = this;
+
+	    $scope.$on('calendar.refreshView', function() {
+	      vm.view = calendarHelper.getYearView(vm.events, vm.currentDay, vm.cellModifier);
+
+	      //Auto open the calendar to the current day if set
+	      if (vm.autoOpen) {
+	        vm.view.forEach(function(month) {
+	          if (moment(vm.currentDay).startOf('month').isSame(month.date) && !vm.openMonthIndex) {
+	            vm.monthClicked(month, true);
+	          }
+	        });
+	      }
+
+	    });
+
+	    vm.monthClicked = function(month, monthClickedFirstRun, $event) {
+
+	      if (!monthClickedFirstRun) {
+	        vm.onTimespanClick({
+	          calendarDate: month.date.toDate(),
+	          $event: $event
+	        });
+	        if ($event && $event.defaultPrevented) {
+	          return;
+	        }
+	      }
+
+	      vm.openRowIndex = null;
+	      var monthIndex = vm.view.indexOf(month);
+	      if (monthIndex === vm.openMonthIndex) { //the month has been clicked and is already open
+	        vm.openMonthIndex = null; //close the open month
+	      } else {
+	        vm.openMonthIndex = monthIndex;
+	        vm.openRowIndex = Math.floor(monthIndex / 4);
+	      }
+
+	    };
+
+	    vm.handleEventDrop = function(event, newMonthDate) {
+	      var newStart = moment(event.startsAt).month(moment(newMonthDate).month());
+	      var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarDate: newMonthDate,
+	        calendarNewEventStart: newStart.toDate(),
+	        calendarNewEventEnd: newEnd ? newEnd.toDate() : null
+	      });
+	    };
+
+	  }])
+	  .directive('mwlCalendarYear', ["calendarUseTemplates", function(calendarUseTemplates) {
+
+	    return {
+	      template: calendarUseTemplates ? __webpack_require__(30) : '',
+	      restrict: 'EA',
+	      require: '^mwlCalendar',
+	      scope: {
+	        events: '=',
+	        currentDay: '=',
+	        onEventClick: '=',
+	        onEventTimesChanged: '=',
+	        onEditEventClick: '=',
+	        onDeleteEventClick: '=',
+	        editEventHtml: '=',
+	        deleteEventHtml: '=',
+	        autoOpen: '=',
+	        onTimespanClick: '=',
+	        cellModifier: '='
+	      },
+	      controller: 'MwlCalendarYearCtrl as vm',
+	      link: function(scope, element, attrs, calendarCtrl) {
+	        scope.vm.calendarCtrl = calendarCtrl;
+	      },
+	      bindToController: true
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"cal-year-box\">\n  <div ng-repeat=\"rowOffset in [0, 4, 8] track by rowOffset\">\n    <div class=\"row cal-before-eventlist\">\n      <div\n        class=\"span3 col-md-3 col-xs-6 cal-cell {{ day.cssClass }}\"\n        ng-repeat=\"month in vm.view | calendarLimitTo:4:rowOffset track by $index\"\n        ng-init=\"monthIndex = vm.view.indexOf(month)\"\n        ng-click=\"vm.monthClicked(month, false, $event)\"\n        ng-class=\"{pointer: month.events.length > 0, 'cal-day-today': month.isToday}\"\n        mwl-droppable\n        on-drop=\"vm.handleEventDrop(dropData.event, month.date)\">\n\n        <span\n          class=\"pull-right\"\n          data-cal-date\n          ng-click=\"vm.calendarCtrl.drillDown(month.date)\"\n          ng-bind=\"month.label\">\n        </span>\n\n        <small\n          class=\"cal-events-num badge badge-important pull-left\"\n          ng-show=\"month.badgeTotal > 0\"\n          ng-bind=\"month.badgeTotal\">\n        </small>\n\n        <div\n          class=\"cal-day-tick\"\n          ng-show=\"monthIndex === vm.openMonthIndex && vm.view[vm.openMonthIndex].events.length > 0\">\n          <i class=\"glyphicon glyphicon-chevron-up\"></i>\n          <i class=\"fa fa-chevron-up\"></i>\n        </div>\n\n      </div>\n    </div>\n\n    <mwl-calendar-slide-box\n      is-open=\"vm.openRowIndex === $index && vm.view[vm.openMonthIndex].events.length > 0\"\n      events=\"vm.view[vm.openMonthIndex].events\"\n      on-event-click=\"vm.onEventClick\"\n      edit-event-html=\"vm.editEventHtml\"\n      on-edit-event-click=\"vm.onEditEventClick\"\n      delete-event-html=\"vm.deleteEventHtml\"\n      on-delete-event-click=\"vm.onDeleteEventClick\">\n    </mwl-calendar-slide-box>\n\n  </div>\n\n</div>\n";
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlCollapseFallbackCtrl', ["$scope", "$attrs", "$element", function($scope, $attrs, $element) {
+
+	    $scope.$watch($attrs.mwlCollapseFallback, function(shouldCollapse) {
+	      if (shouldCollapse) {
+	        $element.addClass('ng-hide');
+	      } else {
+	        $element.removeClass('ng-hide');
+	      }
+	    });
+
+	  }])
+	  .directive('mwlCollapseFallback', ["$injector", function($injector) {
+
+	    if ($injector.has('collapseDirective')) {
+	      return {};
+	    }
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlCollapseFallbackCtrl'
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlDateModifierCtrl', ["$element", "$attrs", "$scope", "moment", function($element, $attrs, $scope, moment) {
+
+	    var vm = this;
+
+	    function onClick() {
+	      if (angular.isDefined($attrs.setToToday)) {
+	        vm.date = new Date();
+	      } else if (angular.isDefined($attrs.increment)) {
+	        vm.date = moment(vm.date).add(1, vm.increment).toDate();
+	      } else if (angular.isDefined($attrs.decrement)) {
+	        vm.date = moment(vm.date).subtract(1, vm.decrement).toDate();
+	      }
+	      $scope.$apply();
+	    }
+
+	    $element.bind('click', onClick);
+
+	    $scope.$on('$destroy', function() {
+	      $element.unbind('click', onClick);
+	    });
+
+	  }])
+	  .directive('mwlDateModifier', function() {
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlDateModifierCtrl as vm',
+	      scope: {
+	        date: '=',
+	        increment: '=',
+	        decrement: '='
+	      },
+	      bindToController: true
+	    };
+
+	  });
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlDraggableCtrl', ["$element", "$scope", "$window", "$parse", "$attrs", "interact", function($element, $scope, $window, $parse, $attrs, interact) {
+
+	    if (!interact) {
+	      return;
+	    }
+
+	    var snap, snapGridDimensions;
+	    if ($attrs.snapGrid) {
+	      snapGridDimensions = $parse($attrs.snapGrid)($scope);
+	      snap = {
+	        targets: [
+	          interact.createSnapGrid(snapGridDimensions)
+	        ]
+	      };
+	    }
+
+	    function translateElement(elm, transformValue) {
+	      return elm
+	        .css('-ms-transform', transformValue)
+	        .css('-webkit-transform', transformValue)
+	        .css('transform', transformValue);
+	    }
+
+	    function canDrag() {
+	      return $parse($attrs.mwlDraggable)($scope);
+	    }
+
+	    function getUnitsMoved(x, y, gridDimensions) {
+
+	      var result = {x: x, y: y};
+
+	      if (gridDimensions && gridDimensions.x) {
+	        result.x /= gridDimensions.x;
+	      }
+
+	      if (gridDimensions && gridDimensions.y) {
+	        result.y /= gridDimensions.y;
+	      }
+
+	      return result;
+
+	    }
+
+	    interact($element[0]).draggable({
+	      snap: snap,
+	      onstart: function(event) {
+	        if (canDrag()) {
+	          angular.element(event.target).addClass('dragging-active');
+	          event.target.dropData = $parse($attrs.dropData)($scope);
+	          event.target.style.pointerEvents = 'none';
+	          if ($attrs.onDragStart) {
+	            $parse($attrs.onDragStart)($scope);
+	            $scope.$apply();
+	          }
+	        }
+	      },
+	      onmove: function(event) {
+
+	        if (canDrag()) {
+	          var elm = angular.element(event.target);
+	          var x = (parseFloat(elm.attr('data-x')) || 0) + (event.dx || 0);
+	          var y = (parseFloat(elm.attr('data-y')) || 0) + (event.dy || 0);
+
+	          switch ($parse($attrs.axis)($scope)) {
+	            case 'x':
+	              y = 0;
+	              break;
+
+	            case 'y':
+	              x = 0;
+	              break;
+
+	            default:
+	          }
+
+	          if ($window.getComputedStyle(elm[0]).position === 'static') {
+	            elm.css('position', 'relative');
+	          }
+
+	          translateElement(elm, 'translate(' + x + 'px, ' + y + 'px)')
+	            .css('z-index', 1000)
+	            .attr('data-x', x)
+	            .attr('data-y', y);
+
+	          if ($attrs.onDrag) {
+	            $parse($attrs.onDrag)($scope, getUnitsMoved(x, y, snapGridDimensions));
+	            $scope.$apply();
+	          }
+	        }
+
+	      },
+	      onend: function(event) {
+
+	        if (canDrag()) {
+	          var elm = angular.element(event.target);
+	          var x = elm.attr('data-x');
+	          var y = elm.attr('data-y');
+
+	          event.target.style.pointerEvents = 'auto';
+	          if ($attrs.onDragEnd) {
+	            $parse($attrs.onDragEnd)($scope, getUnitsMoved(x, y, snapGridDimensions));
+	            $scope.$apply();
+	          }
+
+	          translateElement(elm, '')
+	            .removeAttr('data-x')
+	            .removeAttr('data-y')
+	            .removeClass('dragging-active');
+	        }
+
+	      }
+	    });
+
+	    $scope.$on('$destroy', function() {
+	      interact($element[0]).unset();
+	    });
+
+	  }])
+	  .directive('mwlDraggable', function() {
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlDraggableCtrl'
+	    };
+
+	  });
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlDroppableCtrl', ["$element", "$scope", "$parse", "$attrs", "interact", function($element, $scope, $parse, $attrs, interact) {
+
+	    if (!interact) {
+	      return;
+	    }
+
+	    interact($element[0]).dropzone({
+	      ondragenter: function(event) {
+	        angular.element(event.target).addClass('drop-active');
+	      },
+	      ondragleave: function(event) {
+	        angular.element(event.target).removeClass('drop-active');
+	      },
+	      ondropdeactivate: function(event) {
+	        angular.element(event.target).removeClass('drop-active');
+	      },
+	      ondrop: function(event) {
+	        if (event.relatedTarget.dropData) {
+	          $parse($attrs.onDrop)($scope, {dropData: event.relatedTarget.dropData});
+	          $scope.$apply();
+	        }
+	      }
+	    });
+
+	    $scope.$on('$destroy', function() {
+	      interact($element[0]).unset();
+	    });
+
+	  }])
+	  .directive('mwlDroppable', function() {
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlDroppableCtrl'
+	    };
+
+	  });
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlElementDimensionsCtrl', ["$element", "$scope", "$parse", "$attrs", function($element, $scope, $parse, $attrs) {
+
+	    $parse($attrs.mwlElementDimensions).assign($scope, {
+	      width: $element[0].offsetWidth,
+	      height: $element[0].offsetHeight
+	    });
+
+	  }])
+	  .directive('mwlElementDimensions', function() {
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlElementDimensionsCtrl'
+	    };
+
+	  });
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .controller('MwlResizableCtrl', ["$element", "$scope", "$parse", "$attrs", "interact", function($element, $scope, $parse, $attrs, interact) {
+
+	    if (!interact) {
+	      return;
+	    }
+
+	    var snap, snapGridDimensions;
+	    if ($attrs.snapGrid) {
+	      snapGridDimensions = $parse($attrs.snapGrid)($scope);
+	      snap = {
+	        targets: [
+	          interact.createSnapGrid(snapGridDimensions)
+	        ]
+	      };
+	    }
+
+	    var originalDimensions = {};
+	    var originalDimensionsStyle = {};
+	    var resizeEdge;
+
+	    function canResize() {
+	      return $parse($attrs.mwlResizable)($scope);
+	    }
+
+	    function getUnitsResized(edge, elm, gridDimensions) {
+	      var unitsResized = {};
+	      unitsResized.edge = edge;
+	      if (edge === 'start') {
+	        unitsResized.x = elm.data('x');
+	        unitsResized.y = elm.data('y');
+	      } else if (edge === 'end') {
+	        unitsResized.x = parseFloat(elm.css('width').replace('px', '')) - originalDimensions.width;
+	        unitsResized.y = parseFloat(elm.css('height').replace('px', '')) - originalDimensions.height;
+	      }
+	      if (gridDimensions && gridDimensions.x) {
+	        unitsResized.x = Math.round(unitsResized.x / gridDimensions.x);
+	      }
+	      if (gridDimensions && gridDimensions.y) {
+	        unitsResized.y = Math.round(unitsResized.y / gridDimensions.y);
+	      }
+	      return unitsResized;
+	    }
+
+	    interact($element[0]).resizable({
+	      edges: $parse($attrs.resizeEdges)($scope),
+	      snap: snap,
+	      onstart: function(event) {
+
+	        if (canResize()) {
+	          resizeEdge = 'end';
+	          var elm = angular.element(event.target);
+	          originalDimensions.height = elm[0].offsetHeight;
+	          originalDimensions.width = elm[0].offsetWidth;
+	          originalDimensionsStyle.height = elm.css('height');
+	          originalDimensionsStyle.width = elm.css('width');
+	        }
+
+	      },
+	      onmove: function(event) {
+
+	        if (canResize()) {
+	          var elm = angular.element(event.target);
+	          var x = parseFloat(elm.data('x') || 0);
+	          var y = parseFloat(elm.data('y') || 0);
+
+	          elm.css({
+	            width: event.rect.width + 'px',
+	            height: event.rect.height + 'px'
+	          });
+
+	          // translate when resizing from top or left edges
+	          x += event.deltaRect.left;
+	          y += event.deltaRect.top;
+
+	          elm.css('transform', 'translate(' + x + 'px,' + y + 'px)');
+
+	          elm.data('x', x);
+	          elm.data('y', y);
+
+	          if (event.deltaRect.left !== 0 || event.deltaRect.top !== 0) {
+	            resizeEdge = 'start';
+	          }
+
+	          if ($attrs.onResize) {
+	            $parse($attrs.onResize)($scope, getUnitsResized(resizeEdge, elm, snapGridDimensions));
+	            $scope.$apply();
+	          }
+
+	        }
+
+	      },
+	      onend: function(event) {
+
+	        if (canResize()) {
+
+	          var elm = angular.element(event.target);
+	          var unitsResized = getUnitsResized(resizeEdge, elm, snapGridDimensions);
+
+	          elm
+	            .data('x', null)
+	            .data('y', null)
+	            .css({
+	              transform: '',
+	              width: originalDimensionsStyle.width,
+	              height: originalDimensionsStyle.height
+	            });
+
+	          if ($attrs.onResizeEnd) {
+	            $parse($attrs.onResizeEnd)($scope, unitsResized);
+	            $scope.$apply();
+	          }
+	        }
+
+	      }
+	    });
+
+	    $scope.$on('$destroy', function() {
+	      interact($element[0]).unset();
+	    });
+
+	  }])
+	  .directive('mwlResizable', function() {
+
+	    return {
+	      restrict: 'A',
+	      controller: 'MwlResizableCtrl'
+	    };
+
+	  });
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var map = {
+		"./calendarDate.js": 38,
+		"./calendarLimitTo.js": 39,
+		"./calendarTruncateEventTitle.js": 40
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 37;
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .filter('calendarDate', ["calendarHelper", "calendarConfig", function(calendarHelper, calendarConfig) {
+
+	    function calendarDate(date, format, getFromConfig) {
+
+	      if (getFromConfig === true) {
+	        format = calendarConfig.dateFormats[format];
+	      }
+
+	      return calendarHelper.formatDate(date, format);
+
+	    }
+
+	    // This is stateful because the locale can change as well
+	    // as calendarConfig.dateFormats which would change the value outside of this filter
+	    calendarDate.$stateful = true;
+
+	    return calendarDate;
+
+	  }]);
+
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .filter('calendarLimitTo', ["limitToFilter", function(limitToFilter) {
+
+	    if (angular.version.minor >= 4) { //1.4+ supports the begin attribute
+	      return limitToFilter;
+	    }
+
+	    //Copied from the angular source. Only 1.4 has the begin functionality.
+	    return function(input, limit, begin) {
+	      if (Math.abs(Number(limit)) === Infinity) {
+	        limit = Number(limit);
+	      } else {
+	        limit = parseInt(limit);
+	      }
+	      if (isNaN(limit)) {
+	        return input;
+	      }
+
+	      if (angular.isNumber(input)) {
+	        input = input.toString();
+	      }
+	      if (!angular.isArray(input) && !angular.isString(input)) {
+	        return input;
+	      }
+
+	      begin = (!begin || isNaN(begin)) ? 0 : parseInt(begin);
+	      begin = (begin < 0 && begin >= -input.length) ? input.length + begin : begin;
+
+	      if (limit >= 0) {
+	        return input.slice(begin, begin + limit);
+	      } else if (begin === 0) {
+	        return input.slice(limit, input.length);
+	      } else {
+	        return input.slice(Math.max(0, begin + limit), begin);
+	      }
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .filter('calendarTruncateEventTitle', function() {
+
+	    return function(string, length, boxHeight) {
+	      if (!string) {
+	        return '';
+	      }
+
+	      //Only truncate if if actually needs truncating
+	      if (string.length >= length && string.length / 20 > boxHeight / 30) {
+	        return string.substr(0, length) + '...';
+	      } else {
+	        return string;
+	      }
+	    };
+
+	  });
+
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var map = {
+		"./calendarConfig.js": 42,
+		"./calendarHelper.js": 43,
+		"./calendarTitle.js": 44,
+		"./interact.js": 45,
+		"./moment.js": 47
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 41;
+
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .provider('calendarConfig', function() {
+
+	    var defaultFormats = {
+	      angular: {
+	        date: {
+	          hour: 'ha',
+	          day: 'd MMM',
+	          month: 'MMMM',
+	          weekDay: 'EEEE',
+	          time: 'HH:mm',
+	          datetime: 'MMM d, h:mm a'
+	        },
+	        title: {
+	          day: 'EEEE d MMMM, yyyy',
+	          week: 'Week {week} of {year}',
+	          month: 'MMMM yyyy',
+	          year: 'yyyy'
+	        }
+	      },
+	      moment: {
+	        date: {
+	          hour: 'ha',
+	          day: 'D MMM',
+	          month: 'MMMM',
+	          weekDay: 'dddd',
+	          time: 'HH:mm',
+	          datetime: 'MMM D, h:mm a'
+	        },
+	        title: {
+	          day: 'dddd D MMMM, YYYY',
+	          week: 'Week {week} of {year}',
+	          month: 'MMMM YYYY',
+	          year: 'YYYY'
+	        }
+	      }
+	    };
+
+	    var dateFormatter = 'angular';
+	    var defaultDateFormats = angular.copy(defaultFormats[dateFormatter].date);
+	    var defaultTitleFormats = angular.copy(defaultFormats[dateFormatter].title);
+	    var displayEventEndTimes = false;
+	    var showTimesOnWeekView = false;
+	    var displayAllMonthEvents = false;
+
+	    var i18nStrings = {
+	      eventsLabel: 'Events',
+	      timeLabel: 'Time'
+	    };
+
+	    var configProvider = this;
+
+	    configProvider.setDateFormats = function(formats) {
+	      angular.extend(defaultDateFormats, formats);
+	      return configProvider;
+	    };
+
+	    configProvider.setTitleFormats = function(formats) {
+	      angular.extend(defaultTitleFormats, formats);
+	      return configProvider;
+	    };
+
+	    configProvider.setI18nStrings = function(strings) {
+	      angular.extend(i18nStrings, strings);
+	      return configProvider;
+	    };
+
+	    configProvider.setDisplayAllMonthEvents = function(value) {
+	      displayAllMonthEvents = value;
+	      return configProvider;
+	    };
+
+	    configProvider.setDisplayEventEndTimes = function(value) {
+	      displayEventEndTimes = value;
+	      return configProvider;
+	    };
+
+	    configProvider.setDateFormatter = function(value) {
+	      if (['angular', 'moment'].indexOf(value) === -1) {
+	        throw new Error('Invalid date formatter. Allowed types are angular and moment.');
+	      }
+	      dateFormatter = value;
+	      defaultDateFormats = angular.copy(defaultFormats[dateFormatter].date);
+	      defaultTitleFormats = angular.copy(defaultFormats[dateFormatter].title);
+	      return configProvider;
+	    };
+
+	    configProvider.showTimesOnWeekView = function(value) {
+	      showTimesOnWeekView = value; //experimental, and ignores the event end date
+	      return configProvider;
+	    };
+
+	    configProvider.$get = function() {
+	      return {
+	        dateFormats: defaultDateFormats,
+	        titleFormats: defaultTitleFormats,
+	        i18nStrings: i18nStrings,
+	        displayAllMonthEvents: displayAllMonthEvents,
+	        displayEventEndTimes: displayEventEndTimes,
+	        dateFormatter: dateFormatter,
+	        showTimesOnWeekView: showTimesOnWeekView
+	      };
+	    };
+
+	  });
+
+
+/***/ },
+/* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .factory('calendarHelper', ["dateFilter", "moment", "calendarConfig", function(dateFilter, moment, calendarConfig) {
+
+	    function formatDate(date, format) {
+	      if (calendarConfig.dateFormatter === 'angular') {
+	        return dateFilter(moment(date).toDate(), format);
+	      } else if (calendarConfig.dateFormatter === 'moment') {
+	        return moment(date).format(format);
+	      }
+	    }
+
+	    function adjustEndDateFromStartDiff(oldStart, newStart, oldEnd) {
+	      if (!oldEnd) {
+	        return oldEnd;
+	      }
+	      var diffInSeconds = moment(newStart).diff(moment(oldStart));
+	      return moment(oldEnd).add(diffInSeconds);
+	    }
+
+	    function eventIsInPeriod(event, periodStart, periodEnd) {
+
+	      var eventStart = moment(event.startsAt);
+	      var eventEnd = moment(event.endsAt || event.startsAt);
+	      periodStart = moment(periodStart);
+	      periodEnd = moment(periodEnd);
+
+	      if (angular.isDefined(event.recursOn)) {
+
+	        switch (event.recursOn) {
+	          case 'year':
+	            eventStart.set({
+	              year: periodStart.year()
+	            });
+	            break;
+
+	          case 'month':
+	            eventStart.set({
+	              year: periodStart.year(),
+	              month: periodStart.month()
+	            });
+	            break;
+
+	          default:
+	            throw new Error('Invalid value (' + event.recursOn + ') given for recurs on. Can only be year or month.');
+	        }
+
+	        eventEnd = adjustEndDateFromStartDiff(event.startsAt, eventStart, eventEnd);
+
+	      }
+
+	      return (eventStart.isAfter(periodStart) && eventStart.isBefore(periodEnd)) ||
+	        (eventEnd.isAfter(periodStart) && eventEnd.isBefore(periodEnd)) ||
+	        (eventStart.isBefore(periodStart) && eventEnd.isAfter(periodEnd)) ||
+	        eventStart.isSame(periodStart) ||
+	        eventEnd.isSame(periodEnd);
+
+	    }
+
+	    function filterEventsInPeriod(events, startPeriod, endPeriod) {
+	      return events.filter(function(event) {
+	        return eventIsInPeriod(event, startPeriod, endPeriod);
+	      });
+	    }
+
+	    function getEventsInPeriod(calendarDate, period, allEvents) {
+	      var startPeriod = moment(calendarDate).startOf(period);
+	      var endPeriod = moment(calendarDate).endOf(period);
+	      return filterEventsInPeriod(allEvents, startPeriod, endPeriod);
+	    }
+
+	    function getBadgeTotal(events) {
+	      return events.filter(function(event) {
+	        return event.incrementsBadgeTotal !== false;
+	      }).length;
+	    }
+
+	    function getWeekDayNames() {
+	      var weekdays = [];
+	      var count = 0;
+	      while (count < 7) {
+	        weekdays.push(formatDate(moment().weekday(count++), calendarConfig.dateFormats.weekDay));
+	      }
+	      return weekdays;
+	    }
+
+	    function getYearView(events, currentDay, cellModifier) {
+
+	      var view = [];
+	      var eventsInPeriod = getEventsInPeriod(currentDay, 'year', events);
+	      var month = moment(currentDay).startOf('year');
+	      var count = 0;
+	      while (count < 12) {
+	        var startPeriod = month.clone();
+	        var endPeriod = startPeriod.clone().endOf('month');
+	        var periodEvents = filterEventsInPeriod(eventsInPeriod, startPeriod, endPeriod);
+	        var cell = {
+	          label: formatDate(startPeriod, calendarConfig.dateFormats.month),
+	          isToday: startPeriod.isSame(moment().startOf('month')),
+	          events: periodEvents,
+	          date: startPeriod,
+	          badgeTotal: getBadgeTotal(periodEvents)
+	        };
+
+	        cellModifier({calendarCell: cell});
+	        view.push(cell);
+	        month.add(1, 'month');
+	        count++;
+	      }
+
+	      return view;
+
+	    }
+
+	    function getMonthView(events, currentDay, cellModifier) {
+
+	      var startOfMonth = moment(currentDay).startOf('month');
+	      var day = startOfMonth.clone().startOf('week');
+	      var endOfMonthView = moment(currentDay).endOf('month').endOf('week');
+	      var eventsInPeriod;
+	      if (calendarConfig.displayAllMonthEvents) {
+	        eventsInPeriod = filterEventsInPeriod(events, day, endOfMonthView);
+	      } else {
+	        eventsInPeriod = filterEventsInPeriod(events, startOfMonth, startOfMonth.clone().endOf('month'));
+	      }
+	      var view = [];
+	      var today = moment().startOf('day');
+
+	      while (day.isBefore(endOfMonthView)) {
+
+	        var inMonth = day.month() === moment(currentDay).month();
+	        var monthEvents = [];
+	        if (inMonth || calendarConfig.displayAllMonthEvents) {
+	          monthEvents = filterEventsInPeriod(eventsInPeriod, day, day.clone().endOf('day'));
+	        }
+
+	        var cell = {
+	          label: day.date(),
+	          date: day.clone(),
+	          inMonth: inMonth,
+	          isPast: today.isAfter(day),
+	          isToday: today.isSame(day),
+	          isFuture: today.isBefore(day),
+	          isWeekend: [0, 6].indexOf(day.day()) > -1,
+	          events: monthEvents,
+	          badgeTotal: getBadgeTotal(monthEvents)
+	        };
+
+	        cellModifier({calendarCell: cell});
+
+	        view.push(cell);
+
+	        day.add(1, 'day');
+	      }
+
+	      return view;
+
+	    }
+
+	    function getWeekView(events, currentDay) {
+
+	      var startOfWeek = moment(currentDay).startOf('week');
+	      var endOfWeek = moment(currentDay).endOf('week');
+	      var dayCounter = startOfWeek.clone();
+	      var days = [];
+	      var today = moment().startOf('day');
+	      while (days.length < 7) {
+	        days.push({
+	          weekDayLabel: formatDate(dayCounter, calendarConfig.dateFormats.weekDay),
+	          date: dayCounter.clone(),
+	          dayLabel: formatDate(dayCounter, calendarConfig.dateFormats.day),
+	          isPast: dayCounter.isBefore(today),
+	          isToday: dayCounter.isSame(today),
+	          isFuture: dayCounter.isAfter(today),
+	          isWeekend: [0, 6].indexOf(dayCounter.day()) > -1
+	        });
+	        dayCounter.add(1, 'day');
+	      }
+
+	      var eventsSorted = filterEventsInPeriod(events, startOfWeek, endOfWeek).map(function(event) {
+
+	        var eventStart = moment(event.startsAt).startOf('day');
+	        var eventEnd = moment(event.endsAt || event.startsAt).startOf('day');
+	        var weekViewStart = moment(startOfWeek).startOf('day');
+	        var weekViewEnd = moment(endOfWeek).startOf('day');
+	        var offset, span;
+
+	        if (eventStart.isBefore(weekViewStart) || eventStart.isSame(weekViewStart)) {
+	          offset = 0;
+	        } else {
+	          offset = eventStart.diff(weekViewStart, 'days');
+	        }
+
+	        if (eventEnd.isAfter(weekViewEnd)) {
+	          eventEnd = weekViewEnd;
+	        }
+
+	        if (eventStart.isBefore(weekViewStart)) {
+	          eventStart = weekViewStart;
+	        }
+
+	        span = moment(eventEnd).diff(eventStart, 'days') + 1;
+
+	        event.daySpan = span;
+	        event.dayOffset = offset;
+
+	        return event;
+	      });
+
+	      return {days: days, events: eventsSorted};
+
+	    }
+
+	    function getDayView(events, currentDay, dayViewStart, dayViewEnd, dayViewSplit) {
+
+	      var dayStartHour = moment(dayViewStart || '00:00', 'HH:mm').hours();
+	      var dayEndHour = moment(dayViewEnd || '23:00', 'HH:mm').hours();
+	      var hourHeight = (60 / dayViewSplit) * 30;
+	      var calendarStart = moment(currentDay).startOf('day').add(dayStartHour, 'hours');
+	      var calendarEnd = moment(currentDay).startOf('day').add(dayEndHour, 'hours');
+	      var calendarHeight = (dayEndHour - dayStartHour + 1) * hourHeight;
+	      var hourHeightMultiplier = hourHeight / 60;
+	      var buckets = [];
+	      var eventsInPeriod = filterEventsInPeriod(
+	        events,
+	        moment(currentDay).startOf('day').toDate(),
+	        moment(currentDay).endOf('day').toDate()
+	      );
+
+	      return eventsInPeriod.map(function(event) {
+	        if (moment(event.startsAt).isBefore(calendarStart)) {
+	          event.top = 0;
+	        } else {
+	          event.top = (moment(event.startsAt).startOf('minute').diff(calendarStart.startOf('minute'), 'minutes') * hourHeightMultiplier) - 2;
+	        }
+
+	        if (moment(event.endsAt || event.startsAt).isAfter(calendarEnd)) {
+	          event.height = calendarHeight - event.top;
+	        } else {
+	          var diffStart = event.startsAt;
+	          if (moment(event.startsAt).isBefore(calendarStart)) {
+	            diffStart = calendarStart.toDate();
+	          }
+	          if (!event.endsAt) {
+	            event.height = 30;
+	          } else {
+	            event.height = moment(event.endsAt || event.startsAt).diff(diffStart, 'minutes') * hourHeightMultiplier;
+	          }
+	        }
+
+	        if (event.top - event.height > calendarHeight) {
+	          event.height = 0;
+	        }
+
+	        event.left = 0;
+
+	        return event;
+	      }).filter(function(event) {
+	        return event.height > 0;
+	      }).map(function(event) {
+
+	        var cannotFitInABucket = true;
+	        buckets.forEach(function(bucket, bucketIndex) {
+	          var canFitInThisBucket = true;
+
+	          bucket.forEach(function(bucketItem) {
+	            if (eventIsInPeriod(event, bucketItem.startsAt, bucketItem.endsAt || bucketItem.startsAt) ||
+	              eventIsInPeriod(bucketItem, event.startsAt, event.endsAt || event.startsAt)) {
+	              canFitInThisBucket = false;
+	            }
+	          });
+
+	          if (canFitInThisBucket && cannotFitInABucket) {
+	            cannotFitInABucket = false;
+	            event.left = bucketIndex * 150;
+	            buckets[bucketIndex].push(event);
+	          }
+
+	        });
+
+	        if (cannotFitInABucket) {
+	          event.left = buckets.length * 150;
+	          buckets.push([event]);
+	        }
+
+	        return event;
+
+	      });
+
+	    }
+
+	    function getWeekViewWithTimes(events, currentDay, dayViewStart, dayViewEnd, dayViewSplit) {
+	      var weekView = getWeekView(events, currentDay);
+	      var newEvents = [];
+	      weekView.days.forEach(function(day) {
+	        var dayEvents = weekView.events.filter(function(event) {
+	          return moment(event.startsAt).startOf('day').isSame(moment(day.date).startOf('day'));
+	        });
+	        var newDayEvents = getDayView(
+	          dayEvents,
+	          day.date,
+	          dayViewStart,
+	          dayViewEnd,
+	          dayViewSplit
+	        );
+	        newEvents = newEvents.concat(newDayEvents);
+	      });
+	      weekView.events = newEvents;
+	      return weekView;
+	    }
+
+	    function getDayViewHeight(dayViewStart, dayViewEnd, dayViewSplit) {
+	      var dayViewStartM = moment(dayViewStart || '00:00', 'HH:mm');
+	      var dayViewEndM = moment(dayViewEnd || '23:00', 'HH:mm');
+	      var hourHeight = (60 / dayViewSplit) * 30;
+	      return ((dayViewEndM.diff(dayViewStartM, 'hours') + 1) * hourHeight) + 2;
+	    }
+
+	    return {
+	      getWeekDayNames: getWeekDayNames,
+	      getYearView: getYearView,
+	      getMonthView: getMonthView,
+	      getWeekView: getWeekView,
+	      getDayView: getDayView,
+	      getWeekViewWithTimes: getWeekViewWithTimes,
+	      getDayViewHeight: getDayViewHeight,
+	      adjustEndDateFromStartDiff: adjustEndDateFromStartDiff,
+	      formatDate: formatDate,
+	      eventIsInPeriod: eventIsInPeriod //expose for testing only
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+
+	angular
+	  .module('mwl.calendar')
+	  .factory('calendarTitle', ["moment", "calendarConfig", "calendarHelper", function(moment, calendarConfig, calendarHelper) {
+
+	    function day(currentDay) {
+	      return calendarHelper.formatDate(currentDay, calendarConfig.titleFormats.day);
+	    }
+
+	    function week(currentDay) {
+	      var weekTitleLabel = calendarConfig.titleFormats.week;
+	      return weekTitleLabel.replace('{week}', moment(currentDay).week()).replace('{year}', moment(currentDay).format('YYYY'));
+	    }
+
+	    function month(currentDay) {
+	      return calendarHelper.formatDate(currentDay, calendarConfig.titleFormats.month);
+	    }
+
+	    function year(currentDay) {
+	      return calendarHelper.formatDate(currentDay, calendarConfig.titleFormats.year);
+	    }
+
+	    return {
+	      day: day,
+	      week: week,
+	      month: month,
+	      year: year
+	    };
+
+	  }]);
+
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+	var interact;
+	try {
+	  interact = __webpack_require__(46);
+	} catch (e) {
+	  /* istanbul ignore next */
+	  interact = null;
+	}
+
+	angular
+	  .module('mwl.calendar')
+	  .constant('interact', interact);
+
+
+/***/ },
+/* 46 */
+/***/ function(module, exports) {
+
+	if(typeof __WEBPACK_EXTERNAL_MODULE_46__ === 'undefined') {var e = new Error("Cannot find module \"undefined\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
+	module.exports = __WEBPACK_EXTERNAL_MODULE_46__;
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var angular = __webpack_require__(13);
+	var moment = __webpack_require__(48);
+
+	angular
+	  .module('mwl.calendar')
+	  .constant('moment', moment);
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_48__;
+
+/***/ }
+/******/ ])
+});
+;
 angular.module('invoices', [
                'ngMaterial',
                'invoices.controllers',
@@ -62402,7 +68349,9 @@ angular.module('invoices', [
                'djangoRESTResources',
                'ui.mask',
                'datetime',
-               'angular-sortable-view'
+               'angular-sortable-view',
+               'ui.bootstrap',
+               'mwl.calendar'
 ]);
 
 angular.module('invoices.states', []);
@@ -62429,6 +68378,589 @@ angular.module('invoices.directives', []);
 angular.module('invoices.filters', []);
 angular.module('invoices.services', []);
 angular.module('invoices.states', ['ui.router', 'uiRouterStyles']);
+angular.module('invoices.filters')
+  .filter('msToTimeString', 
+    function(){
+      return function(millseconds){
+        var seconds = Math.floor(millseconds / 1000),
+            h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('secondsToTimeString', 
+    function(){
+      return function(seconds){
+        var h = 3600,
+            m = 60,
+            hours = Math.floor(seconds/h),
+            minutes = Math.floor((seconds % h)/m),
+            scnds = Math.floor((seconds % m)),
+            timeString = '';
+        if(scnds < 10){
+          scnds = "0" + scnds;
+        }
+        if(hours < 10){
+          hours = "0" + hours;
+        }
+        if(minutes < 10){
+          minutes = "0" + minutes;
+        }
+        timeString = hours + ":" + minutes + ":" + scnds;
+        return timeString;
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('telephone', 
+    function(){
+      return function(telephone){
+        if(!telephone){
+          return "";
+        }
+        var value = telephone.toString().trim().replace(/^\+/, '');
+        if(value.match(/[^0-9]/)){
+          return telephone;
+        }
+        var country, city, number;
+        switch(value.length){
+          case 10:
+            country = 1;
+            city = value.slice(0,3);
+            number = value.slice(3);
+            break;
+          case 11:
+            country = value[0];
+            city = value.slice(1,4);
+            number = value.slice(4);
+            break;
+          case 12:
+            country = value.slice(0,3);
+            city = value.slice(3,5);
+            number = value.slice(5);
+            break;
+          default:
+            return telephone;
+        }
+        if(country === 1){
+          country = "";
+        }
+        number = number.slice(0, 3) + '-' + number.slice(3);
+        return (country + " (" + city + ") " + number).trim();
+      };
+    }
+  )
+;
+angular.module('invoices.filters')
+  .filter('timeDeltaToHours', 
+    function(){
+      return function(delta){
+        var pieces = delta.split(":"),
+            hours = pieces[0],
+            minutes = pieces[1],
+            seconds = pieces[2];
+        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
+      };
+    }
+  )
+;
+var smoothScroll = function(element, options){
+  options = options || {};
+  var duration = 800,
+      offset = 0;
+
+  var easing = function(n){
+    return n < 0.5 ? 8 * Math.pow(n, 4) : 1 - 8 * (--n) * Math.pow(n, 3);
+  };
+
+  var getScrollLocation = function(){
+    return window.pageYOffset ? window.pageYOffset : document.documentElement.scrollTop;
+  };
+
+  setTimeout(function(){
+    var startLocation = getScrollLocation(),
+        timeLapsed = 0,
+        percentage, position;
+
+    var getEndLocation = function(element){
+      var location = 0;
+      if(element.offsetParent){
+        do {
+          location += element.offsetTop;
+          element = element.offsetParent;
+        } while (element);
+      }
+      location = Math.max(location - offset, 0);
+      return location;
+    };
+
+    var endLocation = getEndLocation(element);
+    var distance = endLocation - startLocation;
+
+    var stopAnimation = function(){
+      var currentLocation = getScrollLocation();
+      if(position == endLocation || currentLocation == endLocation || ((window.innerHeight + currentLocation) >= document.body.scrollHeight)){
+        clearInterval(runAnimation);
+      }
+    };
+
+    var animateScroll = function(){
+      timeLapsed += 16;
+      percentage = (timeLapsed / duration);
+      percentage = (percentage > 1) ? 1 : percentage;
+      position = startLocation + (distance * easing(percentage));
+      window.scrollTo(0, position);
+      stopAnimation();
+    };
+
+    var runAnimation = setInterval(animateScroll, 16);
+  }, 0);
+};
+
+var msToTimeString = function(ms){
+  var seconds = Math.floor(ms / 1000),
+      h = 3600,
+      m = 60,
+      hours = Math.floor(seconds/h),
+      minutes = Math.floor((seconds % h)/m),
+      scnds = Math.floor((seconds % m)),
+      timeString = '';
+  if(scnds < 10) scnds = "0"+scnds;
+  if(hours < 10) hours = "0"+hours;
+  if(minutes < 10) minutes = "0"+minutes;
+  timeString = hours +":"+ minutes +":"+scnds;
+  return timeString;
+};
+
+function urlToBase64(img){
+  var canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  dataURL = canvas.toDataURL("image/png");
+  return dataURL;
+}
+angular.module('invoices.directives')
+  .directive('infocus', ['$timeout', 
+    function($timeout){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          $timeout(function(){
+            $element[0].focus();
+          }, 1000);
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive('inready', ['$timeout', 
+    function($timeout){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var elementClass = $attrs.inready,
+              el = angular.element($element);
+          angular.element(document).ready(function(){
+            $element.addClass(elementClass);
+          });
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive('inscroll', ['$window', 
+    function($window){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($window).bind('scroll', function(){
+            var elements = document.querySelectorAll("[inview]");
+            for(var i=0;i<elements.length;i++){
+              var el = elements[i],
+                  top = el.getBoundingClientRect().top,
+                  dist = window.innerHeight;
+              if(top<((dist/2)+(dist/4))){
+                if(!el.classList.contains('inview')){
+                  var inviewEvent = new Event('inview');
+                  el.dispatchEvent(inviewEvent);
+                }
+              } else {
+                var outviewEvent = new Event('outview');
+                  el.dispatchEvent(outviewEvent);
+              }
+            }
+          });
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive('inview', 
+    function(){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('inview', function(){
+            this.classList.add('inview');
+          });
+          angular.element($element).on('outview', function(){
+            this.classList.remove('inview');
+          });
+        }
+      };
+    }
+  )
+;
+angular.module('invoices.directives')
+  .directive('inscrollto', 
+    function(){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var targetElement;
+          
+          $element.on('click', function(e){
+            e.preventDefault();
+            this.blur();
+            var targetId = $attrs.inscrollto;
+
+            targetElement = document.getElementById(targetId);
+            if(!targetElement) return; 
+
+            smoothScroll(targetElement, {});
+
+            return false;
+          });
+        }
+      };
+    }
+  )
+;
+angular.module('invoices.directives')
+  .directive('inbokeh', ['$interval', 
+    function($interval){
+      return {
+        restrict: 'A',
+        link: function($scope, $elements, $attrs){
+          var container = document.getElementById('strip'),
+              width = container.clientWidth,
+              height = 450,
+              canvas = document.getElementById('blur'),
+              con = canvas.getContext('2d'),
+              rint = 60,
+              g,
+              pxs = [];
+          canvas.width = width;
+          canvas.height = height;
+          for(var i=0;i<100;i++){
+            pxs[i] = new Circle();
+            pxs[i].reset();
+          }
+          $interval(draw, rint);
+          function draw(){
+            con.clearRect(0,0,width,height);
+            for(var i=0;i<pxs.length;i++){
+              pxs[i].fade();
+              pxs[i].move();
+              pxs[i].draw();
+            }
+          }
+          function Circle(){
+            this.s = {ttl:8000, xmax:3, ymax:2, rmax:200, rt:1, xdef:960, ydef:540, xdrift:2, ydrift:2, random:true, blink:true};
+            var crFill = [
+              ['rgba(10,56,67,0)', 'rgba(10,56,67,1)'],
+              ['rgba(11,67,99,0)', 'rgba(11,67,99,1)'],
+              ['rgba(8,46,49,0)', 'rgba(8,46,49,1)'],
+              ['rgba(7,64,60,0)', 'rgba(7,64,60,1)']
+            ];
+            var opacityFill = "."+Math.floor(Math.random()*5)+1;
+
+            this.reset = function(){
+              this.x = (this.s.random ? width*Math.random() : this.s.xdef);
+              this.y = (this.s.random ? height*Math.random() : this.s.ydef);
+              this.r = ((this.s.rmax-1)*Math.random()) + 1;
+              this.dx = (Math.random()*this.s.xmax) * (Math.random() < 0.5 ? -1 : 1);
+              this.dy = (Math.random()*this.s.ymax) * (Math.random() < 0.5 ? -1 : 1);
+              this.hl = (this.s.ttl/rint)*(this.r/this.s.rmax);
+              this.rt = Math.random()*this.hl;
+              this.s.rt = Math.random()+1;
+              this.stop = Math.random()*0.2+0.4;
+              this.s.xdrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
+              this.s.ydrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
+              this.opacityFill = opacityFill;
+              this.currentColor = Math.floor(Math.random()*crFill.length);
+            };
+
+            this.fade = function(){
+              this.rt += this.s.rt;
+            };
+
+            this.draw = function(){
+              if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
+                this.s.rt = this.s.rt*-1;
+              }
+              else if(this.rt >= this.hl){
+                this.reset();
+              }
+              con.beginPath();
+              con.arc(this.x,this.y,this.r,0,Math.PI*2,true);
+              con.globalAlpha = opacityFill;
+              var newo = 1-(this.rt/this.hl);
+              var cr = this.r*newo;
+              gradient = con.createRadialGradient(this.x,this.y,0,this.x,this.y,(cr <= 0 ? 1 : cr));
+              gradient.addColorStop(0.0, crFill[(this.currentColor)][1]);
+              gradient.addColorStop(0.7, crFill[(this.currentColor)][1]);
+              gradient.addColorStop(1.0, crFill[(this.currentColor)][0]);
+              con.fillStyle = gradient;
+              con.fill();
+              con.closePath();
+            };
+
+            this.move = function(){
+              this.x += (this.rt/this.hl)*this.dx;
+              this.y += (this.rt/this.hl)*this.dy;
+              if(this.x > width || this.x < 0){
+                this.dx *= -1;
+              } 
+              if(this.y > height || this.y < 0){
+                this.dy *= -1;
+              } 
+            };
+
+            this.getX = function(){return this.x;};
+            this.getY = function(){return this.y;};
+          }
+          window.onresize = function(e){
+            width = container.clientWidth;
+            canvas.width = width;
+          };
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive('infile', 
+    function(){
+      return {
+        scope: {
+          infile: "="
+        },
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var currentLogo = $scope.$eval($attrs.currentLogo);
+          var addRemoveLink = function(){
+            var removeLogo = document.createElement('a');
+            removeLogo.id = "removeLogo";
+            removeLogo.setAttribute('href', '#');
+            removeLogo.innerHTML = "<span class='fa fa-remove'></span>";
+            removeLogo.addEventListener('click', function(e){
+              e.preventDefault();
+              document.getElementById('logoPreview').remove();
+              document.getElementById('removeLogo').remove();
+              $scope.$apply(function(){
+                $scope.infile = null;
+              });
+            });
+            angular.element($element)[0].parentElement.appendChild(removeLogo);
+          };
+          if(currentLogo){
+            var img = new Image();
+            var preview = document.getElementById('logoPreview') || document.createElement('img');
+            preview.id = "logoPreview";
+            preview.setAttribute('src', currentLogo);
+            preview.style.width = "100px";
+            angular.element($element)[0].parentElement.appendChild(preview);
+            addRemoveLink();
+            img.onload = function(){
+              $scope.$apply(function(){
+                $scope.infile = urlToBase64(img);
+              });
+            };
+            img.src = currentLogo;
+          }
+          angular.element($element).on('change', function(e){
+            var reader = new FileReader(),
+                filename = '',
+                input = this,
+                data;
+            if(this.files && this.files[0]){
+              reader.onload = function(ev){
+                data = ev.target.result;
+                console.log(data);
+                var preview = document.getElementById('logoPreview') || document.createElement('img');
+                preview.id = "logoPreview";
+                preview.setAttribute('src', reader.result);
+                preview.style.width = "100px";
+                input.parentElement.appendChild(preview);
+                addRemoveLink();
+                $scope.$apply(function(){
+                  $scope.infile = data;
+                });
+              };
+              reader.readAsDataURL(this.files[0]);
+              filename = e.target.value.split('\\').pop().length > 14 ? e.target.value.split('\\').pop().slice(0,11)+"&hellip;" : e.target.value.split('\\').pop();
+            }
+            if(filename){
+              this.nextSibling.querySelector('span.label').innerHTML = filename;
+            } else {
+              this.nextSibling.querySelector('span.label').innerHTML = 'Project Logo';
+            }
+          });
+        }
+      };
+    }
+  )
+;
+angular.module('invoices.directives')
+  .directive('intimer', 
+    function(){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('click', function(){
+            var el = this.parentElement.querySelector(".counter");
+            var timerEvent = $attrs.intimer;
+            var timeEvent = new Event(timerEvent);
+            el.dispatchEvent(timeEvent);
+          });
+        }
+      };
+    }
+  )
+;
+angular.module('invoices.directives')
+  .directive('incounting', ['$interval', 
+    function($interval){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var self = this,
+              timer,
+              timeSync,
+              startTime,
+              totalElapsed = 0,
+              elapsed = 0,
+              timerEl = angular.element($element),
+              projectId = timerEl[0].getAttribute('data-project'),
+              intervalId = timerEl[0].getAttribute('data-interval');
+          timerEl.on('startTimer', function(){
+            startTime = new Date();
+            timer = $interval(function(){
+              var now = new Date();
+              elapsed = now.getTime() - startTime.getTime();
+              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
+            }, 1001);
+          });
+          angular.element($element).on('stopTimer', function(){
+            $interval.cancel(timer);
+            timer = undefined;
+            totalElapsed += elapsed;
+            elapsed = 0;
+          });
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive("insave", ['$state', 
+                        '$mdDialog', 
+                        '$log', 
+                        'apiSrv', 
+    function($state, $mdDialog, $log, apiSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('click', function(ev){
+            var projectId = $attrs.insave,
+                invoiceHtml = document.getElementById('invoice').outerHTML,
+                progress = document.querySelector("md-progress-linear");
+            progress.classList.remove("hidden");
+            apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
+              progress.classList.add("hidden");
+              $mdDialog.show(
+                $mdDialog.alert()
+                  .parent(angular.element(document.querySelector('.view-panel.active')))
+                  .clickOutsideToClose(true)
+                  .title('Invoice ready')
+                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme">' +
+                            '<a href="'+invoice.url+'" target="_blank">' +
+                              '<md-icon class="md-default-theme">' +
+                                '<span class="fa fa-file-pdf-o"></span>' +
+                              '</md-icon> ' +
+                              'View PDF' +
+                            '</a>' +
+                           '</button>'
+                          )
+                  .ariaLabel('Invoice link')
+                  .ok('Dismiss')
+                  .targetEvent(ev)
+              ).finally(function(){
+                $state.go("app");
+              });
+            }, function(err){
+              $log.error(err);
+            });
+          });
+        }
+      };
+    }
+  ])
+;
+angular.module('invoices.directives')
+  .directive("inupdate", ['$state', 
+                          '$mdDialog', 
+                          '$log', 
+                          'apiSrv',
+                          'msgSrv',
+    function($state, $mdDialog, $log, apiSrv, msgSrv){
+      return {
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          angular.element($element).on('click', function(ev){
+            var invoiceId = $attrs.inupdate,
+                projectId = angular.element($element)[0].getAttribute("data-project"),
+                invoiceHtml = document.querySelector('.markup').innerHTML,
+                progress = document.querySelector("md-progress-linear");
+            progress.classList.remove("hidden");
+            apiSrv.request('PUT', 'projects/'+projectId+'/statements/'+invoiceId+'/', {markup: invoiceHtml}, function(invoice){
+              progress.classList.add("hidden");
+              document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
+              msgSrv.emitMsg('updateInvoiceList');
+              $mdDialog.cancel();
+            }, function(err){
+              $log.error(err);
+            });
+          });
+        }
+      };
+    }
+  ])
+;
 var formatErr = function(err){
   var errString = JSON.stringify(err),
       errArray = errString.split(','),
@@ -62623,6 +69155,9 @@ angular.module('invoices.controllers')
             $state.go('app');
             break;
           case "app.settings":
+            baseViewChange = true;
+            break;
+          case "app.calendar":
             baseViewChange = true;
             break;
           case "app.newProject":
@@ -63271,588 +69806,39 @@ angular.module('invoices.controllers')
     }
   ])
 ;
-var smoothScroll = function(element, options){
-  options = options || {};
-  var duration = 800,
-      offset = 0;
-
-  var easing = function(n){
-    return n < 0.5 ? 8 * Math.pow(n, 4) : 1 - 8 * (--n) * Math.pow(n, 3);
-  };
-
-  var getScrollLocation = function(){
-    return window.pageYOffset ? window.pageYOffset : document.documentElement.scrollTop;
-  };
-
-  setTimeout(function(){
-    var startLocation = getScrollLocation(),
-        timeLapsed = 0,
-        percentage, position;
-
-    var getEndLocation = function(element){
-      var location = 0;
-      if(element.offsetParent){
-        do {
-          location += element.offsetTop;
-          element = element.offsetParent;
-        } while (element);
-      }
-      location = Math.max(location - offset, 0);
-      return location;
-    };
-
-    var endLocation = getEndLocation(element);
-    var distance = endLocation - startLocation;
-
-    var stopAnimation = function(){
-      var currentLocation = getScrollLocation();
-      if(position == endLocation || currentLocation == endLocation || ((window.innerHeight + currentLocation) >= document.body.scrollHeight)){
-        clearInterval(runAnimation);
-      }
-    };
-
-    var animateScroll = function(){
-      timeLapsed += 16;
-      percentage = (timeLapsed / duration);
-      percentage = (percentage > 1) ? 1 : percentage;
-      position = startLocation + (distance * easing(percentage));
-      window.scrollTo(0, position);
-      stopAnimation();
-    };
-
-    var runAnimation = setInterval(animateScroll, 16);
-  }, 0);
-};
-
-var msToTimeString = function(ms){
-  var seconds = Math.floor(ms / 1000),
-      h = 3600,
-      m = 60,
-      hours = Math.floor(seconds/h),
-      minutes = Math.floor((seconds % h)/m),
-      scnds = Math.floor((seconds % m)),
-      timeString = '';
-  if(scnds < 10) scnds = "0"+scnds;
-  if(hours < 10) hours = "0"+hours;
-  if(minutes < 10) minutes = "0"+minutes;
-  timeString = hours +":"+ minutes +":"+scnds;
-  return timeString;
-};
-
-function urlToBase64(img){
-  var canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  var ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  dataURL = canvas.toDataURL("image/png");
-  return dataURL;
-}
-angular.module('invoices.directives')
-  .directive('infocus', ['$timeout', 
-    function($timeout){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          $timeout(function(){
-            $element[0].focus();
-          }, 1000);
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive('inready', ['$timeout', 
-    function($timeout){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var elementClass = $attrs.inready,
-              el = angular.element($element);
-          angular.element(document).ready(function(){
-            $element.addClass(elementClass);
-          });
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive('inscroll', ['$window', 
-    function($window){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($window).bind('scroll', function(){
-            var elements = document.querySelectorAll("[inview]");
-            for(var i=0;i<elements.length;i++){
-              var el = elements[i],
-                  top = el.getBoundingClientRect().top,
-                  dist = window.innerHeight;
-              if(top<((dist/2)+(dist/4))){
-                if(!el.classList.contains('inview')){
-                  var inviewEvent = new Event('inview');
-                  el.dispatchEvent(inviewEvent);
-                }
-              } else {
-                var outviewEvent = new Event('outview');
-                  el.dispatchEvent(outviewEvent);
-              }
-            }
-          });
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive('inview', 
-    function(){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($element).on('inview', function(){
-            this.classList.add('inview');
-          });
-          angular.element($element).on('outview', function(){
-            this.classList.remove('inview');
-          });
-        }
-      };
-    }
-  )
-;
-angular.module('invoices.directives')
-  .directive('inscrollto', 
-    function(){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var targetElement;
-          
-          $element.on('click', function(e){
-            e.preventDefault();
-            this.blur();
-            var targetId = $attrs.inscrollto;
-
-            targetElement = document.getElementById(targetId);
-            if(!targetElement) return; 
-
-            smoothScroll(targetElement, {});
-
-            return false;
-          });
-        }
-      };
-    }
-  )
-;
-angular.module('invoices.directives')
-  .directive('inbokeh', ['$interval', 
-    function($interval){
-      return {
-        restrict: 'A',
-        link: function($scope, $elements, $attrs){
-          var container = document.getElementById('strip'),
-              width = container.clientWidth,
-              height = 450,
-              canvas = document.getElementById('blur'),
-              con = canvas.getContext('2d'),
-              rint = 60,
-              g,
-              pxs = [];
-          canvas.width = width;
-          canvas.height = height;
-          for(var i=0;i<100;i++){
-            pxs[i] = new Circle();
-            pxs[i].reset();
-          }
-          $interval(draw, rint);
-          function draw(){
-            con.clearRect(0,0,width,height);
-            for(var i=0;i<pxs.length;i++){
-              pxs[i].fade();
-              pxs[i].move();
-              pxs[i].draw();
-            }
-          }
-          function Circle(){
-            this.s = {ttl:8000, xmax:3, ymax:2, rmax:200, rt:1, xdef:960, ydef:540, xdrift:2, ydrift:2, random:true, blink:true};
-            var crFill = [
-              ['rgba(10,56,67,0)', 'rgba(10,56,67,1)'],
-              ['rgba(11,67,99,0)', 'rgba(11,67,99,1)'],
-              ['rgba(8,46,49,0)', 'rgba(8,46,49,1)'],
-              ['rgba(7,64,60,0)', 'rgba(7,64,60,1)']
-            ];
-            var opacityFill = "."+Math.floor(Math.random()*5)+1;
-
-            this.reset = function(){
-              this.x = (this.s.random ? width*Math.random() : this.s.xdef);
-              this.y = (this.s.random ? height*Math.random() : this.s.ydef);
-              this.r = ((this.s.rmax-1)*Math.random()) + 1;
-              this.dx = (Math.random()*this.s.xmax) * (Math.random() < 0.5 ? -1 : 1);
-              this.dy = (Math.random()*this.s.ymax) * (Math.random() < 0.5 ? -1 : 1);
-              this.hl = (this.s.ttl/rint)*(this.r/this.s.rmax);
-              this.rt = Math.random()*this.hl;
-              this.s.rt = Math.random()+1;
-              this.stop = Math.random()*0.2+0.4;
-              this.s.xdrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
-              this.s.ydrift *= Math.random() * (Math.random() < 0.5 ? -1 : 1);
-              this.opacityFill = opacityFill;
-              this.currentColor = Math.floor(Math.random()*crFill.length);
-            };
-
-            this.fade = function(){
-              this.rt += this.s.rt;
-            };
-
-            this.draw = function(){
-              if(this.s.blink && (this.rt <= 0 || this.rt >= this.hl)){
-                this.s.rt = this.s.rt*-1;
-              }
-              else if(this.rt >= this.hl){
-                this.reset();
-              }
-              con.beginPath();
-              con.arc(this.x,this.y,this.r,0,Math.PI*2,true);
-              con.globalAlpha = opacityFill;
-              var newo = 1-(this.rt/this.hl);
-              var cr = this.r*newo;
-              gradient = con.createRadialGradient(this.x,this.y,0,this.x,this.y,(cr <= 0 ? 1 : cr));
-              gradient.addColorStop(0.0, crFill[(this.currentColor)][1]);
-              gradient.addColorStop(0.7, crFill[(this.currentColor)][1]);
-              gradient.addColorStop(1.0, crFill[(this.currentColor)][0]);
-              con.fillStyle = gradient;
-              con.fill();
-              con.closePath();
-            };
-
-            this.move = function(){
-              this.x += (this.rt/this.hl)*this.dx;
-              this.y += (this.rt/this.hl)*this.dy;
-              if(this.x > width || this.x < 0){
-                this.dx *= -1;
-              } 
-              if(this.y > height || this.y < 0){
-                this.dy *= -1;
-              } 
-            };
-
-            this.getX = function(){return this.x;};
-            this.getY = function(){return this.y;};
-          }
-          window.onresize = function(e){
-            width = container.clientWidth;
-            canvas.width = width;
-          };
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive('infile', 
-    function(){
-      return {
-        scope: {
-          infile: "="
-        },
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var currentLogo = $scope.$eval($attrs.currentLogo);
-          var addRemoveLink = function(){
-            var removeLogo = document.createElement('a');
-            removeLogo.id = "removeLogo";
-            removeLogo.setAttribute('href', '#');
-            removeLogo.innerHTML = "<span class='fa fa-remove'></span>";
-            removeLogo.addEventListener('click', function(e){
-              e.preventDefault();
-              document.getElementById('logoPreview').remove();
-              document.getElementById('removeLogo').remove();
-              $scope.$apply(function(){
-                $scope.infile = null;
-              });
-            });
-            angular.element($element)[0].parentElement.appendChild(removeLogo);
-          };
-          if(currentLogo){
-            var img = new Image();
-            var preview = document.getElementById('logoPreview') || document.createElement('img');
-            preview.id = "logoPreview";
-            preview.setAttribute('src', currentLogo);
-            preview.style.width = "100px";
-            angular.element($element)[0].parentElement.appendChild(preview);
-            addRemoveLink();
-            img.onload = function(){
-              $scope.$apply(function(){
-                $scope.infile = urlToBase64(img);
-              });
-            };
-            img.src = currentLogo;
-          }
-          angular.element($element).on('change', function(e){
-            var reader = new FileReader(),
-                filename = '',
-                input = this,
-                data;
-            if(this.files && this.files[0]){
-              reader.onload = function(ev){
-                data = ev.target.result;
-                console.log(data);
-                var preview = document.getElementById('logoPreview') || document.createElement('img');
-                preview.id = "logoPreview";
-                preview.setAttribute('src', reader.result);
-                preview.style.width = "100px";
-                input.parentElement.appendChild(preview);
-                addRemoveLink();
-                $scope.$apply(function(){
-                  $scope.infile = data;
-                });
-              };
-              reader.readAsDataURL(this.files[0]);
-              filename = e.target.value.split('\\').pop().length > 14 ? e.target.value.split('\\').pop().slice(0,11)+"&hellip;" : e.target.value.split('\\').pop();
-            }
-            if(filename){
-              this.nextSibling.querySelector('span.label').innerHTML = filename;
-            } else {
-              this.nextSibling.querySelector('span.label').innerHTML = 'Project Logo';
-            }
-          });
-        }
-      };
-    }
-  )
-;
-angular.module('invoices.directives')
-  .directive('intimer', 
-    function(){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($element).on('click', function(){
-            var el = this.parentElement.querySelector(".counter");
-            var timerEvent = $attrs.intimer;
-            var timeEvent = new Event(timerEvent);
-            el.dispatchEvent(timeEvent);
-          });
-        }
-      };
-    }
-  )
-;
-angular.module('invoices.directives')
-  .directive('incounting', ['$interval', 
-    function($interval){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          var self = this,
-              timer,
-              timeSync,
-              startTime,
-              totalElapsed = 0,
-              elapsed = 0,
-              timerEl = angular.element($element),
-              projectId = timerEl[0].getAttribute('data-project'),
-              intervalId = timerEl[0].getAttribute('data-interval');
-          timerEl.on('startTimer', function(){
-            startTime = new Date();
-            timer = $interval(function(){
-              var now = new Date();
-              elapsed = now.getTime() - startTime.getTime();
-              angular.element($element).html(msToTimeString(totalElapsed+elapsed));
-            }, 1001);
-          });
-          angular.element($element).on('stopTimer', function(){
-            $interval.cancel(timer);
-            timer = undefined;
-            totalElapsed += elapsed;
-            elapsed = 0;
-          });
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive("insave", ['$state', 
-                        '$mdDialog', 
-                        '$log', 
-                        'apiSrv', 
-    function($state, $mdDialog, $log, apiSrv){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($element).on('click', function(ev){
-            var projectId = $attrs.insave,
-                invoiceHtml = document.getElementById('invoice').outerHTML,
-                progress = document.querySelector("md-progress-linear");
-            progress.classList.remove("hidden");
-            apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
-              progress.classList.add("hidden");
-              $mdDialog.show(
-                $mdDialog.alert()
-                  .parent(angular.element(document.querySelector('.view-panel.active')))
-                  .clickOutsideToClose(true)
-                  .title('Invoice ready')
-                  .content('<button class="invoice-btn md-icon-button md-button md-default-theme">' +
-                            '<a href="'+invoice.url+'" target="_blank">' +
-                              '<md-icon class="md-default-theme">' +
-                                '<span class="fa fa-file-pdf-o"></span>' +
-                              '</md-icon> ' +
-                              'View PDF' +
-                            '</a>' +
-                           '</button>'
-                          )
-                  .ariaLabel('Invoice link')
-                  .ok('Dismiss')
-                  .targetEvent(ev)
-              ).finally(function(){
-                $state.go("app");
-              });
-            }, function(err){
-              $log.error(err);
-            });
-          });
-        }
-      };
-    }
-  ])
-;
-angular.module('invoices.directives')
-  .directive("inupdate", ['$state', 
-                          '$mdDialog', 
-                          '$log', 
+angular.module('invoices.controllers')
+  .controller('calCtrl', ['$scope',
+                          '$log',
                           'apiSrv',
-                          'msgSrv',
-    function($state, $mdDialog, $log, apiSrv, msgSrv){
-      return {
-        restrict: 'A',
-        link: function($scope, $element, $attrs){
-          angular.element($element).on('click', function(ev){
-            var invoiceId = $attrs.inupdate,
-                projectId = angular.element($element)[0].getAttribute("data-project"),
-                invoiceHtml = document.querySelector('.markup').innerHTML,
-                progress = document.querySelector("md-progress-linear");
-            progress.classList.remove("hidden");
-            apiSrv.request('PUT', 'projects/'+projectId+'/statements/'+invoiceId+'/', {markup: invoiceHtml}, function(invoice){
-              progress.classList.add("hidden");
-              document.getElementById('invoice_'+invoiceId).querySelector('.preview').innerHTML = invoice.markup;
-              msgSrv.emitMsg('updateInvoiceList');
-              $mdDialog.cancel();
-            }, function(err){
-              $log.error(err);
-            });
-          });
+    function($scope, $log, apiSrv){
+      $scope.calendarView = 'month';
+      $scope.calendarDay = new Date();
+      var project_ids = [];
+      apiSrv.request('GET', 'projects/intervals/', {}, function(intervals){
+        for(var i=0;i<intervals.length;i++){
+          var s = new Date(intervals[i].work_day),
+              e = new Date(intervals[i].work_day);
+          if(project_ids.indexOf(intervals[i].project) === -1){
+            project_ids.push(intervals[i].project);
+          }
+          // project_ids = project_ids.filter(function(value,index,self){return self.indexOf(value)===index;})
+          intervals[i].title = "<strong>"+intervals[i].project_name+"</strong>" + ": " + intervals[i].description;
+          intervals[i].type = 'info';
+          intervals[i].startsAt = s;
+          intervals[i].endsAt = e;
+          intervals[i].editable = false;
+          intervals[i].deletable = false;
+          intervals[i].draggable = false;
+          intervals[i].resizable = false;
+          intervals[i].incrementsBadgeTotal = true;
+          intervals[i].cssClass = "project_"+(project_ids.indexOf(intervals[i].project) + 1);
         }
-      };
+        $scope.events = intervals;
+      }, function(err){
+        $log.error(err);
+      });
     }
   ])
-;
-angular.module('invoices.filters')
-  .filter('msToTimeString', 
-    function(){
-      return function(millseconds){
-        var seconds = Math.floor(millseconds / 1000),
-            h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor((seconds % h)/m),
-            scnds = Math.floor((seconds % m)),
-            timeString = '';
-        if(scnds < 10){
-          scnds = "0" + scnds;
-        }
-        if(hours < 10){
-          hours = "0" + hours;
-        }
-        if(minutes < 10){
-          minutes = "0" + minutes;
-        }
-        timeString = hours + ":" + minutes + ":" + scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('secondsToTimeString', 
-    function(){
-      return function(seconds){
-        var h = 3600,
-            m = 60,
-            hours = Math.floor(seconds/h),
-            minutes = Math.floor((seconds % h)/m),
-            scnds = Math.floor((seconds % m)),
-            timeString = '';
-        if(scnds < 10){
-          scnds = "0" + scnds;
-        }
-        if(hours < 10){
-          hours = "0" + hours;
-        }
-        if(minutes < 10){
-          minutes = "0" + minutes;
-        }
-        timeString = hours + ":" + minutes + ":" + scnds;
-        return timeString;
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('telephone', 
-    function(){
-      return function(telephone){
-        if(!telephone){
-          return "";
-        }
-        var value = telephone.toString().trim().replace(/^\+/, '');
-        if(value.match(/[^0-9]/)){
-          return telephone;
-        }
-        var country, city, number;
-        switch(value.length){
-          case 10:
-            country = 1;
-            city = value.slice(0,3);
-            number = value.slice(3);
-            break;
-          case 11:
-            country = value[0];
-            city = value.slice(1,4);
-            number = value.slice(4);
-            break;
-          case 12:
-            country = value.slice(0,3);
-            city = value.slice(3,5);
-            number = value.slice(5);
-            break;
-          default:
-            return telephone;
-        }
-        if(country === 1){
-          country = "";
-        }
-        number = number.slice(0, 3) + '-' + number.slice(3);
-        return (country + " (" + city + ") " + number).trim();
-      };
-    }
-  )
-;
-angular.module('invoices.filters')
-  .filter('timeDeltaToHours', 
-    function(){
-      return function(delta){
-        var pieces = delta.split(":"),
-            hours = pieces[0],
-            minutes = pieces[1],
-            seconds = pieces[2];
-        return parseInt(hours) + (parseInt(minutes)/60) + (parseFloat(seconds)/60/60);
-      };
-    }
-  )
 ;
 angular.module('invoices.services')
   .factory('apiSrv', ['$http', 
@@ -63968,6 +69954,18 @@ angular.module('invoices.states')
               templateUrl: templateDir + '/profile.html',
               controller: 'userCtrl'
             }
+          }
+        })
+        .state('app.calendar', {
+          url: '/calendar',
+          views: {
+            'calendar': {
+              templateUrl: templateDir + '/calendar.html',
+              controller: 'calCtrl'
+            }
+          },
+          data: {
+            css: cssDir + '/calendar.css'
           }
         })
         .state('app.newProject', {

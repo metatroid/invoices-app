@@ -60,6 +60,9 @@ angular.module('invoices.controllers')
           case "app.settings":
             baseViewChange = true;
             break;
+          case "app.calendar":
+            baseViewChange = true;
+            break;
           case "app.newProject":
             if(!overlay){$scope.showNewProjectForm();}
             break;

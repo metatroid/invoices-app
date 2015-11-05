@@ -130,7 +130,8 @@ body{
 }
 body{
   background-color: #fff !important;
-  background-image: url(/static/assets/img/old-mathematics.png);
+  background-image: url(/static/assets/img/tiny_grid.png);
+  background-size: 26px 26px;
   &.app{
     background-image: url(/static/assets/img/grid.gif);
   }

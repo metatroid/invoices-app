@@ -192,6 +192,12 @@ def ProjectSort(request, format=None):
   serializer = ProjectSerializer(projects, many=True)
   return Response(serializer.data)
 
+@api_view(['GET'])
+def AllIntervals(request, format=None):
+  intervals = Interval.objects.filter(project__user=request.user.id)
+  serializer = IntervalSerializer(intervals, many=True)
+  return Response(serializer.data)
+
 @api_view(['POST'])
 def ProjectIntervalSort(request, pk, format=None):
   data = json.loads(request.body.decode('utf-8'))

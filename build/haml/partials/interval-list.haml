@@ -30,7 +30,7 @@
               %md-input-container
                 %label
                   Date
-                %input{datetime: "yyyy-MM-dd", ng-model: "ctrl.parent.newInterval.work_date"}
+                %input{datetime: "yyyy-MM-dd HH:mm", ng-model: "ctrl.parent.newInterval.work_date"}
           .self-center{flex: "10"}
             .interval-action-progress.hidden
               %md-progress-circular{md-mode: "indeterminate", md-diameter: "20px"}
@@ -62,7 +62,7 @@
                 %md-input-container.inline-60
                   %label
                     Date
-                  %input{datetime: "yyyy-MM-dd", ng-model: "interval.work_date"}
+                  %input{datetime: "yyyy-MM-dd HH:mm", ng-model: "interval.work_date"}
                 %md-input-container.inline-20
                   %label
                     Include

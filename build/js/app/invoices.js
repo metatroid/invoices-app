@@ -8,7 +8,9 @@ angular.module('invoices', [
                'djangoRESTResources',
                'ui.mask',
                'datetime',
-               'angular-sortable-view'
+               'angular-sortable-view',
+               'ui.bootstrap',
+               'mwl.calendar'
 ]);
 
 angular.module('invoices.states', []);

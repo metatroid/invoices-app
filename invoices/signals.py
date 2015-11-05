@@ -50,6 +50,15 @@ def ensure_profile_exists(sender, **kwargs):
     Profile.objects.get_or_create(user=kwargs.get('instance'))
 
 @receiver(post_save, sender=Interval)
+def after_create_interval(sender, **kwargs):
+  interval = kwargs.get('instance')
+  if not interval.project_name:
+    project = Project.objects.get(pk=interval.project.id)
+    interval.project_name = project.project_name
+    logger.debug("SETTING PROJECT NAME ON INTERVAL TO: "+project.project_name)
+    interval.save()
+
+@receiver(post_save, sender=Interval)
 def after_save_interval(sender, **kwargs):
     interval = kwargs.get('instance')
     if(interval.end):
@@ -70,8 +79,9 @@ def after_save_interval(sender, **kwargs):
 @receiver(post_delete, sender=Interval)
 def after_delete_interval(sender, **kwargs):
     interval = kwargs.get('instance')
-    if(Project.objects.all().filter(pk=interval.project.id).count() > 0):
-      project = Project.objects.get(pk=interval.project.id)
+    p = Project.objects.all().filter(pk=interval.project.id)
+    if(p.count() > 0):
+      project = p.get(pk=interval.project.id)
       project_position = project.position
       seconds = 0
       for i in project.intervals.all().filter(paid=False):

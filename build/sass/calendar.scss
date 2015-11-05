@@ -1,0 +1,69 @@
+@import 'libs/bootstrap/bootstrap';
+@import 'libs/angular-bootstrap-calendar.min';
+#calendar{
+  padding-bottom: 60px;
+  md-toolbar{
+    margin-bottom: 40px;
+  }
+  .date-title{
+    font-weight: normal;
+    position: relative;
+    top: -1px;
+    margin-left: auto;
+    a{
+      display: inline-block;
+      font-size: 8px;
+      cursor: pointer;
+      color: rgba(0,0,0,0.87);
+      &:nth-child(2){
+        font-size: 14px;
+        margin-left: 5px;
+        margin-right: 5px;
+        position: relative;
+        top: 1px;
+        width: 110px;
+        text-align: center;
+      }
+      &:hover{
+        text-decoration: none;
+        color: rgba(0,0,0,1);
+      }
+    }
+  }
+}
+.cal-month-box{
+  border-left:0;
+}
+.cal-day-today{
+  background-color: #ddd;
+  span[data-cal-date]{
+    color: #666;
+  }
+}
+.cal-day-tick{
+  .fa{
+    display: inline-block;
+  }
+  .glyphicon{
+    display: none;
+  }
+}
+
+$colorSet1: BlueViolet, CornflowerBlue, Crimson, DarkBlue, DarkGreen, DarkMagenta, Darkorange, DarkRed, DodgerBlue, Green, HotPink, Indigo, Magenta, Maroon, MidnightBlue, OrangeRed, Purple, Red, RoyalBlue, Teal, Tomato;
+$colorSet2: Aqua, Aquamarine, Black, Blue, Brown, CadetBlue, Chartreuse, Chocolate, Cyan, DarkCyan, DarkGray, DarkOliveGreen, DarkOrchid, DarkSalmon, DarkSeaGreen, DarkSlateBlue, DarkSlateGrey, DarkTurquoise, DarkViolet, DeepPink, DeepSkyBlue, DimGray, FireBrick, ForestGreen, Fuchsia, GoldenRod, Gray, GreenYellow, IndianRed, Khaki, Lavender, LawnGreen, LemonChiffon, LightBlue, LightCoral, LightCyan, LightGoldenRodYellow, LightGreen, LightPink, LightSalmon, LightSeaGreen, LightSkyBlue, Lime, LimeGreen, MediumAquaMarine, MediumBlue, MediumOrchid, MediumPurple, MediumSeaGreen, MediumSlateBlue, MediumSpringGreen, MediumTurquoise, MediumVioletRed, MistyRose, Moccasin, NavajoWhite, Navy, Olive, OliveDrab, Orange, Orchid, PaleGreen, PaleVioletRed, PeachPuff, Peru, Pink, Plum, PowderBlue, RosyBrown, SaddleBrown, Salmon, SandyBrown, SeaGreen, Sienna, Silver, SkyBlue, SlateBlue, SlateGray, SpringGreen, SteelBlue, Tan, Thistle, Turquoise, Violet, Yellow, YellowGreen;
+@for $i from 1 through 20{
+  .events-list a.project_#{$i},
+  .cal-event-list li.project_#{$i} span.event{
+    background-color: nth($colorSet1, random(21));
+    box-shadow: none;
+    border-color: rgba(255,255,255,0.85);
+  }
+}
+@for $i from 21 through 100{
+  .events-list a.project_#{$i},
+  .cal-event-list li.project_#{$i} span.event{
+    background-color: nth($colorSet2, random(86));
+    box-shadow: none;
+    border-color: rgba(255,255,255,0.85);
+  }
+}

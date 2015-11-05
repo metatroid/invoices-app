@@ -7,7 +7,7 @@
       %a{ng-class: "{active: $state.current.name === 'app.settings'}", ui-sref: "app.settings"}
         %span.fa.fa-cog
     %li
-      %a{href: "#"}
+      %a{ng-class: "{active: $state.current.name === 'app.calendar'}", ui-sref: "app.calendar"}
         %span.fa.fa-calendar
     %li
       %a{href: "#"}
@@ -20,7 +20,7 @@
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
   %md-progress-linear.application-progress-indicator.hidden{md-mode: "indeterminate"}
-  #app.view-panel.project-view{ng-class: "{active: currentState !== 'app.settings'}"}
+  #app.view-panel.project-view{ng-class: "{active: currentState !== 'app.settings' && currentState !== 'app.calendar'}"}
     %md-content
       %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
         %md-list-item.project{id: "project_{{project.id}}", ng-repeat: "project in projects", sv-element: "sv-element", data-pid: "{{project.id}}", data-position: "{{project.position}}"}
@@ -105,3 +105,5 @@
           Profile Settings
     .form-wrapper.user-form-wrapper
       %form.form#userForm{ui-view: "profile"}
+  #calendar.view-panel.calendar-view{ng-class: "{active: currentState === 'app.calendar'}"}
+    %div{ui-view: "calendar"}

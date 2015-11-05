@@ -65,7 +65,8 @@ nav{
             background-color: rgba(0,0,0,0.35);
             border: none;// 1px solid rgba(5,255,5,0.5);
             border-radius: 0;
-            color: rgba(5,255,5,0.5);
+            color: #eda9f4;//rgba(5,255,5,0.5);
+            font-size: 14px;
           }
         }
       }
@@ -206,13 +207,13 @@ nav{
       position: relative;
       z-index: 3;
       background-color: #fff;
-      box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+      // box-shadow:0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
     }
     &:before, &:after{
       content:"";
       position:absolute;
       z-index:1;
-      box-shadow:0 0 20px rgba(0,0,0,0.8);
+      // box-shadow:0 0 20px rgba(0,0,0,0.8);
       top:50%;
       bottom:0;
       left:10px;

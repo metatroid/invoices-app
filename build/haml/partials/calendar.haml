@@ -1,0 +1,12 @@
+%md-toolbar.md-default
+  .md-toolbar-tools
+    %h2.md-flex
+      Projects Overview
+    %span.date-title
+      %a{mwl-date-modifier: "mwl-date-modifier", date: "calendarDay", decrement: "calendarView"}
+        %span.fa.fa-chevron-left
+      %a{mwl-date-modifier: "mwl-date-modifier", date: "calendarDay", set-to-today: "set-to-today"}
+        {{calendarTitle}}
+      %a{mwl-date-modifier: "mwl-date-modifier", date: "calendarDay", increment: "calendarView"}
+        %span.fa.fa-chevron-right
+%mwl-calendar{view: "calendarView", current-day: "calendarDay", events: "events", view-title: "calendarTitle", day-view-split: "30"}

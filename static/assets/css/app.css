@@ -7404,7 +7404,8 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque {
       text-decoration: none;
       color: #000; }
 
-#application #profile {
+#application #profile,
+#application #calendar {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
   overflow: auto;
   bottom: 0; }
