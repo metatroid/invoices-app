@@ -18,7 +18,13 @@
                 %span.fa.fa-clock-o
                 %span
                   {{interval.description}}
-            .actions.self-center.inline-20
+                .date-time
+                  %span
+                    {{interval.work_day | date:'MM/dd/yyyy'}} 
+                  \- 
+                  %span
+                    {{interval.total}}
+            -#.actions.self-center.inline-20
               %md-button.md-icon-button.update-btn{aria-label: "update", ng-click: "editInterval(interval, $event, $index)", title: "Update Time Interval"}
                 %span.fa.fa-edit
               %md-button.md-icon-button.delete-btn{aria-label: "remove", ng-click: "deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
@@ -30,7 +36,7 @@
                 %span.fa.fa-file-o
                 %a{href: "{{invoice.url}}", target: "_blank"}
                   {{invoice.filename}}
-            .actions.self-center.inline-20
+            -#.actions.self-center.inline-20
               %md-button.md-icon-button.edit-btn{aria-label: "edit", title: "Edit invoice", ng-click: "editInvoice(invoice, $index, $event)"}
                 %span.fa.fa-edit
               %md-button.md-icon-button.delete-btn{aria-label: "delete", title: "Delete invoice", ng-click: "deleteInvoice(invoice, $event, $index)"}

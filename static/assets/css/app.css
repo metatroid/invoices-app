@@ -7727,6 +7727,10 @@ md-bottom-sheet {
   #archive md-list-item .project {
     line-height: 48px;
     border-bottom: 1px dotted #ddd; }
+    #archive md-list-item .project span {
+      font-weight: bold; }
+      #archive md-list-item .project span.fa {
+        font-weight: normal; }
     #archive md-list-item .project .md-avatar,
     #archive md-list-item .project .project-icon {
       margin-right: 5px; }
@@ -7735,31 +7739,35 @@ md-bottom-sheet {
   #archive md-list-item ul {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 20px 0 0;
     display: inline-block;
     vertical-align: top; }
     #archive md-list-item ul.intervals {
-      width: 50%;
-      margin-right: 5%; }
+      width: 55%; }
     #archive md-list-item ul.statements {
-      width: 45%; }
+      width: 40%; }
+      #archive md-list-item ul.statements span.fa {
+        font-weight: bold; }
     #archive md-list-item ul li {
-      position: relative; }
+      position: relative;
+      min-height: 48px; }
       #archive md-list-item ul li a {
         color: rgba(0, 0, 0, 0.87);
         text-decoration: none; }
     #archive md-list-item ul .statement,
     #archive md-list-item ul .interval {
-      position: absolute;
-      top: 50%;
+      position: relative;
       left: 20px;
-      right: 30%;
-      -webkit-transform: translateY(-50%);
-              transform: translateY(-50%);
-      text-indent: -10px; }
+      text-indent: -10px;
+      font-weight: bold; }
       #archive md-list-item ul .statement span.fa,
       #archive md-list-item ul .interval span.fa {
         margin-right: 5px; }
+      #archive md-list-item ul .statement .date-time,
+      #archive md-list-item ul .interval .date-time {
+        padding-left: 8px;
+        font-size: 12px;
+        font-weight: normal; }
   #archive md-list-item .actions {
     -webkit-align-self: flex-start;
         -ms-flex-item-align: start;

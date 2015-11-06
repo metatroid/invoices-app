@@ -894,6 +894,12 @@ md-bottom-sheet{
     .project{
       line-height: 48px;
       border-bottom: 1px dotted #ddd;
+      span{
+        font-weight: bold;
+        &.fa{
+          font-weight: normal;
+        }
+      }
       .md-avatar,
       .project-icon{
         margin-right: 5px;
@@ -905,18 +911,21 @@ md-bottom-sheet{
     ul{
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 20px 0 0;
       display: inline-block;
       vertical-align: top;
       &.intervals{
-        width: 50%;
-        margin-right: 5%;
+        width: 55%;
       }
       &.statements{
-        width: 45%;
+        width: 40%;
+        span.fa{
+          font-weight: bold;
+        }
       }
       li{
         position: relative;
+        min-height: 48px;
         a{
           color: rgba(0,0,0,0.87);
           text-decoration: none;
@@ -924,14 +933,22 @@ md-bottom-sheet{
       }
       .statement,
       .interval{
-        position: absolute;
-        top: 50%;
+        // position: absolute;
+        // top: 50%;
+        // left: 20px;
+        // right: 30%;
+        // transform: translateY(-50%);
+        position: relative;
         left: 20px;
-        right: 30%;
-        transform: translateY(-50%);
         text-indent: -10px;
+        font-weight: bold;
         span.fa{
           margin-right: 5px;
+        }
+        .date-time{
+          padding-left: 8px;
+          font-size: 12px;
+          font-weight: normal;
         }
       }
     }
