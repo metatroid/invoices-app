@@ -47,13 +47,18 @@
               Fixed Rate
             %input{ng-model: "ctrl.parent.project.fixed_rate"}
         %md-content{layout-padding: "layout-padding"}
-          %md-input-container
+          %md-input-container.inline-50
             .file-upload-wrapper
               %input{type: "file", aria-label: "Project logo upload", id: "project_logo", infile: "ctrl.parent.project.project_logo", current-logo: "'{{ctrl.parent.project.project_logo}}'"}
               %label.md-no-float{for: "project_logo"}
                 %span.fa.fa-upload
                 %span.label
                   Project Logo
+          %md-input-container.inline-50
+            %label
+              Active
+            %div{ng-repeat: "v in [0]"}
+              %md-checkbox{ng-model: "ctrl.parent.project.active", ng-init: "ctrl.parent.project.active", aria-label: "Active checkbox"}
         %input{type: "hidden", ng-model: "ctrl.parent.project.user", ng-value: "ctrl.parent.user.id", value: "{{ctrl.parent.user.id}}", name: "user", required: true}
         .md-actions{layout: "row"}
           %ul.errors.text-danger{ng-if: "ctrl.parent.project.error != ''", ng-bind-html: "ctrl.parent.htmlSafe(ctrl.parent.project.error)"}

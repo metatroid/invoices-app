@@ -11,5 +11,11 @@ class Statement(models.Model):
   created_at = models.DateTimeField(default=timezone.now)
   updated_at = models.DateTimeField(auto_now=True)
 
+  def _filename(self):
+    url = self.url
+    filename = url.split('/')[-1]
+    return filename
+  filename = property(_filename)
+
   class Meta:
     ordering = ('created_at',)

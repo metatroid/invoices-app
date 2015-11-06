@@ -63,6 +63,14 @@ body{
     width: 100% !important;
   }
 }
+.inline-30{
+  width: 30%;
+  min-width: 30% !important;
+  display: inline-block;
+  input{
+    width: 100% !important;
+  }
+}
 .inline-50{
   width: 50%;
   min-width: 50% !important;

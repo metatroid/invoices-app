@@ -4,14 +4,14 @@
       %a{ng-class: "{active: $state.current.name === 'app'}", ui-sref: "app"}
         %span.fa.fa-tasks
     %li
-      %a{ng-class: "{active: $state.current.name === 'app.settings'}", ui-sref: "app.settings"}
-        %span.fa.fa-cog
-    %li
       %a{ng-class: "{active: $state.current.name === 'app.calendar'}", ui-sref: "app.calendar"}
         %span.fa.fa-calendar
     %li
-      %a{href: "#"}
-        %span.fa.fa-code-fork
+      %a{ng-class: "{active: $state.current.name === 'app.archive'}", ui-sref: "app.archive"}
+        %span.fa.fa-cube
+    %li
+      %a{ng-class: "{active: $state.current.name === 'app.settings'}", ui-sref: "app.settings"}
+        %span.fa.fa-cog
   .app-actions
     %a{ui-sref: "app.newProject($event)"}
       %span.fa.fa-plus-square
@@ -20,10 +20,10 @@
   %md-toolbar.top
     %nav.app-navigation{ui-view: "nav"}
   %md-progress-linear.application-progress-indicator.hidden{md-mode: "indeterminate"}
-  #app.view-panel.project-view{ng-class: "{active: currentState !== 'app.settings' && currentState !== 'app.calendar'}"}
+  #app.view-panel.project-view{ng-class: "{active: currentState !== 'app.settings' && currentState !== 'app.calendar' && currentState !== 'app.archive'}"}
     %md-content
       %md-list.project-list{sv-root: "sv-root", sv-part: "projects", sv-on-sort: "sortProjects($item, $partFrom, $partTo, $indexFrom, $indexTo)"}
-        %md-list-item.project{id: "project_{{project.id}}", ng-repeat: "project in projects", sv-element: "sv-element", data-pid: "{{project.id}}", data-position: "{{project.position}}"}
+        %md-list-item.project{id: "project_{{project.id}}", ng-repeat: "project in projects | filter:{active:onlyActiveProjects}", sv-element: "sv-element", data-pid: "{{project.id}}", data-position: "{{project.position}}"}
           %md-fab-toolbar{md-open: "closed", md-direction: "left", count: "4"}
             %md-fab-trigger
               %md-button.md-fab{aria-label: "menu"}
@@ -98,6 +98,10 @@
                       save time interval
                     %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index, $event)"}
                       discard
+  #archive.view-panel.archive-view{ng-class: "{active: currentState === 'app.archive'}"}
+    %div{ui-view: "archive"}
+  #calendar.view-panel.calendar-view{ng-class: "{active: currentState === 'app.calendar'}"}
+    %div{ui-view: "calendar"}
   #profile.view-panel.settings-view{ng-class: "{active: currentState === 'app.settings'}"}
     %md-toolbar.md-default
       .md-toolbar-tools
@@ -105,5 +109,4 @@
           Profile Settings
     .form-wrapper.user-form-wrapper
       %form.form#userForm{ui-view: "profile"}
-  #calendar.view-panel.calendar-view{ng-class: "{active: currentState === 'app.calendar'}"}
-    %div{ui-view: "calendar"}
+  

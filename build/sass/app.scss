@@ -454,7 +454,8 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque{
     }
   }
   #profile,
-  #calendar{
+  #calendar,
+  #archive{
     background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
     overflow: auto;
     bottom: 0;
@@ -881,6 +882,65 @@ md-bottom-sheet{
           margin-right: 3%;
           padding: 5px 0 0;
         }
+      }
+    }
+  }
+}
+#archive{
+  md-list-item{
+    padding: 0px 20px 10px;
+    margin: 10px 20px;
+    border: 1px solid #ddd;
+    .project{
+      line-height: 48px;
+      border-bottom: 1px dotted #ddd;
+      .md-avatar,
+      .project-icon{
+        margin-right: 5px;
+      }
+    }
+    .properties{
+      margin-right: -10%;
+    }
+    ul{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: inline-block;
+      vertical-align: top;
+      &.intervals{
+        width: 50%;
+        margin-right: 5%;
+      }
+      &.statements{
+        width: 45%;
+      }
+      li{
+        position: relative;
+        a{
+          color: rgba(0,0,0,0.87);
+          text-decoration: none;
+        }
+      }
+      .statement,
+      .interval{
+        position: absolute;
+        top: 50%;
+        left: 20px;
+        right: 30%;
+        transform: translateY(-50%);
+        text-indent: -10px;
+        span.fa{
+          margin-right: 5px;
+        }
+      }
+    }
+    .actions{
+      align-self: flex-start;
+      a,
+      button{
+        vertical-align: top;
+        margin: 0;
       }
     }
   }

@@ -187,6 +187,7 @@ angular.module('invoices.controllers')
     function($scope, $state, $log, $sce, apiSrv, msgSrv, $mdDialog, $mdBottomSheet, $mdToast, djResource, $filter, orderByFilter){
       $scope.htmlSafe = $sce.trustAsHtml;
       $scope.showPaid = false;
+      $scope.onlyActiveProjects = true;
       var baseViewChange = false,
           overlay = false;
       var progressIndicator = document.querySelector('.application-progress-indicator');
@@ -234,6 +235,9 @@ angular.module('invoices.controllers')
             baseViewChange = true;
             break;
           case "app.calendar":
+            baseViewChange = true;
+            break;
+          case "app.archive":
             baseViewChange = true;
             break;
           case "app.newProject":
@@ -367,19 +371,20 @@ angular.module('invoices.controllers')
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/project-edit.html',
-            parent: angular.element(document.querySelector('.view-panel.project-view')),
+            parent: angular.element(document.querySelector('.view-panel.active')),
             targetEvent: ev,
             clickOutsideToClose: true,
             onComplete: function(){
               overlay = true;
-              document.querySelector('.view-panel.project-view').classList.add('no-scroll');
+              document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
+              document.querySelector('.view-panel.active').classList.add('no-scroll');
             }
           }).finally(function(){
-            if(!baseViewChange){
+            if(!baseViewChange && $scope.currentState !== 'app.archive'){
               $state.go("app");
             }
             overlay = false;
-            document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
+            document.querySelector('.view-panel.active').classList.remove('no-scroll');
           });
         }, function(err){$log.error(err);});
       };
@@ -1625,6 +1630,15 @@ angular.module('invoices.states')
           },
           data: {
             css: cssDir + '/calendar.css'
+          }
+        })
+        .state('app.archive', {
+          url: '/archive',
+          views: {
+            'archive': {
+              templateUrl: templateDir + '/archive.html',
+              controller: 'appCtrl'
+            }
           }
         })
         .state('app.newProject', {

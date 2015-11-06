@@ -1,0 +1,42 @@
+%md-toolbar.md-default
+  .md-toolbar-tools
+    %h2.md-flex
+      Archive
+%md-list.projects
+  %md-list-item{ng-repeat: "project in projects"}
+    .inline-90
+      .project
+        %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}
+        %span.project-icon.fa.fa-folder{ng-if: "!project.project_logo"}
+        %span
+          {{project.project_name}}
+      .properties
+        %ul.intervals
+          %li{ng-repeat: "interval in project.intervals"}
+            .inline-80
+              .interval
+                %span.fa.fa-clock-o
+                %span
+                  {{interval.description}}
+            .actions.self-center.inline-20
+              %md-button.md-icon-button.update-btn{aria-label: "update", ng-click: "editInterval(interval, $event, $index)", title: "Update Time Interval"}
+                %span.fa.fa-edit
+              %md-button.md-icon-button.delete-btn{aria-label: "remove", ng-click: "deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
+                %span.fa.fa-remove
+        %ul.statements
+          %li{ng-repeat: "invoice in project.statements"}
+            .inline-80
+              .statement
+                %span.fa.fa-file-o
+                %a{href: "{{invoice.url}}", target: "_blank"}
+                  {{invoice.filename}}
+            .actions.self-center.inline-20
+              %md-button.md-icon-button.edit-btn{aria-label: "edit", title: "Edit invoice", ng-click: "editInvoice(invoice, $index, $event)"}
+                %span.fa.fa-edit
+              %md-button.md-icon-button.delete-btn{aria-label: "delete", title: "Delete invoice", ng-click: "deleteInvoice(invoice, $event, $index)"}
+                %span.fa.fa-remove
+    .actions.inline-10
+      %md-button.md-icon-button{aria-label: "edit", ng-click: "showProjectEditor($event, project.id, $index)"}
+        %span.fa.fa-edit
+      %md-button.md-icon-button{aria-label: "remove", ng-click: "deleteProject($event, project.id, $index)"}
+        %span.fa.fa-remove

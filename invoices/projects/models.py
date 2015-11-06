@@ -26,6 +26,7 @@ class Project(models.Model):
   payments = models.DecimalField(max_digits=8, decimal_places=2, default=0, blank=True)
   completed = models.BooleanField(default=False)
   paid = models.BooleanField(default=False)
+  active = models.BooleanField(default=True, blank=True)
   created_at = models.DateTimeField(default=timezone.now)
   updated_at = models.DateTimeField(auto_now=True)
   

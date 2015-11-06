@@ -7405,7 +7405,8 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque {
       color: #000; }
 
 #application #profile,
-#application #calendar {
+#application #calendar,
+#application #archive {
   background-image: linear-gradient(to bottom, white 0, rgba(255, 255, 255, 0.7) 100%);
   overflow: auto;
   bottom: 0; }
@@ -7718,3 +7719,52 @@ md-bottom-sheet {
       margin-left: 3%;
       margin-right: 3%;
       padding: 5px 0 0; }
+
+#archive md-list-item {
+  padding: 0px 20px 10px;
+  margin: 10px 20px;
+  border: 1px solid #ddd; }
+  #archive md-list-item .project {
+    line-height: 48px;
+    border-bottom: 1px dotted #ddd; }
+    #archive md-list-item .project .md-avatar,
+    #archive md-list-item .project .project-icon {
+      margin-right: 5px; }
+  #archive md-list-item .properties {
+    margin-right: -10%; }
+  #archive md-list-item ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+    vertical-align: top; }
+    #archive md-list-item ul.intervals {
+      width: 50%;
+      margin-right: 5%; }
+    #archive md-list-item ul.statements {
+      width: 45%; }
+    #archive md-list-item ul li {
+      position: relative; }
+      #archive md-list-item ul li a {
+        color: rgba(0, 0, 0, 0.87);
+        text-decoration: none; }
+    #archive md-list-item ul .statement,
+    #archive md-list-item ul .interval {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      right: 30%;
+      -webkit-transform: translateY(-50%);
+              transform: translateY(-50%);
+      text-indent: -10px; }
+      #archive md-list-item ul .statement span.fa,
+      #archive md-list-item ul .interval span.fa {
+        margin-right: 5px; }
+  #archive md-list-item .actions {
+    -webkit-align-self: flex-start;
+        -ms-flex-item-align: start;
+            align-self: flex-start; }
+    #archive md-list-item .actions a,
+    #archive md-list-item .actions button {
+      vertical-align: top;
+      margin: 0; }

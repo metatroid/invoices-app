@@ -77,6 +77,15 @@ angular.module('invoices.states')
             css: cssDir + '/calendar.css'
           }
         })
+        .state('app.archive', {
+          url: '/archive',
+          views: {
+            'archive': {
+              templateUrl: templateDir + '/archive.html',
+              controller: 'appCtrl'
+            }
+          }
+        })
         .state('app.newProject', {
           url: '/new'
         })

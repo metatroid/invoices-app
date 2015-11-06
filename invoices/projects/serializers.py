@@ -58,6 +58,7 @@ class StatementSerializer(serializers.ModelSerializer):
       'url',
       'markup',
       'project',
+      'filename',
       'created_at',
       'updated_at'
     )
@@ -87,6 +88,7 @@ class ProjectSerializer(serializers.ModelSerializer):
       'payments',
       'completed',
       'paid',
+      'active',
       'created_at',
       'updated_at',
       'user',
