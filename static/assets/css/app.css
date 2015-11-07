@@ -7384,25 +7384,26 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque {
       #application #app .project-list .project h2, #application #app .project-list .project h3, #application #app .project-list .project h4 {
         margin-top: 0;
         margin-bottom: 5px; }
-  #application #app .invoice-btn {
+
+#application .invoice-btn {
+  display: block;
+  width: 100%;
+  line-height: 24px;
+  min-height: 24px;
+  height: 42px;
+  border-radius: 0;
+  text-align: center;
+  margin: 20px auto -20px;
+  background-color: #efefef;
+  padding: 10px; }
+  #application .invoice-btn md-icon {
+    line-height: 22px;
+    margin-right: 8px;
+    width: auto; }
+  #application .invoice-btn a {
     display: block;
-    width: 100%;
-    line-height: 24px;
-    min-height: 24px;
-    height: 42px;
-    border-radius: 0;
-    text-align: center;
-    margin: 20px auto -20px;
-    background-color: #efefef;
-    padding: 10px; }
-    #application #app .invoice-btn md-icon {
-      line-height: 22px;
-      margin-right: 8px;
-      width: auto; }
-    #application #app .invoice-btn a {
-      display: block;
-      text-decoration: none;
-      color: #000; }
+    text-decoration: none;
+    color: #000; }
 
 #application #profile,
 #application #calendar,
@@ -7721,14 +7722,16 @@ md-bottom-sheet {
       padding: 5px 0 0; }
 
 #archive md-list-item {
-  padding: 0px 20px 10px;
+  padding: 10px 20px 10px;
   margin: 10px 20px;
   border: 1px solid #ddd; }
   #archive md-list-item .project {
-    line-height: 48px;
+    line-height: 32px;
     border-bottom: 1px dotted #ddd; }
     #archive md-list-item .project span {
-      font-weight: bold; }
+      font-weight: bold;
+      position: relative;
+      top: 6px; }
       #archive md-list-item .project span.fa {
         font-weight: normal; }
     #archive md-list-item .project .md-avatar,
@@ -7748,6 +7751,26 @@ md-bottom-sheet {
       width: 40%; }
       #archive md-list-item ul.statements span.fa {
         font-weight: bold; }
+      #archive md-list-item ul.statements .actions a {
+        font-weight: normal;
+        font-size: 12px;
+        position: relative;
+        top: -2px; }
+    #archive md-list-item ul strong {
+      display: block;
+      border-bottom: 1px dotted #ddd;
+      margin-bottom: 10px;
+      font-size: 12px;
+      max-width: 400px; }
+      #archive md-list-item ul strong a {
+        float: right;
+        color: rgba(0, 0, 0, 0.87);
+        text-decoration: none;
+        font-weight: normal;
+        font-size: 10px;
+        position: relative;
+        top: 2px;
+        cursor: pointer; }
     #archive md-list-item ul li {
       position: relative;
       min-height: 48px; }

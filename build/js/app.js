@@ -540,7 +540,7 @@ angular.module('invoices.controllers')
         $mdOpenMenu(ev);
       };
       $scope.openInvoiceDialog = function(projectId, ev){
-        document.querySelector('.view-panel.project-view').scrollTop = 0;
+        document.querySelector('.view-panel.active').scrollTop = 0;
         apiSrv.request('GET', 'projects/'+projectId, {}, function(project){
           $mdDialog.show({
             controller: function(){
@@ -551,19 +551,19 @@ angular.module('invoices.controllers')
             },
             controllerAs: 'ctrl',
             templateUrl: 'angular/partials/invoice-display.html',
-            parent: angular.element(document.querySelector('.view-panel.project-view')),
+            parent: angular.element(document.querySelector('.view-panel.active')),
             targetEvent: ev,
             clickOutsideToClose: true,
             onComplete: function(){
               overlay = true;
-              document.querySelector('.view-panel.project-view').classList.add('no-scroll');
+              document.querySelector('.view-panel.active').classList.add('no-scroll');
             }
           }).finally(function(){
-            if(!baseViewChange){
+            if(!baseViewChange && $scope.currentState !== 'app.archive'){
               $state.go("app");
             }
             overlay = false;
-            document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
+            document.querySelector('.view-panel.active').classList.remove('no-scroll');
           });
         }, function(err){$log.error(err);});
       };
@@ -587,6 +587,29 @@ angular.module('invoices.controllers')
           }
           document.querySelector('.view-panel.project-view').classList.remove('no-scroll');
           overlay = false;
+        });
+      };
+
+      $scope.deleteInvoice = function(project, invoice, index, ev){
+        var that = this;
+        var confirm = $mdDialog.confirm()
+            .title('You are about to delete this invoice.')
+            .content('This action cannot be undone. Are you sure you wish to proceed?')
+            .ariaLabel('Confirm delete')
+            .targetEvent(ev)
+            .ok('Delete this invoice')
+            .cancel('Cancel');
+        $mdDialog.show(confirm).then(function() {
+          apiSrv.request('DELETE', 'projects/'+invoice.project+'/statements/'+invoice.id, {},
+            function(data){
+              project.statements.splice(index, 1);
+            },
+            function(err){
+              $log.error(err);
+            }
+          );
+        }, function() {
+          $log.info('cancelled delete');
         });
       };
     }
@@ -1326,11 +1349,10 @@ angular.module('invoices.directives')
   ])
 ;
 angular.module('invoices.directives')
-  .directive("insave", ['$state', 
-                        '$mdDialog', 
+  .directive("insave", ['$mdDialog', 
                         '$log', 
                         'apiSrv', 
-    function($state, $mdDialog, $log, apiSrv){
+    function($mdDialog, $log, apiSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -1358,9 +1380,7 @@ angular.module('invoices.directives')
                   .ariaLabel('Invoice link')
                   .ok('Dismiss')
                   .targetEvent(ev)
-              ).finally(function(){
-                $state.go("app");
-              });
+              );
             }, function(err){
               $log.error(err);
             });
@@ -1636,8 +1656,7 @@ angular.module('invoices.states')
           url: '/archive',
           views: {
             'archive': {
-              templateUrl: templateDir + '/archive.html',
-              controller: 'appCtrl'
+              templateUrl: templateDir + '/archive.html'
             }
           }
         })

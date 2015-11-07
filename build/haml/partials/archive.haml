@@ -12,6 +12,8 @@
           {{project.project_name}}
       .properties
         %ul.intervals
+          %strong
+            Hours
           %li{ng-repeat: "interval in project.intervals"}
             .inline-80
               .interval
@@ -30,16 +32,18 @@
               %md-button.md-icon-button.delete-btn{aria-label: "remove", ng-click: "deleteInterval(interval, $event, $index)", title: "Delete Time Interval"}
                 %span.fa.fa-remove
         %ul.statements
+          %strong
+            Invoices
+            %a{ng-click: "openInvoiceDialog(project.id, $event)"}
+              New Invoice
           %li{ng-repeat: "invoice in project.statements"}
             .inline-80
               .statement
                 %span.fa.fa-file-o
                 %a{href: "{{invoice.url}}", target: "_blank"}
                   {{invoice.filename}}
-            -#.actions.self-center.inline-20
-              %md-button.md-icon-button.edit-btn{aria-label: "edit", title: "Edit invoice", ng-click: "editInvoice(invoice, $index, $event)"}
-                %span.fa.fa-edit
-              %md-button.md-icon-button.delete-btn{aria-label: "delete", title: "Delete invoice", ng-click: "deleteInvoice(invoice, $event, $index)"}
+            .actions.self-center.inline-20
+              %a{aria-label: "delete", title: "Delete invoice", ng-click: "deleteInvoice(project, invoice, $index, $event)"}
                 %span.fa.fa-remove
     .actions.inline-10
       %md-button.md-icon-button{aria-label: "edit", ng-click: "showProjectEditor($event, project.id, $index)"}

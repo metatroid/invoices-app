@@ -1,9 +1,8 @@
 angular.module('invoices.directives')
-  .directive("insave", ['$state', 
-                        '$mdDialog', 
+  .directive("insave", ['$mdDialog', 
                         '$log', 
                         'apiSrv', 
-    function($state, $mdDialog, $log, apiSrv){
+    function($mdDialog, $log, apiSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
@@ -31,9 +30,7 @@ angular.module('invoices.directives')
                   .ariaLabel('Invoice link')
                   .ok('Dismiss')
                   .targetEvent(ev)
-              ).finally(function(){
-                $state.go("app");
-              });
+              );
             }, function(err){
               $log.error(err);
             });

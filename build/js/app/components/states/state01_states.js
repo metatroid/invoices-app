@@ -81,8 +81,7 @@ angular.module('invoices.states')
           url: '/archive',
           views: {
             'archive': {
-              templateUrl: templateDir + '/archive.html',
-              controller: 'appCtrl'
+              templateUrl: templateDir + '/archive.html'
             }
           }
         })

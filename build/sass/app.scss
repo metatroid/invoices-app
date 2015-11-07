@@ -430,27 +430,27 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque{
         }
       }
     }
-    .invoice-btn{
+  }
+  .invoice-btn{
+    display: block;
+    width: 100%;
+    line-height: 24px;
+    min-height: 24px;
+    height: 42px;
+    border-radius: 0;
+    text-align: center;
+    margin: 20px auto -20px;
+    background-color: #efefef;
+    padding: 10px;
+    md-icon{
+      line-height: 22px;
+      margin-right: 8px;
+      width: auto;
+    }
+    a{
       display: block;
-      width: 100%;
-      line-height: 24px;
-      min-height: 24px;
-      height: 42px;
-      border-radius: 0;
-      text-align: center;
-      margin: 20px auto -20px;
-      background-color: #efefef;
-      padding: 10px;
-      md-icon{
-        line-height: 22px;
-        margin-right: 8px;
-        width: auto;
-      }
-      a{
-        display: block;
-        text-decoration: none;
-        color: #000;
-      }
+      text-decoration: none;
+      color: #000;
     }
   }
   #profile,
@@ -888,14 +888,16 @@ md-bottom-sheet{
 }
 #archive{
   md-list-item{
-    padding: 0px 20px 10px;
+    padding: 10px 20px 10px;
     margin: 10px 20px;
     border: 1px solid #ddd;
     .project{
-      line-height: 48px;
+      line-height: 32px;
       border-bottom: 1px dotted #ddd;
       span{
         font-weight: bold;
+        position: relative;
+        top: 6px;
         &.fa{
           font-weight: normal;
         }
@@ -921,6 +923,31 @@ md-bottom-sheet{
         width: 40%;
         span.fa{
           font-weight: bold;
+        }
+        .actions{
+          a{
+            font-weight: normal;
+            font-size: 12px;
+            position: relative;
+            top: -2px;
+          }
+        }
+      }
+      strong{
+        display: block;
+        border-bottom: 1px dotted #ddd;
+        margin-bottom: 10px;
+        font-size: 12px;
+        max-width: 400px;
+        a{
+          float: right;
+          color: rgba(0,0,0,0.87);
+          text-decoration: none;
+          font-weight: normal;
+          font-size: 10px;
+          position: relative;
+          top: 2px;
+          cursor: pointer;
         }
       }
       li{
