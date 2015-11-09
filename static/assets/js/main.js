@@ -68672,13 +68672,13 @@ angular.module('invoices.controllers')
         $scope.newProject.deadline = data.deadline_date;
         apiSrv.request('POST', 'projects/', $scope.newProject, function(project){
           $scope.closeDialog();
-          that.projects.push(project);
+          that.projects.unshift(project);
           that.newProject = new Project();
         }, function(err){
           $log.error(err);
         });
       };
-      $scope.deleteProject = function(ev, id, index){
+      $scope.deleteProject = function(ev, project){
         var confirm = $mdDialog.confirm()
             .title('You are about to delete this project.')
             .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -68687,9 +68687,9 @@ angular.module('invoices.controllers')
             .ok('Delete this project')
             .cancel('Cancel');
         $mdDialog.show(confirm).then(function() {
-          apiSrv.request('DELETE', 'projects/'+id, {},
+          apiSrv.request('DELETE', 'projects/'+project.id, {},
             function(data){
-              $scope.projects.splice(index, 1);
+              $scope.projects.splice($scope.projects.indexOf(project), 1);
             },
             function(err){
               $log.error(err);
@@ -68708,6 +68708,11 @@ angular.module('invoices.controllers')
               if(this.parent.project.deadline){
                 this.parent.project.deadline_date = new Date(this.parent.project.deadline);
               }
+              for(var i=0;i<$scope.projects.length;i++){
+                if($scope.projects[i].id == projectId){
+                  index = i; //get original index from filtered collection
+                }
+              }
               this.parent.project_index = index;
             },
             controllerAs: 'ctrl',
@@ -68718,7 +68723,9 @@ angular.module('invoices.controllers')
             onComplete: function(){
               overlay = true;
               document.getElementsByTagName('md-dialog-content')[0].scrollTop = 0;
-              document.querySelector('.view-panel.active').classList.add('no-scroll');
+              var panel = document.querySelector('.view-panel.active');
+              panel.scrollTop = 0;
+              panel.classList.add('no-scroll');
             }
           }).finally(function(){
             if(!baseViewChange && $scope.currentState !== 'app.archive'){
@@ -69075,7 +69082,7 @@ angular.module('invoices.controllers')
           apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
             function(data){
               $timeout.cancel(intervalIndicator);
-              $scope.intervals.splice(index, 1);
+              $scope.intervals.splice($scope.intervals.indexOf(interval), 1);
               Project.get({id: interval.project}, function(project){
                 $scope.projects.splice($scope.openProject, 1, project);
                 that.project = project;

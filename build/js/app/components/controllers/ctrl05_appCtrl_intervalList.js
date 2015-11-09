@@ -112,7 +112,7 @@ angular.module('invoices.controllers')
           apiSrv.request('DELETE', 'projects/'+interval.project+'/intervals/'+interval.id, {},
             function(data){
               $timeout.cancel(intervalIndicator);
-              $scope.intervals.splice(index, 1);
+              $scope.intervals.splice($scope.intervals.indexOf(interval), 1);
               Project.get({id: interval.project}, function(project){
                 $scope.projects.splice($scope.openProject, 1, project);
                 that.project = project;
