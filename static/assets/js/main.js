@@ -68806,17 +68806,17 @@ angular.module('invoices.controllers')
       };
 
       $scope.intervalObj = {"description": ""};
-      $scope.saveInterval = function(id, index){
+      $scope.saveInterval = function(project){
         var intervalData = {
           "description": $scope.intervalObj.description
         };
-        var intervalId = $scope.intervals[id].interval,
-            timerEl = document.getElementById("project_"+id).querySelector(".timer"),
+        var intervalId = $scope.intervals[project.id].interval,
+            timerEl = document.getElementById("project_"+project.id).querySelector(".timer"),
             timerBtn = timerEl.querySelector('.counter'),
             intervalIx = $scope.timers.indexOf(intervalId);
-        apiSrv.request('PUT', 'projects/'+id+'/intervals/'+intervalId+'/', intervalData,
+        apiSrv.request('PUT', 'projects/'+project.id+'/intervals/'+intervalId+'/', intervalData,
           function(data){
-            $scope.projects.splice(index, 1, data);
+            $scope.projects.splice($scope.projects.indexOf(project), 1, data);
             $scope.intervals[id].timerRunning = false;
             $scope.timers.splice(intervalIx, 1);
             $scope.timeEvent = "startTimer";
@@ -68854,6 +68854,11 @@ angular.module('invoices.controllers')
       };
       
       $scope.showIntervalList = function(ev, pid, index){
+        for(var i=0;i<$scope.projects.length;i++){
+          if($scope.projects[i].id == pid){
+            index = i; //get original index from filtered collection
+          }
+        }
         $scope.openProject = index;
         overlay = true;
         document.querySelector('.view-panel.project-view').scrollTop = 0;
