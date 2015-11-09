@@ -854,7 +854,12 @@ md-bottom-sheet{
     margin: 10px 20px;
     border: 1px solid #ddd;
     &.inactive{
-      opacity: 0.35;
+      opacity: 0.75;
+      background-color: rgba(0,0,0,0.05);
+      .inactive-label{
+        position: static;
+        font-size: 8px;
+      }
     }
     .project{
       line-height: 32px;
@@ -867,9 +872,13 @@ md-bottom-sheet{
           font-weight: normal;
         }
       }
+      .md-avatar{
+        vertical-align: middle;
+      }
       .md-avatar,
       .project-icon{
         margin-right: 5px;
+        max-width: 32px;
       }
     }
     .properties{
@@ -895,6 +904,7 @@ md-bottom-sheet{
             font-size: 12px;
             position: relative;
             top: -2px;
+            cursor: pointer;
           }
         }
       }

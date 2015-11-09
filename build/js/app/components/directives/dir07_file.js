@@ -46,7 +46,6 @@ angular.module('invoices.directives')
             if(this.files && this.files[0]){
               reader.onload = function(ev){
                 data = ev.target.result;
-                console.log(data);
                 var preview = document.getElementById('logoPreview') || document.createElement('img');
                 preview.id = "logoPreview";
                 preview.setAttribute('src', reader.result);

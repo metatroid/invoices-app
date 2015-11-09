@@ -81,10 +81,10 @@
             .timer
               %md-button.counter{incounting: true, data-project: "{{project.id}}"}
                 00:00:00
-              %a.timer-control.timer-pause{href: "#", ng-show: "intervals[project.id].timerRunning === true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+              %a.timer-control.timer-pause{href: "#", ng-show: "projectTiming[project.id].timerRunning === true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
                 %span.fa.fa-pause
                 pause
-              %a.timer-control.timer-resume{href: "#", ng-show: "intervals[project.id].timerRunning !== true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
+              %a.timer-control.timer-resume{href: "#", ng-show: "projectTiming[project.id].timerRunning !== true", intimer: "{{timeEvent}}", ng-click: "startstopTimer(project.id)", data-project: "{{project.id}}"}
                 %span.fa.fa-play-circle
                 start
               .interval-form-wrapper

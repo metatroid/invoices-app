@@ -15,18 +15,6 @@ function pad(n, width, z){
   n = n + '';
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
-function xhrfile() {
-  return supportFileAPI() && supportAjaxUploadProgressEvents();
-  function supportFileAPI() {
-      var input = document.createElement('input');
-      input.type = 'file';
-      return 'files' in input;
-  }
-  function supportAjaxUploadProgressEvents() {
-      var xhr = new XMLHttpRequest();
-      return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
-  }
-}
 function timeDeltaToSeconds(delta){
   var pieces = delta.split(":"),
       hours = pieces[0],

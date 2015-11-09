@@ -5,6 +5,13 @@ angular.module('invoices.services')
       msgSrv.state = {};
       msgSrv.appScope = [];
       msgSrv.vars = {};
+      msgSrv.projectTiming = {};
+      msgSrv.setTimingStatus = function(timingObj){
+        msgSrv.projectTiming = timingObj;
+      }
+      msgSrv.getTimingStatus = function(timingObj){
+        return msgSrv.projectTiming;
+      }
       msgSrv.setVars = function(obj){
         msgSrv.vars = obj;
       };

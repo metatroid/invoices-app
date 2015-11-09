@@ -6,9 +6,11 @@ angular.module('invoices.controllers')
                                    'orderByFilter',
                                    '$timeout',
                                    '$mdDialog',
-    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog){
+                                   '$mdToast',
+    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog, $mdToast){
       var $scope = msgSrv.getScope('appCtrl');
       var vars = msgSrv.getVars();
+      var timingStatus = msgSrv.getTimingStatus();
       var Project = djResource('api/projects/:id', {'id': "@id"});
       var it = this;
       this.parent = $scope;
@@ -78,8 +80,18 @@ angular.module('invoices.controllers')
         apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
           function(data){
             $timeout.cancel(intervalIndicator);
-            $scope.projects.splice($scope.openProject, 1, data);
-            that.project = data;
+            if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+              $scope.projects.splice($scope.openProject, 1, data);
+              that.project = data;
+            } else {
+              var toast = $mdToast.simple()
+                            .content("Changes will be reflected when this project's timer is saved or discarded.")
+                            .action('Ok')
+                            .highlightAction(false)
+                            .hideDelay(10000)
+                            .position('top right');
+              $mdToast.show(toast).then(function(){});
+            }
             progress.classList.add('hidden');
             actions.classList.remove('hidden');
             actions.querySelector('button.update-btn').classList.add('success');
@@ -113,10 +125,20 @@ angular.module('invoices.controllers')
             function(data){
               $timeout.cancel(intervalIndicator);
               $scope.intervals.splice($scope.intervals.indexOf(interval), 1);
-              Project.get({id: interval.project}, function(project){
-                $scope.projects.splice($scope.openProject, 1, project);
-                that.project = project;
-              });
+              if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+                Project.get({id: interval.project}, function(project){
+                  $scope.projects.splice($scope.openProject, 1, project);
+                  that.project = project;
+                });
+              } else {
+                var toast = $mdToast.simple()
+                              .content("Changes will be reflected when this project's timer is saved or discarded.")
+                              .action('Ok')
+                              .highlightAction(false)
+                              .hideDelay(10000)
+                              .position('top right');
+                $mdToast.show(toast).then(function(){});
+              }
               progress.classList.add('hidden');
               actions.classList.remove('hidden');
               actions.querySelector('button.delete-btn').classList.add('success');
@@ -158,10 +180,20 @@ angular.module('invoices.controllers')
             data.work_date = new Date(data.work_day);
             that.intervals.push(data);
             that.newInterval = new Interval();
-            Project.get({id: data.project}, function(project){
-              $scope.projects.splice($scope.openProject, 1, project);
-              that.project = project;
-            });
+            if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+              Project.get({id: data.project}, function(project){
+                $scope.projects.splice($scope.openProject, 1, project);
+                that.project = project;
+              });
+            } else {
+              var toast = $mdToast.simple()
+                            .content("Changes will be reflected when this project's timer is saved or discarded.")
+                            .action('Ok')
+                            .highlightAction(false)
+                            .hideDelay(10000)
+                            .position('top right');
+              $mdToast.show(toast).then(function(){});
+            }
             progress.classList.add('hidden');
             actions.classList.remove('hidden');
             actions.querySelector('button.insert-btn').classList.add('success');

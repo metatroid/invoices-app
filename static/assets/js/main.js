@@ -68395,18 +68395,6 @@ function pad(n, width, z){
   n = n + '';
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
-function xhrfile() {
-  return supportFileAPI() && supportAjaxUploadProgressEvents();
-  function supportFileAPI() {
-      var input = document.createElement('input');
-      input.type = 'file';
-      return 'files' in input;
-  }
-  function supportAjaxUploadProgressEvents() {
-      var xhr = new XMLHttpRequest();
-      return !! (xhr && ('upload' in xhr) && ('onprogress' in xhr.upload));
-  }
-}
 function timeDeltaToSeconds(delta){
   var pieces = delta.split(":"),
       hours = pieces[0],
@@ -68601,12 +68589,9 @@ angular.module('invoices.controllers')
         }
       });
       var Project = djResource('api/projects/:id', {'id': "@id"});
-      function getProjects(){
-        $scope.projects = Project.query(function(projects){
-          projects = orderByFilter(projects, ['position', 'created_at']);
-        });
-      }
-      getProjects();
+      $scope.projects = Project.query(function(projects){
+        projects = orderByFilter(projects, ['-active', 'position', 'created_at']);
+      });
       $scope.newProject = new Project();
       $scope.newProject.hourly_rate = $scope.user.default_rate;
       $scope.newProject.deadline = $filter('date')($scope.newProject.deadline_date, 'yyyy-MM-dd'); // js date format workaround
@@ -68660,19 +68645,6 @@ angular.module('invoices.controllers')
       
       $scope.createProject = function(data){
         var that = this;
-        if(!xhrfile() && data.project_logo){
-          var toast = $mdToast.simple()
-                        .content('Your browser does not support xhr file uploads. Selected image will be removed.')
-                        .action('Ok')
-                        .highlightAction(false)
-                        .hideDelay(6000)
-                        .position('top right');
-          $mdToast.show(toast).then(function(){
-            if(data.project_logo){
-              data.project_logo = null;
-            }
-          });
-        }
         $scope.newProject.deadline = data.deadline_date;
         $scope.newProject.position = $scope.projects.length;
         apiSrv.request('POST', 'projects/', $scope.newProject, function(project){
@@ -68715,7 +68687,7 @@ angular.module('invoices.controllers')
               }
               for(var i=0;i<$scope.projects.length;i++){
                 if($scope.projects[i].id == projectId){
-                  index = i; //get original index from filtered collection
+                  index = i; //get unfiltered index
                 }
               }
               this.parent.project_index = index;
@@ -68742,23 +68714,20 @@ angular.module('invoices.controllers')
         }, function(err){$log.error(err);});
       };
       $scope.updateProject = function(data, index){
-        if(!xhrfile() && data.project_logo){
-          var toast = $mdToast.simple()
-                        .content('Your browser does not support xhr file uploads. Selected image will be removed.')
-                        .action('Ok')
-                        .highlightAction(false)
-                        .hideDelay(6000)
-                        .position('top right');
-          $mdToast.show(toast).then(function(){
-            if(data.project_logo){
-              data.project_logo = null;
-            }
-          });
-        }
         data.deadline = data.deadline_date;
         apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
           $scope.closeDialog();
-          $scope.projects.splice(index, 1, project);
+          if((typeof $scope.projectTiming[data.id] === 'undefined') || !$scope.projectTiming[data.id].timerRunning){
+            $scope.projects.splice(index, 1, project);
+          } else {
+            var toast = $mdToast.simple()
+                          .content("Changes will be reflected when this project's timer is saved or discarded.")
+                          .action('Ok')
+                          .highlightAction(false)
+                          .hideDelay(10000)
+                          .position('top right');
+            $mdToast.show(toast).then(function(){});
+          }
           $scope.projects = orderByFilter($scope.projects, ['-active', 'position', 'created_at']);
         }, function(err){$log.error(err);});
       };
@@ -68766,19 +68735,21 @@ angular.module('invoices.controllers')
       $scope.timeEvent = "startTimer";
       var timerRunning = false;
       $scope.timers = [];
-      $scope.intervals = {};
+      $scope.projectTiming = {};
       var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
+      
       var startTimer = function(id){
         $scope.timeEvent = "startTimer";
-        $scope.intervals[id] = typeof $scope.intervals[id] === "undefined" ? {} : $scope.intervals[id];
-        $scope.intervals[id].timerRunning = true;
+        $scope.projectTiming[id] = typeof $scope.projectTiming[id] === "undefined" ? {} : $scope.projectTiming[id];
+        $scope.projectTiming[id].timerRunning = true;
+        msgSrv.setTimingStatus($scope.projectTiming);
         var timerEl = document.getElementById("project_"+id).querySelector(".timer");
         timerEl.classList.remove('saving');
         if($scope.timers.indexOf(id) === -1){
           $scope.timers.push(id);
           apiSrv.request('POST', 'projects/'+id+'/intervals/', {start: (new Date())},
            function(data){
-            $scope.intervals[id].interval = data.id;
+            $scope.projectTiming[id].interval = data.id;
            },
            function(err){
             $log.error(err);
@@ -68788,8 +68759,9 @@ angular.module('invoices.controllers')
       };
       var stopTimer = function(id){
         $scope.timeEvent = "stopTimer";
-        $scope.intervals[id].timerRunning = false;
-        var intervalId = $scope.intervals[id].interval,
+        $scope.projectTiming[id].timerRunning = false;
+        msgSrv.setTimingStatus($scope.projectTiming);
+        var intervalId = $scope.projectTiming[id].interval,
             timerEl = document.getElementById("project_"+id).querySelector(".timer"),
             counter = document.getElementById("project_"+id).querySelector(".counter");
         timerEl.setAttribute('data-interval', intervalId);
@@ -68810,8 +68782,8 @@ angular.module('invoices.controllers')
         });
       };
       $scope.startstopTimer = function(id){
-        var ix = $scope.timers.indexOf(id);
-        if(!timerRunning && (typeof $scope.intervals[id] === "undefined" || !$scope.intervals[id].timerRunning)){
+        // var ix = $scope.timers.indexOf(id);
+        if(!timerRunning && (typeof $scope.projectTiming[id] === "undefined" || !$scope.projectTiming[id].timerRunning)){
           startTimer(id);
         } else {
           stopTimer(id);
@@ -68823,14 +68795,15 @@ angular.module('invoices.controllers')
         var intervalData = {
           "description": $scope.intervalObj.description
         };
-        var intervalId = $scope.intervals[project.id].interval,
+        var intervalId = $scope.projectTiming[project.id].interval,
             timerEl = document.getElementById("project_"+project.id).querySelector(".timer"),
             timerBtn = timerEl.querySelector('.counter'),
             intervalIx = $scope.timers.indexOf(intervalId);
         apiSrv.request('PUT', 'projects/'+project.id+'/intervals/'+intervalId+'/', intervalData,
           function(data){
             $scope.projects.splice($scope.projects.indexOf(project), 1, data);
-            $scope.intervals[id].timerRunning = false;
+            $scope.projectTiming[project.id].timerRunning = false;
+            msgSrv.setTimingStatus($scope.projectTiming);
             $scope.timers.splice(intervalIx, 1);
             $scope.timeEvent = "startTimer";
             $scope.intervalObj.description = "";
@@ -68842,7 +68815,7 @@ angular.module('invoices.controllers')
       };
       $scope.discardInterval = function(project, index, ev){
         index = $scope.projects.indexOf(project);
-        var intervalId = $scope.intervals[project.id].interval,
+        var intervalId = $scope.projectTiming[project.id].interval,
             confirm = $mdDialog.confirm()
               .title('You are about to discard this time period.')
               .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -68854,7 +68827,8 @@ angular.module('invoices.controllers')
           apiSrv.request('DELETE', 'projects/'+project.id+'/intervals/'+intervalId+'/', {},
             function(data){
               $scope.projects.splice(index, 1, data);
-              $scope.intervals[project.id].timerRunning = false;
+              $scope.projectTiming[project.id].timerRunning = false;
+              msgSrv.setTimingStatus($scope.projectTiming);
               $scope.timers.splice(index, 1);
               $scope.timeEvent = "startTimer";
             },
@@ -68983,9 +68957,11 @@ angular.module('invoices.controllers')
                                    'orderByFilter',
                                    '$timeout',
                                    '$mdDialog',
-    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog){
+                                   '$mdToast',
+    function($log, apiSrv, msgSrv, djResource, orderByFilter, $timeout, $mdDialog, $mdToast){
       var $scope = msgSrv.getScope('appCtrl');
       var vars = msgSrv.getVars();
+      var timingStatus = msgSrv.getTimingStatus();
       var Project = djResource('api/projects/:id', {'id': "@id"});
       var it = this;
       this.parent = $scope;
@@ -69055,8 +69031,18 @@ angular.module('invoices.controllers')
         apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
           function(data){
             $timeout.cancel(intervalIndicator);
-            $scope.projects.splice($scope.openProject, 1, data);
-            that.project = data;
+            if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+              $scope.projects.splice($scope.openProject, 1, data);
+              that.project = data;
+            } else {
+              var toast = $mdToast.simple()
+                            .content("Changes will be reflected when this project's timer is saved or discarded.")
+                            .action('Ok')
+                            .highlightAction(false)
+                            .hideDelay(10000)
+                            .position('top right');
+              $mdToast.show(toast).then(function(){});
+            }
             progress.classList.add('hidden');
             actions.classList.remove('hidden');
             actions.querySelector('button.update-btn').classList.add('success');
@@ -69090,10 +69076,20 @@ angular.module('invoices.controllers')
             function(data){
               $timeout.cancel(intervalIndicator);
               $scope.intervals.splice($scope.intervals.indexOf(interval), 1);
-              Project.get({id: interval.project}, function(project){
-                $scope.projects.splice($scope.openProject, 1, project);
-                that.project = project;
-              });
+              if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+                Project.get({id: interval.project}, function(project){
+                  $scope.projects.splice($scope.openProject, 1, project);
+                  that.project = project;
+                });
+              } else {
+                var toast = $mdToast.simple()
+                              .content("Changes will be reflected when this project's timer is saved or discarded.")
+                              .action('Ok')
+                              .highlightAction(false)
+                              .hideDelay(10000)
+                              .position('top right');
+                $mdToast.show(toast).then(function(){});
+              }
               progress.classList.add('hidden');
               actions.classList.remove('hidden');
               actions.querySelector('button.delete-btn').classList.add('success');
@@ -69135,10 +69131,20 @@ angular.module('invoices.controllers')
             data.work_date = new Date(data.work_day);
             that.intervals.push(data);
             that.newInterval = new Interval();
-            Project.get({id: data.project}, function(project){
-              $scope.projects.splice($scope.openProject, 1, project);
-              that.project = project;
-            });
+            if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){
+              Project.get({id: data.project}, function(project){
+                $scope.projects.splice($scope.openProject, 1, project);
+                that.project = project;
+              });
+            } else {
+              var toast = $mdToast.simple()
+                            .content("Changes will be reflected when this project's timer is saved or discarded.")
+                            .action('Ok')
+                            .highlightAction(false)
+                            .hideDelay(10000)
+                            .position('top right');
+              $mdToast.show(toast).then(function(){});
+            }
             progress.classList.add('hidden');
             actions.classList.remove('hidden');
             actions.querySelector('button.insert-btn').classList.add('success');
@@ -69632,7 +69638,6 @@ angular.module('invoices.directives')
             if(this.files && this.files[0]){
               reader.onload = function(ev){
                 data = ev.target.result;
-                console.log(data);
                 var preview = document.getElementById('logoPreview') || document.createElement('img');
                 preview.id = "logoPreview";
                 preview.setAttribute('src', reader.result);
@@ -69906,6 +69911,13 @@ angular.module('invoices.services')
       msgSrv.state = {};
       msgSrv.appScope = [];
       msgSrv.vars = {};
+      msgSrv.projectTiming = {};
+      msgSrv.setTimingStatus = function(timingObj){
+        msgSrv.projectTiming = timingObj;
+      }
+      msgSrv.getTimingStatus = function(timingObj){
+        return msgSrv.projectTiming;
+      }
       msgSrv.setVars = function(obj){
         msgSrv.vars = obj;
       };

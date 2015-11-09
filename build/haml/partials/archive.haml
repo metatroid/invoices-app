@@ -9,7 +9,9 @@
         %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}
         %span.project-icon.fa.fa-folder{ng-if: "!project.project_logo"}
         %span
-          {{project.project_name}}
+          {{project.project_name}} 
+          %span.inactive-label{ng-if: "!project.active"}
+            (inactive)
       .properties
         %ul.intervals
           %strong
