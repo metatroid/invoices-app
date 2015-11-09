@@ -96,7 +96,7 @@
                       %input{ng-model: "intervalObj.description", required: "required"}
                     %md-button.md-raised.md-primary{type: "submit"}
                       save time interval
-                    %md-button.md-raised{type: "button", ng-click: "discardInterval(project.id, $index, $event)"}
+                    %md-button.md-raised{type: "button", ng-click: "discardInterval(project, $index, $event)"}
                       discard
   #archive.view-panel.archive-view{ng-class: "{active: currentState === 'app.archive'}"}
     %div{ui-view: "archive"}

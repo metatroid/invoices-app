@@ -3,7 +3,7 @@
     %h2.md-flex
       Archive
 %md-list.projects
-  %md-list-item{ng-repeat: "project in projects"}
+  %md-list-item{ng-repeat: "project in projects", ng-class: "{inactive: project.active !== true}"}
     .inline-90
       .project
         %img.md-avatar{ng-src: "{{project.project_logo}}", alt: "{{project.project_name}}", ng-if: "project.project_logo"}

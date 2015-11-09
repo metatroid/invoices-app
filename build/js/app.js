@@ -260,12 +260,16 @@ angular.module('invoices.controllers')
         }
       });
       var Project = djResource('api/projects/:id', {'id': "@id"});
-      $scope.projects = Project.query(function(projects){
-        projects = orderByFilter(projects, ['position', 'created_at']);
-      });
+      function getProjects(){
+        $scope.projects = Project.query(function(projects){
+          projects = orderByFilter(projects, ['position', 'created_at']);
+        });
+      }
+      getProjects();
       $scope.newProject = new Project();
       $scope.newProject.hourly_rate = $scope.user.default_rate;
       $scope.newProject.deadline = $filter('date')($scope.newProject.deadline_date, 'yyyy-MM-dd'); // js date format workaround
+
       $scope.sortProjects = function(item, partFrom, partTo, indexFrom, indexTo){
         progressIndicator.classList.remove("hidden");
         var data = {projectList: partFrom};
@@ -329,9 +333,10 @@ angular.module('invoices.controllers')
           });
         }
         $scope.newProject.deadline = data.deadline_date;
+        $scope.newProject.position = $scope.projects.length;
         apiSrv.request('POST', 'projects/', $scope.newProject, function(project){
           $scope.closeDialog();
-          that.projects.unshift(project);
+          that.projects.push(project);
           that.newProject = new Project();
         }, function(err){
           $log.error(err);
@@ -413,6 +418,7 @@ angular.module('invoices.controllers')
         apiSrv.request('PUT', 'projects/'+data.id, data, function(project){
           $scope.closeDialog();
           $scope.projects.splice(index, 1, project);
+          $scope.projects = orderByFilter($scope.projects, ['-active', 'position', 'created_at']);
         }, function(err){$log.error(err);});
       };
 
@@ -493,8 +499,9 @@ angular.module('invoices.controllers')
           }
         );
       };
-      $scope.discardInterval = function(id, index, ev){
-        var intervalId = $scope.intervals[id].interval,
+      $scope.discardInterval = function(project, index, ev){
+        index = $scope.projects.indexOf(project);
+        var intervalId = $scope.intervals[project.id].interval,
             confirm = $mdDialog.confirm()
               .title('You are about to discard this time period.')
               .content('This action cannot be undone. Are you sure you wish to proceed?')
@@ -503,10 +510,10 @@ angular.module('invoices.controllers')
               .ok('Discard this interval')
               .cancel('Cancel');
         $mdDialog.show(confirm).then(function() {
-          apiSrv.request('DELETE', 'projects/'+id+'/intervals/'+intervalId+'/', {},
+          apiSrv.request('DELETE', 'projects/'+project.id+'/intervals/'+intervalId+'/', {},
             function(data){
               $scope.projects.splice(index, 1, data);
-              $scope.intervals[id].timerRunning = false;
+              $scope.intervals[project.id].timerRunning = false;
               $scope.timers.splice(index, 1);
               $scope.timeEvent = "startTimer";
             },

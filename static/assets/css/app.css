@@ -7250,15 +7250,14 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque {
   #application main.main-app .view-panel {
     position: fixed;
     left: 140px;
-    right: 0;
+    right: 4px;
     top: 63px;
-    -webkit-transform: translateX(-100%);
-            transform: translateX(-100%);
-    transition: -webkit-transform 0.5s ease;
-    transition: transform 0.5s ease; }
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 1; }
     #application main.main-app .view-panel.active {
-      -webkit-transform: translateX(0%);
-              transform: translateX(0%); }
+      opacity: 1;
+      z-index: 2; }
     #application main.main-app .view-panel.no-scroll {
       overflow: hidden !important; }
 
@@ -7279,9 +7278,6 @@ md-backdrop.md-bottom-sheet-backdrop.md-opaque {
           -ms-flex-align: start;
               align-items: flex-start;
       position: relative; }
-      #application #app .project-list .project.sv-helper {
-        -webkit-transform: translate(-140px, -50px);
-                transform: translate(-140px, -50px); }
       #application #app .project-list .project md-fab-toolbar {
         position: absolute;
         right: 0px;
@@ -7474,10 +7470,6 @@ md-bottom-sheet {
 .interval-list .sortable md-list-item .flex:last-of-type md-input-container:nth-child(3) {
   padding-left: 30px; }
 
-.interval-list .sortable md-list-item.sv-helper {
-  -webkit-transform: translate(-145px, -140px);
-          transform: translate(-145px, -140px); }
-
 .interval-list md-input-container label,
 .interval-list md-input-container .md-placeholder,
 .interval-list md-input-container label,
@@ -7662,9 +7654,6 @@ md-bottom-sheet {
     font-weight: normal; }
   #invoice .invoice-info .intervals .table {
     margin-bottom: 75px; }
-    #invoice .invoice-info .intervals .table tbody tr.sv-helper {
-      -webkit-transform: translate(-265px, -115px);
-              transform: translate(-265px, -115px); }
     #invoice .invoice-info .intervals .table tbody tr td:nth-child(3) {
       width: 465px; }
   #invoice .invoice-info .intervals .totals {
@@ -7725,6 +7714,8 @@ md-bottom-sheet {
   padding: 10px 20px 10px;
   margin: 10px 20px;
   border: 1px solid #ddd; }
+  #archive md-list-item.inactive {
+    opacity: 0.35; }
   #archive md-list-item .project {
     line-height: 32px;
     border-bottom: 1px dotted #ddd; }
@@ -7799,3 +7790,7 @@ md-bottom-sheet {
     #archive md-list-item .actions button {
       vertical-align: top;
       margin: 0; }
+
+md-dialog.md-transition-in {
+  -webkit-transform: none !important;
+          transform: none !important; }

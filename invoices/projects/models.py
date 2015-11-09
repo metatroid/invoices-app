@@ -49,4 +49,4 @@ class Project(models.Model):
   invoice_hours = property(_invoice_hours)
 
   class Meta:
-    ordering = ('position','created_at',)
+    ordering = ('-active','position','created_at',)
