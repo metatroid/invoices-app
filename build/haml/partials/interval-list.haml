@@ -52,7 +52,7 @@
                 %md-input-container
                   %label
                     Duration
-                  %input{ng-model: "interval.total"}
+                  %input{inrestrict: "duration", ng-model: "interval.total"}
               %div{flex: "50"}
                 %md-input-container
                   %label
@@ -72,7 +72,7 @@
                   %label
                     Paid
                   %div{ng-repeat: "v in [0]"}
-                    %md-checkbox{ng-model: "interval.paid", ng-init: "interval.paid", aria-label: "Paid checkbox"}
+                    %md-checkbox{ng-model: "interval.paid_holder", ng-init: "interval.paid_holder", aria-label: "Paid checkbox"}
             .self-center{flex: "10"}
               .interval-action-progress.hidden
                 %md-progress-circular{md-mode: "indeterminate", md-diameter: "20px"}

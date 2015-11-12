@@ -1,7 +1,7 @@
 angular.module('invoices.directives')
   .directive('intimer', 
     function(){
-      return {
+      return{
         restrict: 'A',
         link: function($scope, $element, $attrs){
           angular.element($element).on('click', function(){

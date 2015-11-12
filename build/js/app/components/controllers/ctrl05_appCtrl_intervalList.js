@@ -19,6 +19,7 @@ angular.module('invoices.controllers')
       this.parent.intervals = Interval.query({project_id: vars.pid}, function(intervals){
         for(var i=0;i<intervals.length;i++){
           intervals[i].work_date = new Date(intervals[i].work_day);
+          intervals[i].paid_holder = intervals[i].paid;
         }
         it.parent.intervals = orderByFilter(intervals, ['position', 'work_day']);
       });
@@ -77,6 +78,8 @@ angular.module('invoices.controllers')
             newEnd = new Date(start.getTime() + timeDiff*1000);
         interval.end = newEnd;
         interval.work_day = interval.work_date;
+        var paidOg = interval.paid;
+        interval.paid = interval.paid_holder;
         apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
           function(data){
             $timeout.cancel(intervalIndicator);
@@ -100,6 +103,7 @@ angular.module('invoices.controllers')
             }, 1000);
           },
           function(err){
+            interval.paid = paidOg;
             $timeout.cancel(intervalIndicator);
             $log.error(err);
             progress.classList.add('hidden');

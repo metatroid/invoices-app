@@ -6,12 +6,13 @@ angular.module('invoices.services')
       msgSrv.appScope = [];
       msgSrv.vars = {};
       msgSrv.projectTiming = {};
+      msgSrv.msgArgs = {};
       msgSrv.setTimingStatus = function(timingObj){
         msgSrv.projectTiming = timingObj;
-      }
+      };
       msgSrv.getTimingStatus = function(timingObj){
         return msgSrv.projectTiming;
-      }
+      };
       msgSrv.setVars = function(obj){
         msgSrv.vars = obj;
       };
@@ -31,7 +32,8 @@ angular.module('invoices.services')
       msgSrv.getScope = function(key){
         return msgSrv.appScope[key];
       };
-      msgSrv.emitMsg = function(message){
+      msgSrv.emitMsg = function(message, data){
+        msgSrv.msgArgs = {args: data};
         $rootScope.$broadcast(message);
       };
       

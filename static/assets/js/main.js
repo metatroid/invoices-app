@@ -68731,6 +68731,29 @@ angular.module('invoices.controllers')
           $scope.projects = orderByFilter($scope.projects, ['-active', 'position', 'created_at']);
         }, function(err){$log.error(err);});
       };
+      $scope.$on('updateProject', function(){
+        var project = msgSrv.msgArgs.args,
+            pid = project.id;
+        if((typeof $scope.projectTiming[pid] === 'undefined') || !$scope.projectTiming[pid].timerRunning){
+          Project.get({id: pid}, function(data){
+            var ix = 0;
+            for(var i=0;i<$scope.projects.length;i++){
+              if($scope.projects[i].id == pid){
+                ix = i;
+              }
+            }
+            $scope.projects.splice(ix, 1, data);
+          });
+        } else {
+          var toast = $mdToast.simple()
+                        .content("Changes will be reflected when this project's timer is saved or discarded.")
+                        .action('Ok')
+                        .highlightAction(false)
+                        .hideDelay(10000)
+                        .position('top right');
+          $mdToast.show(toast).then(function(){});
+        }
+      });
 
       $scope.timeEvent = "startTimer";
       var timerRunning = false;
@@ -68970,6 +68993,7 @@ angular.module('invoices.controllers')
       this.parent.intervals = Interval.query({project_id: vars.pid}, function(intervals){
         for(var i=0;i<intervals.length;i++){
           intervals[i].work_date = new Date(intervals[i].work_day);
+          intervals[i].paid_holder = intervals[i].paid;
         }
         it.parent.intervals = orderByFilter(intervals, ['position', 'work_day']);
       });
@@ -69028,6 +69052,8 @@ angular.module('invoices.controllers')
             newEnd = new Date(start.getTime() + timeDiff*1000);
         interval.end = newEnd;
         interval.work_day = interval.work_date;
+        var paidOg = interval.paid;
+        interval.paid = interval.paid_holder;
         apiSrv.request('PUT', 'projects/'+interval.project+'/intervals/'+interval.id+'/', interval,
           function(data){
             $timeout.cancel(intervalIndicator);
@@ -69051,6 +69077,7 @@ angular.module('invoices.controllers')
             }, 1000);
           },
           function(err){
+            interval.paid = paidOg;
             $timeout.cancel(intervalIndicator);
             $log.error(err);
             progress.classList.add('hidden');
@@ -69252,6 +69279,7 @@ angular.module('invoices.controllers')
             function(data){
               $timeout.cancel(invoiceIndicator);
               $scope.invoices.splice(index, 1);
+              msgSrv.emitMsg('updateProject', that.project);
               progress.classList.add('hidden');
               actions.classList.remove('hidden');
               actions.querySelector('button.delete-btn').classList.add('success');
@@ -69665,7 +69693,7 @@ angular.module('invoices.directives')
 angular.module('invoices.directives')
   .directive('intimer', 
     function(){
-      return {
+      return{
         restrict: 'A',
         link: function($scope, $element, $attrs){
           angular.element($element).on('click', function(){
@@ -69716,18 +69744,21 @@ angular.module('invoices.directives')
 angular.module('invoices.directives')
   .directive("insave", ['$mdDialog', 
                         '$log', 
-                        'apiSrv', 
-    function($mdDialog, $log, apiSrv){
+                        'apiSrv',
+                        'msgSrv',
+    function($mdDialog, $log, apiSrv, msgSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
           angular.element($element).on('click', function(ev){
-            var projectId = $attrs.insave,
+            var project = JSON.parse($attrs.insave),
+                projectId = project.id,
                 invoiceHtml = document.getElementById('invoice').outerHTML,
                 progress = document.querySelector("md-progress-linear");
             progress.classList.remove("hidden");
             apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
               progress.classList.add("hidden");
+              msgSrv.emitMsg('updateProject', project);
               $mdDialog.show(
                 $mdDialog.alert()
                   .parent(angular.element(document.querySelector('.view-panel.active')))
@@ -69784,6 +69815,30 @@ angular.module('invoices.directives')
       };
     }
   ])
+;
+angular.module('invoices.directives')
+  .directive("inrestrict",
+    function(){
+      return{
+        restrict: 'A',
+        link: function($scope, $element, $attrs){
+          var restriction = $attrs.inrestrict;
+          switch(restriction){
+            case 'duration':
+              angular.element($element)[0].addEventListener('keypress', function(e){
+                var character = String.fromCharCode(e.which);
+                if(character.match(/\d|:|\./) === null){
+                  e.preventDefault();
+                }
+              });
+              break;
+            default:
+              break;
+          }
+        }
+      };
+    }
+  )
 ;
 angular.module('invoices.filters')
   .filter('msToTimeString', 
@@ -69912,12 +69967,13 @@ angular.module('invoices.services')
       msgSrv.appScope = [];
       msgSrv.vars = {};
       msgSrv.projectTiming = {};
+      msgSrv.msgArgs = {};
       msgSrv.setTimingStatus = function(timingObj){
         msgSrv.projectTiming = timingObj;
-      }
+      };
       msgSrv.getTimingStatus = function(timingObj){
         return msgSrv.projectTiming;
-      }
+      };
       msgSrv.setVars = function(obj){
         msgSrv.vars = obj;
       };
@@ -69937,7 +69993,8 @@ angular.module('invoices.services')
       msgSrv.getScope = function(key){
         return msgSrv.appScope[key];
       };
-      msgSrv.emitMsg = function(message){
+      msgSrv.emitMsg = function(message, data){
+        msgSrv.msgArgs = {args: data};
         $rootScope.$broadcast(message);
       };
       

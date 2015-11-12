@@ -82,6 +82,7 @@ angular.module('invoices.controllers')
             function(data){
               $timeout.cancel(invoiceIndicator);
               $scope.invoices.splice(index, 1);
+              msgSrv.emitMsg('updateProject', that.project);
               progress.classList.add('hidden');
               actions.classList.remove('hidden');
               actions.querySelector('button.delete-btn').classList.add('success');

@@ -1,18 +1,21 @@
 angular.module('invoices.directives')
   .directive("insave", ['$mdDialog', 
                         '$log', 
-                        'apiSrv', 
-    function($mdDialog, $log, apiSrv){
+                        'apiSrv',
+                        'msgSrv',
+    function($mdDialog, $log, apiSrv, msgSrv){
       return {
         restrict: 'A',
         link: function($scope, $element, $attrs){
           angular.element($element).on('click', function(ev){
-            var projectId = $attrs.insave,
+            var project = JSON.parse($attrs.insave),
+                projectId = project.id,
                 invoiceHtml = document.getElementById('invoice').outerHTML,
                 progress = document.querySelector("md-progress-linear");
             progress.classList.remove("hidden");
             apiSrv.request('POST', 'projects/'+projectId+'/statements/', {markup: invoiceHtml}, function(invoice){
               progress.classList.add("hidden");
+              msgSrv.emitMsg('updateProject', project);
               $mdDialog.show(
                 $mdDialog.alert()
                   .parent(angular.element(document.querySelector('.view-panel.active')))

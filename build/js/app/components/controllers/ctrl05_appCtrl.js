@@ -229,6 +229,29 @@ angular.module('invoices.controllers')
           $scope.projects = orderByFilter($scope.projects, ['-active', 'position', 'created_at']);
         }, function(err){$log.error(err);});
       };
+      $scope.$on('updateProject', function(){
+        var project = msgSrv.msgArgs.args,
+            pid = project.id;
+        if((typeof $scope.projectTiming[pid] === 'undefined') || !$scope.projectTiming[pid].timerRunning){
+          Project.get({id: pid}, function(data){
+            var ix = 0;
+            for(var i=0;i<$scope.projects.length;i++){
+              if($scope.projects[i].id == pid){
+                ix = i;
+              }
+            }
+            $scope.projects.splice(ix, 1, data);
+          });
+        } else {
+          var toast = $mdToast.simple()
+                        .content("Changes will be reflected when this project's timer is saved or discarded.")
+                        .action('Ok')
+                        .highlightAction(false)
+                        .hideDelay(10000)
+                        .position('top right');
+          $mdToast.show(toast).then(function(){});
+        }
+      });
 
       $scope.timeEvent = "startTimer";
       var timerRunning = false;
