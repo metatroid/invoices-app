@@ -331,6 +331,15 @@ angular.module('invoices.controllers')
           },
           function(err){
             $log.error(err);
+            if(err.detail){
+              var toast = $mdToast.simple()
+                            .content(err.detail)
+                            .action('Ok')
+                            .highlightAction(false)
+                            .hideDelay(5000)
+                            .position('top right');
+              $mdToast.show(toast).then(function(){});
+            }
           }
         );
       };
