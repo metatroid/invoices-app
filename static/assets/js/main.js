@@ -68997,6 +68997,7 @@ angular.module('invoices.controllers')
       var Project = djResource('api/projects/:id', {'id': "@id"});
       var it = this;
       this.parent = $scope;
+      this.parent.showPaid = false;
       var Interval = djResource('api/projects/:project_id/intervals/:id', {'project_id': '@pid', 'id': "@id"});
       this.parent.newInterval = new Interval();
       this.parent.intervals = Interval.query({project_id: vars.pid}, function(intervals){
@@ -69165,6 +69166,8 @@ angular.module('invoices.controllers')
           function(data){
             $timeout.cancel(intervalIndicator);
             data.work_date = new Date(data.work_day);
+            data.paid = false;
+            data.paid_holder = false;
             that.intervals.push(data);
             that.newInterval = new Interval();
             if((typeof timingStatus[vars.pid] === 'undefined') || !timingStatus[vars.pid].timerRunning){

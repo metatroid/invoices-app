@@ -40,7 +40,7 @@
               %md-button.md-icon-button{aria-label: "remove", ng-click: "ctrl.parent.clearInterval(ctrl.parent.newInterval, $event)", title: "Clear Fields"}
                 %span.fa.fa-remove
       .sortable
-        %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals | filter:{paid:ctrl.parent.showPaid}", id: "interval_{{interval.id}}", data-iid: "{{interval.id}}", data-position: "{{interval.position}}", data-project: "{{interval.project}}", data-index: "{{$index}}"}
+        %md-list-item.interval.form.auto{ng-repeat: "interval in ctrl.parent.intervals | filter:{paid:ctrl.parent.showPaid}", id: "interval_{{interval.id}}", data-iid: "{{interval.id}}", data-position: "{{interval.position}}", data-project: "{{interval.project}}", data-index: "{{$index}}", data-paid: "{{interval.paid}}"}
           .position-controls
             %md-button.md-icon-button{aria-label: "move up", ng-click: "ctrl.parent.movePositionUp(interval)"}
               %span.fa.fa-caret-up
