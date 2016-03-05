@@ -4326,7 +4326,8 @@ md-grid-list {
       bottom: 0;
       left: 0;
       padding: 0;
-      margin: 0; }
+      margin: 0;
+      overflow: hidden; }
     md-grid-list md-grid-tile md-grid-tile-header,
     md-grid-list md-grid-tile md-grid-tile-footer {
       display: -webkit-flex;
